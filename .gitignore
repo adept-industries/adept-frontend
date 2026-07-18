@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Builds and test output
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Vite
+.vite/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# IDE files
+.idea/
+.vscode/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
