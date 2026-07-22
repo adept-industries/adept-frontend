@@ -31,4 +31,3 @@ docker build -t adept-frontend:phase1 .
 ```
 
 In full Compose, Nginx is available at <http://localhost:3000> and proxies `/api` to the Compose service named `api`.
-`
