@@ -1,41 +1,34 @@
 # Adept Frontend
 
-The Adept frontend is the browser application for the Adept developer-delivery analytics platform.
-
-## Responsibilities
-
-This repository owns:
-
-- React pages and components;
-- authentication and workspace user interfaces;
-- repository, risk, metric, alert, and settings screens;
-- route guards;
-- the generated API client;
-- frontend tests;
-- the production Nginx configuration.
-
-This repository does not own:
-
-- database migrations;
-- backend authentication rules;
-- GitHub or Jira secrets;
-- event-worker logic;
-- risk-model artifacts.
-
-## Technology baseline
-
-- Node.js 22 LTS
-- React 19
-- TypeScript 5
-- Vite
-- npm with `package-lock.json`
+The frontend is Adept's React browser application.
 
 ## Current status
 
-Phase 0 repository foundation.
+Phase 1 provides the Node 24, React 19, TypeScript 5, Vite, test, and production Nginx foundation. Authentication, routing, dashboards, and business screens are added later.
 
-The React Vite application and package lockfile will be created during Phase 1.
+## Install and verify
 
-## Contribution
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test:run
+npm run build
+```
 
-All changes must be made through a feature branch and pull request after branch protection is enabled.
+## Run with Vite
+
+```bash
+npm run dev -- --host 127.0.0.1
+```
+
+Open <http://localhost:5173>. Vite proxies relative `/api` requests to the host API at `http://localhost:8080`.
+
+## Production-like image
+
+```bash
+docker build -t adept-frontend:phase1 .
+```
+
+In full Compose, Nginx is available at <http://localhost:3000> and proxies `/api` to the Compose service named `api`.
+`
