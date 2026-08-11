@@ -25,6 +25,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Check OpenAPI contract drift
+        run: npm run api:check
+
       - name: Lint
         run: npm run lint
 
@@ -39,3 +42,7 @@ jobs:
 
       - name: Build Nginx image
         run: docker build --tag adept-frontend:ci .
+
+      - name: Verify Nginx config and limit behavior
+        run: npm run nginx:verify -- adept-frontend:ci
+
