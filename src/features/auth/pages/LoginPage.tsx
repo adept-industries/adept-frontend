@@ -1,0 +1,137 @@
+import { type FormEvent, useContext, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { AuthLayout } from "../../../components/layout/AuthLayout";
+import { FormField } from "../../../components/ui/FormField";
+import { InlineAlert } from "../../../components/ui/InlineAlert";
+import { AuthContext } from "../../../auth/AuthContext";
+import { ApiError } from "../../../api/problem";
+
+export function LoginPage() {
+  const ctx = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = getSafeRedirect((location.state as { from?: Location } | null)?.from);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      await ctx?.actions.login({ email, password });
+      await navigate(from ?? "/dashboard", { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.problem.code === "EMAIL_NOT_VERIFIED") {
+          await navigate("/check-email", { state: { email } });
+          return;
+        }
+        setError("The email or password is incorrect.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <AuthLayout title="Sign in to Adept">
+      <form
+        id="login-form"
+        onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSubmit(e)}
+        noValidate
+        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+      >
+        {error && <InlineAlert message={error} />}
+
+        <FormField
+          id="login-email"
+          label="Email"
+          type="email"
+          autoComplete="username"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <label
+              htmlFor="login-password"
+              style={{ fontWeight: 600, fontSize: "0.875rem", color: "#374151" }}
+            >
+              Password
+            </label>
+            <Link
+              to="/forgot-password"
+              style={{ fontSize: "0.85rem", color: "#4763d8" }}
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <input
+            id="login-password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{
+              padding: "0.6rem 0.75rem",
+              borderRadius: "0.4rem",
+              border: "1.5px solid #d1d5db",
+              fontSize: "1rem",
+            }}
+          />
+        </div>
+
+        <button
+          type="submit"
+          id="login-submit"
+          disabled={submitting}
+          style={{
+            padding: "0.7rem",
+            borderRadius: "0.4rem",
+            background: "#4763d8",
+            color: "#fff",
+            border: "none",
+            fontWeight: 700,
+            fontSize: "1rem",
+            cursor: submitting ? "not-allowed" : "pointer",
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          {submitting ? "Signing in…" : "Sign in"}
+        </button>
+
+        <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem", color: "#6b7280" }}>
+          New to Adept?{" "}
+          <Link to="/signup" style={{ color: "#4763d8", fontWeight: 600 }}>
+            Create an account
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
+  );
+}
+
+/** Accept only same-origin, non-external redirects from router state. */
+function getSafeRedirect(from: Location | undefined): string | null {
+  if (!from) return null;
+  try {
+    const url = new URL(from.pathname + (from.search ?? ""), window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    const path = url.pathname;
+    // Reject double-slash, backslash, and non-leading-slash.
+    // eslint-disable-next-line no-control-regex
+    if (!path.startsWith("/") || /^\/\/|\\|[\u0000-\u001f]/.test(path)) return null;
+    return path + (from.search ?? "");
+  } catch {
+    return null;
+  }
+}
