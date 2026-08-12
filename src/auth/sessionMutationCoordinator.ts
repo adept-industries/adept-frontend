@@ -96,31 +96,10 @@ function generateEpoch(): string {
  * Returns true when the journal should block automatic refresh.
  * An explicit credential login, logout, or password reset can override this.
  */
-export async function isAmbiguousJournal(): Promise<boolean> {
+export function isAmbiguousJournal(): boolean {
   const j = readJournal();
   if (!j) return false;
   if (j.status === "ambiguous") return true;
-  
-  if (j.status === "started") {
-    if (typeof navigator.locks !== "undefined") {
-      try {
-        const state = await navigator.locks.query();
-        const isActive = 
-          state.held?.some((l) => l.name === SESSION_LOCK) ||
-          state.pending?.some((l) => l.name === SESSION_LOCK);
-        
-        if (isActive) {
-          // Another tab is actively working on it. Not orphaned.
-          return false;
-        }
-      } catch {
-        // Ignore and fallback to treating as orphaned.
-      }
-    }
-    // Orphaned `started` with no held lock — treat as ambiguous.
-    return true;
-  }
-  
   return false;
 }
 

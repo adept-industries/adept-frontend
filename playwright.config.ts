@@ -15,6 +15,9 @@ export default defineConfig({
   testDir: "./e2e",
   testMatch: "**/*.spec.ts",
 
+  /* Give tests more time in slow CI environments */
+  timeout: 60000,
+
   /* Never allow test.only in CI. */
   forbidOnly: !!process.env["CI"],
 

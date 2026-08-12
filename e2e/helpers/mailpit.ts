@@ -3,11 +3,12 @@ import type { Page } from "@playwright/test";
 const MAILPIT_API = "http://localhost:8025/api/v1";
 
 /**
- * Polls Mailpit for a message to the given recipient and returns the plain-text body.
- * Verifies the recipient address exactly. Never logs the raw link or token.
+ * Polls Mailpit for the latest email to a specific address.
+ * Optionally filters for emails containing a specific substring.
  */
 export async function waitForEmail(
   email: string,
+  mustContain?: string,
   timeoutMs = 30_000,
 ): Promise<string> {
   const deadline = Date.now() + timeoutMs;
@@ -35,7 +36,13 @@ export async function waitForEmail(
       const txtRes = await fetch(`${MAILPIT_API}/message/${msg.ID}`);
       if (!txtRes.ok) continue;
       const body = await txtRes.json() as { Text?: string };
-      if (body.Text) return body.Text;
+      
+      if (body.Text) {
+        if (mustContain && !body.Text.includes(mustContain)) {
+          continue;
+        }
+        return body.Text;
+      }
     }
 
     await sleep(1000);
