@@ -157,4 +157,25 @@ export const handlers = [
       membershipId: "mem-1",
     }),
   ),
+
+  // Update workspace (name / timezone only)
+  http.patch(`${API}/workspaces/current`, async ({ request }) => {
+    const body = await request.json() as { name?: string; timezone?: string };
+    return HttpResponse.json({
+      id: "ws-1",
+      name: body.name ?? "Acme",
+      slug: "acme-abc123",
+      timezone: body.timezone ?? "UTC",
+      role: "MANAGER",
+      membershipId: "mem-1",
+    });
+  }),
+
+  // Delete workspace
+  http.delete(`${API}/workspaces/current`, () =>
+    HttpResponse.json(
+      { status: "DELETING", remainingWorkspaces: [] },
+      { status: 202 },
+    ),
+  ),
 ];

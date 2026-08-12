@@ -13,7 +13,8 @@
     "test:run": "vitest run",
     "api:generate": "openapi-typescript openapi/adept-api-v1.json -o src/api/generated/schema.ts",
     "api:check": "openapi-typescript openapi/adept-api-v1.json -o /tmp/schema-check.ts && diff src/api/generated/schema.ts /tmp/schema-check.ts",
-    "nginx:verify": "bash scripts/verify-nginx.sh"
+    "nginx:verify": "bash scripts/verify-nginx.sh",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
