@@ -48,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     void (async () => {
       // 1. Check for ambiguous journal — fail closed without sending refresh.
-      if (isAmbiguousJournal()) {
+      if (await isAmbiguousJournal()) {
         setState({ status: "anonymous", ambiguousSession: true });
         return;
       }

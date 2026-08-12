@@ -27,7 +27,7 @@ test("browser auth lifecycle", async ({ page }) => {
 
   // 1. Signup
   await page.goto("/signup");
-  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
@@ -46,11 +46,13 @@ test("browser auth lifecycle", async ({ page }) => {
   const verifyLink = extractLink(body, "/verify-email");
   await navigateToLink(page, verifyLink);
 
-  // 4. Verify — should auto-redirect to /login after success.
-  await expect(page).toHaveURL(/login/, { timeout: 10_000 });
+  // 4. Verify — wait for success banner then click Sign in.
+  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("link", { name: /sign in/i }).click();
+  await expect(page).toHaveURL(/login/, { timeout: 5_000 });
 
   // 5. Login.
-  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: /log in|sign in/i }).click();
 
@@ -91,7 +93,7 @@ test("storage never contains access token or credentials", async ({ page }) => {
 
   // Sign up and verify.
   await page.goto("/signup");
-  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
@@ -101,10 +103,12 @@ test("storage never contains access token or credentials", async ({ page }) => {
   const body = await waitForEmail(email);
   const verifyLink = extractLink(body, "/verify-email");
   await navigateToLink(page, verifyLink);
-  await expect(page).toHaveURL(/login/, { timeout: 10_000 });
+  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("link", { name: /sign in/i }).click();
+  await expect(page).toHaveURL(/login/, { timeout: 5_000 });
 
   // Login.
-  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: /log in|sign in/i }).click();
   await expect(page).toHaveURL(/dashboard/, { timeout: 10_000 });

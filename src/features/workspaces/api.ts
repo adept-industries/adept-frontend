@@ -118,7 +118,7 @@ export async function deleteWorkspace(
   const token = accessTokenStore.get();
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const body = JSON.stringify({ confirmSlug: params.confirmSlug, password: params.password });
+  const body = JSON.stringify({ confirmationSlug: params.confirmSlug, password: params.password });
   // Clear password reference as soon as it is serialised.
   const clearRef: Partial<typeof params> = params;
   void clearRef;

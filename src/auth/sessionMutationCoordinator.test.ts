@@ -61,7 +61,7 @@ describe("sessionMutationCoordinator", () => {
     ).rejects.toThrow("Network down");
 
     expect(readJournal()?.status).toBe("ambiguous");
-    expect(isAmbiguousJournal()).toBe(true);
+    expect(await isAmbiguousJournal()).toBe(true);
   });
 
   it("clears journal on known API error (not ambiguous)", async () => {
@@ -76,7 +76,7 @@ describe("sessionMutationCoordinator", () => {
 
     // Journal cleared — not ambiguous.
     expect(readJournal()).toBeNull();
-    expect(isAmbiguousJournal()).toBe(false);
+    expect(await isAmbiguousJournal()).toBe(false);
   });
 
   it("credential action clears any pre-existing ambiguous journal", async () => {
@@ -84,7 +84,7 @@ describe("sessionMutationCoordinator", () => {
       "adept.sessionMutationJournal",
       JSON.stringify({ epoch: "x", kind: "refresh", status: "ambiguous", startedAt: "" }),
     );
-    expect(isAmbiguousJournal()).toBe(true);
+    expect(await isAmbiguousJournal()).toBe(true);
 
     await runSessionMutation(
       "login",
@@ -92,7 +92,7 @@ describe("sessionMutationCoordinator", () => {
       { isCredentialAction: true },
     );
 
-    expect(isAmbiguousJournal()).toBe(false);
+    expect(await isAmbiguousJournal()).toBe(false);
   });
 });
 

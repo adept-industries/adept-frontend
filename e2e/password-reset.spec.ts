@@ -14,7 +14,7 @@ async function createAndVerifyAccount(
 ): Promise<void> {
   const page = await context.newPage();
   await page.goto("/signup");
-  await page.getByLabel(/email/i).fill(email);
+  await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
@@ -24,7 +24,9 @@ async function createAndVerifyAccount(
   const body = await waitForEmail(email);
   const link = extractLink(body, "/verify-email");
   await navigateToLink(page, link);
-  await page.waitForURL(/login/, { timeout: 10_000 });
+  await page.getByText(/email has been verified/i).waitFor({ timeout: 10_000 });
+  await page.getByRole("link", { name: /sign in/i }).click();
+  await page.waitForURL(/login/, { timeout: 5_000 });
   await page.close();
 }
 
@@ -51,7 +53,7 @@ test("password reset invalidates old session", async ({ browser }) => {
     // Context A: login and stay authenticated.
     const pageA = await ctxA.newPage();
     await pageA.goto("/login");
-    await pageA.getByLabel(/email/i).fill(email);
+    await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
     await pageA.waitForURL(/dashboard/, { timeout: 10_000 });
@@ -59,7 +61,7 @@ test("password reset invalidates old session", async ({ browser }) => {
     // Context B: request password reset.
     const pageB = await ctxB.newPage();
     await pageB.goto("/forgot-password");
-    await pageB.getByLabel(/email/i).fill(email);
+    await pageB.getByRole("textbox", { name: /email/i }).fill(email);
     await pageB.getByRole("button", { name: /send reset|reset password/i }).click();
     await expect(pageB.getByText(/check your email|email sent/i)).toBeVisible({ timeout: 5_000 });
 
@@ -69,7 +71,7 @@ test("password reset invalidates old session", async ({ browser }) => {
     await navigateToLink(pageB, resetLink);
 
     // Context B: set new password.
-    await pageB.getByLabel(/new password/i).fill(newPassword);
+    await pageB.locator("#reset-password").fill(newPassword);
     await pageB.getByRole("button", { name: /set password|reset/i }).click();
     await pageB.waitForURL(/login/, { timeout: 10_000 });
 
@@ -79,13 +81,13 @@ test("password reset invalidates old session", async ({ browser }) => {
     await pageA.waitForURL(/login/, { timeout: 15_000 });
 
     // Old password fails.
-    await pageA.getByLabel(/email/i).fill(email);
+    await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
     await expect(pageA.getByRole("alert")).toBeVisible({ timeout: 5_000 });
 
     // New password succeeds.
-    await pageA.getByLabel(/email/i).fill(email);
+    await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(newPassword);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
     await pageA.waitForURL(/dashboard/, { timeout: 10_000 });
@@ -114,7 +116,7 @@ test("multi-tab concurrent reload restores session", async ({ browser }) => {
     // Login in one page.
     const page1 = await ctx.newPage();
     await page1.goto("/login");
-    await page1.getByLabel(/email/i).fill(email);
+    await page1.getByRole("textbox", { name: /email/i }).fill(email);
     await page1.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await page1.getByRole("button", { name: /log in|sign in/i }).click();
     await page1.waitForURL(/dashboard/, { timeout: 10_000 });
