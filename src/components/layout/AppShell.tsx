@@ -5,6 +5,7 @@ import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { useAuth } from "../../auth/AuthProvider";
 import logoPath from "../../assets/logo.png";
+import { ProjectSelector } from "../../features/projects/ProjectSelector";
 
 interface AppShellProps {
   children: ReactNode;
@@ -20,6 +21,7 @@ function AppShellNav() {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+      <ProjectSelector />
       <WorkspaceSwitcher
         workspaces={workspaces}
         currentWorkspaceId={currentMembership.workspaceId}
@@ -27,19 +29,19 @@ function AppShellNav() {
 
       {isManager && (
         <Link
+          to="/dashboard/projects"
+          id="nav-projects-link"
+          className="button-link"
+        >
+          Projects
+        </Link>
+      )}
+
+      {isManager && (
+        <Link
           to="/dashboard/settings"
           id="nav-settings-link"
-          style={{ 
-            display: "flex", alignItems: "center", justifyContent: "center", 
-            width: "2.2rem", height: "2.2rem", 
-            borderRadius: "50%", 
-            background: "rgba(255, 255, 255, 0.05)", 
-            border: "1px solid rgba(255, 255, 255, 0.1)", 
-            color: "var(--text-secondary)", 
-            transition: "all 0.2s ease" 
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--text-primary)"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
+          className="button-link icon-button"
           aria-label="Workspace settings"
           title="Settings"
         >
@@ -55,24 +57,7 @@ function AppShellNav() {
         type="button"
         onClick={() => void actions.logout()}
         title="Log out"
-        style={{
-          display: "flex", alignItems: "center", justifyContent: "center", 
-          width: "2.2rem", height: "2.2rem",
-          background: "rgba(255, 255, 255, 0.05)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "50%",
-          cursor: "pointer",
-          color: "var(--text-secondary)",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-          e.currentTarget.style.color = "var(--text-primary)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-          e.currentTarget.style.color = "var(--text-secondary)";
-        }}
+        className="icon-button"
         aria-label="Log out"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -117,7 +102,7 @@ export function AppShell({ children }: AppShellProps) {
             aria-label="Dashboard"
             style={{ display: "flex", alignItems: "center", textDecoration: "none", height: "100%" }}
           >
-            <img src={logoPath} alt="Adept Logo" style={{ height: "3.5rem" }} />
+            <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ height: "3.5rem" }} />
           </Link>
           {workspaceName && (
              <span

@@ -96,7 +96,7 @@ export function LoginPage() {
             </label>
             <Link
               to="/forgot-password"
-              style={{ fontSize: "0.85rem", color: "#4763d8" }}
+              style={{ fontSize: "0.85rem" }}
             >
               Forgot password?
             </Link>
@@ -124,26 +124,14 @@ export function LoginPage() {
         <button
           type="submit"
           id="login-submit"
-          className="premium-btn"
           disabled={submitting}
-          style={{
-            padding: "0.85rem",
-            borderRadius: "0.5rem",
-            color: "#ffffff",
-            border: "none",
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-            fontSize: "1.05rem",
-            cursor: submitting ? "not-allowed" : "pointer",
-            opacity: submitting ? 0.7 : 1,
-          }}
         >
           {submitting ? "Signing in…" : "Sign in"}
         </button>
 
         <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
           New to Adept?{" "}
-          <Link to="/signup" style={{ color: "var(--primary-color)", fontWeight: 600 }}>
+          <Link to="/signup" style={{ fontWeight: 600 }}>
             Create an account
           </Link>
         </p>

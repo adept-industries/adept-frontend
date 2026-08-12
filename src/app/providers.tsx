@@ -2,6 +2,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 import { AuthProvider } from "../auth/AuthProvider.js";
 import { queryClient } from "../api/queryClient.js";
+import { ProjectProvider } from "../features/projects/ProjectProvider.js";
 
 /**
  * Top-level provider tree.
@@ -13,7 +14,7 @@ import { queryClient } from "../api/queryClient.js";
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider><ProjectProvider>{children}</ProjectProvider></AuthProvider>
     </QueryClientProvider>
   );
 }

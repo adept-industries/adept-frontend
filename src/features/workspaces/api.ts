@@ -2,6 +2,8 @@ import type { components, operations } from "../../api/generated/schema.js";
 import { apiRequest } from "../../api/client.js";
 
 export type WorkspaceSummary = components["schemas"]["WorkspaceSummaryResponse"];
+export type CreateWorkspaceRequest =
+  operations["createWorkspace"]["requestBody"]["content"]["application/json"];
 export type CurrentWorkspaceResponse =
   operations["getCurrentWorkspace"]["responses"][200]["content"]["application/json"];
 export type UpdateWorkspaceRequest =
@@ -17,6 +19,17 @@ export function listWorkspaces(signal?: AbortSignal): Promise<WorkspaceSummary[]
     path: "/workspaces",
     auth: "bearer",
     signal,
+  });
+}
+
+export function createWorkspace(
+  body: CreateWorkspaceRequest,
+): Promise<WorkspaceSummary> {
+  return apiRequest<WorkspaceSummary, CreateWorkspaceRequest>({
+    method: "POST",
+    path: "/workspaces",
+    auth: "bearer",
+    body,
   });
 }
 

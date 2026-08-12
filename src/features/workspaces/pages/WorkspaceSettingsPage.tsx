@@ -5,6 +5,7 @@ import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
 import { useAuth } from "../../../auth/AuthProvider";
 import {
+  createWorkspace,
   getCurrentWorkspace,
   updateWorkspace,
   deleteWorkspace,
@@ -45,6 +46,14 @@ export function WorkspaceSettingsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Additional workspace form state
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [newWorkspaceTimezone, setNewWorkspaceTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  );
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   // Deletion form state
   const [showDeleteForm, setShowDeleteForm] = useState(false);
@@ -129,6 +138,28 @@ export function WorkspaceSettingsPage() {
       }
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleCreateWorkspace = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreateError(null);
+    setCreating(true);
+    try {
+      const created = await createWorkspace({
+        name: newWorkspaceName.trim(),
+        timezone: newWorkspaceTimezone,
+      });
+      await actions.selectWorkspace(created.id);
+      void navigate("/dashboard", { replace: true });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setCreateError(err.problem.fieldErrors?.[0]?.message ?? err.problem.detail);
+      } else {
+        setCreateError("An unexpected error occurred.");
+      }
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -219,17 +250,7 @@ export function WorkspaceSettingsPage() {
                   <button
                     type="submit"
                     id="save-settings-btn"
-                    className="premium-btn"
                     disabled={saving}
-                    style={{
-                      padding: "0.75rem 1.5rem",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: "0.5rem",
-                      fontWeight: 600,
-                      cursor: saving ? "not-allowed" : "pointer",
-                      opacity: saving ? 0.7 : 1,
-                    }}
                   >
                     {saving ? "Saving…" : "Save changes"}
                   </button>
@@ -238,19 +259,56 @@ export function WorkspaceSettingsPage() {
             </div>
 
             {/* ── Danger zone ──────────────────────────────────── */}
+            <section className="card" style={{ width: "100%", marginBottom: "2.5rem" }}>
+              <h2 style={{ fontSize: "1.2rem", marginTop: 0 }}>Create another workspace</h2>
+              <p style={{ color: "var(--text-secondary)" }}>
+                A workspace is a separate security boundary. You become its Manager and can switch back at any time.
+              </p>
+              <form
+                onSubmit={(event) => void handleCreateWorkspace(event)}
+                style={{ display: "grid", gap: "1rem" }}
+              >
+                <FormField
+                  id="new-workspace-name"
+                  label="Workspace name"
+                  value={newWorkspaceName}
+                  onChange={(event) => setNewWorkspaceName(event.target.value)}
+                  maxLength={160}
+                  required
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  <label htmlFor="new-workspace-timezone">Timezone</label>
+                  <select
+                    id="new-workspace-timezone"
+                    className="form-input"
+                    value={newWorkspaceTimezone}
+                    onChange={(event) => setNewWorkspaceTimezone(event.target.value)}
+                  >
+                    {timezones.current.map((tz) => (
+                      <option key={tz} value={tz}>{formatTimezone(tz)}</option>
+                    ))}
+                  </select>
+                </div>
+                {createError && <InlineAlert kind="error" message={createError} />}
+                <button type="submit" disabled={creating || !newWorkspaceName.trim()}>
+                  {creating ? "Creating…" : "Create and switch"}
+                </button>
+              </form>
+            </section>
+
             <section
               aria-labelledby="danger-title"
+              className="danger-zone"
               style={{
-                border: "1px solid rgba(220, 38, 38, 0.3)",
+                border: "1px solid var(--danger-border)",
                 borderRadius: "1rem",
                 padding: "2.5rem",
-                background: "linear-gradient(145deg, rgba(30, 10, 10, 0.4) 0%, rgba(15, 5, 5, 0.6) 100%)",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
                 boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
-              <h2 id="danger-title" style={{ fontSize: "1.2rem", fontWeight: 600, color: "#fca5a5", marginBottom: "0.5rem" }}>
+              <h2 id="danger-title" className="danger-text" style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                 Danger Zone
               </h2>
               <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "2rem" }}>
@@ -261,24 +319,8 @@ export function WorkspaceSettingsPage() {
                 <button
                   id="show-delete-form-btn"
                   type="button"
+                  className="danger-button"
                   onClick={() => setShowDeleteForm(true)}
-                  style={{
-                    padding: "0.6rem 1.2rem",
-                    background: "rgba(220, 38, 38, 0.1)",
-                    border: "1px solid rgba(220, 38, 38, 0.4)",
-                    borderRadius: "0.5rem",
-                    color: "#fca5a5",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    fontSize: "0.9rem",
-                    transition: "all 0.2s ease"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.2)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
-                  }}
                 >
                   Delete this workspace
                 </button>
@@ -290,7 +332,7 @@ export function WorkspaceSettingsPage() {
                   style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
                 >
                   <p style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>
-                    Type <strong style={{ color: "#fca5a5" }}>{workspace.slug}</strong> to confirm.
+                    Type <strong className="danger-text">{workspace.slug}</strong> to confirm.
                   </p>
 
                   <FormField
@@ -320,18 +362,8 @@ export function WorkspaceSettingsPage() {
                     <button
                       type="submit"
                       id="confirm-delete-btn"
+                      className="danger-button"
                       disabled={deleting || confirmSlug !== workspace.slug}
-                      style={{
-                        padding: "0.6rem 1.2rem",
-                        background: deleting || confirmSlug !== workspace.slug ? "rgba(255,255,255,0.1)" : "#dc2626",
-                        color: deleting || confirmSlug !== workspace.slug ? "var(--text-secondary)" : "#ffffff",
-                        border: "none",
-                        borderRadius: "0.5rem",
-                        fontWeight: 600,
-                        cursor: deleting || confirmSlug !== workspace.slug ? "not-allowed" : "pointer",
-                        fontSize: "0.9rem",
-                        transition: "all 0.2s ease"
-                      }}
                     >
                       {deleting ? "Deleting…" : "Confirm delete"}
                     </button>
@@ -342,22 +374,6 @@ export function WorkspaceSettingsPage() {
                         setConfirmSlug("");
                         setDeletePassword("");
                         setDeleteError(null);
-                      }}
-                      style={{
-                        padding: "0.6rem 1.2rem",
-                        background: "transparent",
-                        border: "1px solid var(--border-color)",
-                        borderRadius: "0.5rem",
-                        cursor: "pointer",
-                        fontSize: "0.9rem",
-                        color: "var(--text-primary)",
-                        transition: "all 0.2s ease"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
                       }}
                     >
                       Cancel
