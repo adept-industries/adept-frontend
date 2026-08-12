@@ -28,14 +28,14 @@ async function loginWithNewAccount(
   const body = await waitForEmail(email, "/verify-email");
   const link = extractLink(body, "/verify-email");
   await navigateToLink(page, link);
-  await page.getByText(/email has been verified/i).waitFor({ timeout: 30_000 });
+  await page.getByText(/email has been verified/i).waitFor({ timeout: 60_000 });
   await page.getByRole("link", { name: /sign in/i }).click();
-  await page.waitForURL(/login/, { timeout: 30_000 });
+  await page.waitForURL(/login/, { timeout: 60_000 });
 
   await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: /log in|sign in/i }).click();
-  await page.waitForURL(/dashboard/, { timeout: 30_000 });
+  await page.waitForURL(/dashboard/, { timeout: 60_000 });
 
   return page;
 }
@@ -61,9 +61,9 @@ test("workspace settings lifecycle", async ({ browser }) => {
 
     // Navigate to settings.
     await page.goto("/dashboard/settings");
-    await expect(page.getByRole("heading", { name: /settings/i })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /settings/i })).toBeVisible({ timeout: 60_000 });
     // Wait for API data to load — form inputs only appear after fetch completes.
-    await expect(page.locator("#workspace-name")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("#workspace-name")).toBeVisible({ timeout: 60_000 });
 
     // Get original slug text from the confirmation prompt area.
     await page.getByRole("button", { name: /delete this workspace/i }).click();
@@ -79,13 +79,13 @@ test("workspace settings lifecycle", async ({ browser }) => {
     await page.getByRole("button", { name: /save settings/i }).click();
 
     // Confirm success message.
-    await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/settings saved/i)).toBeVisible({ timeout: 60_000 });
 
     // Reload the settings page to confirm persistence via API (avoids double-bootstrap race).
     await page.reload();
     // Wait for the settings page to fully load (API fetch completes).
-    await expect(page.getByRole("heading", { name: /settings/i })).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator("#workspace-name")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole("heading", { name: /settings/i })).toBeVisible({ timeout: 60_000 });
+    await expect(page.locator("#workspace-name")).toBeVisible({ timeout: 60_000 });
     await expect(page.locator("#workspace-name")).toHaveValue(renamedName);
 
     // 4. Slug must remain unchanged (it is never sent in the update).
@@ -107,7 +107,7 @@ test("workspace settings lifecycle", async ({ browser }) => {
     await confirmBtn.click();
 
     // 7. After deletion, the session state is cleared and user is redirected.
-    await page.waitForURL(/login|select-workspace/, { timeout: 30_000 });
+    await page.waitForURL(/login|select-workspace/, { timeout: 60_000 });
     // Confirm workspace preference is cleared from localStorage.
     const pref = await page.evaluate(() => localStorage.getItem("adept.currentWorkspaceId"));
     expect(pref).toBeNull();

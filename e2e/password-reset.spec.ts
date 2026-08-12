@@ -24,9 +24,9 @@ async function createAndVerifyAccount(
   const body = await waitForEmail(email, "/verify-email");
   const link = extractLink(body, "/verify-email");
   await navigateToLink(page, link);
-  await page.getByText(/email has been verified/i).waitFor({ timeout: 30_000 });
+  await page.getByText(/email has been verified/i).waitFor({ timeout: 60_000 });
   await page.getByRole("link", { name: /sign in/i }).click();
-  await page.waitForURL(/login/, { timeout: 30_000 });
+  await page.waitForURL(/login/, { timeout: 60_000 });
   await page.close();
 }
 
@@ -56,14 +56,14 @@ test("password reset invalidates old session", async ({ browser }) => {
     await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
-    await pageA.waitForURL(/dashboard/, { timeout: 30_000 });
+    await pageA.waitForURL(/dashboard/, { timeout: 60_000 });
 
     // Context B: request password reset.
     const pageB = await ctxB.newPage();
     await pageB.goto("/forgot-password");
     await pageB.getByRole("textbox", { name: /email/i }).fill(email);
     await pageB.getByRole("button", { name: /send reset|reset password/i }).click();
-    await expect(pageB.getByText(/check your email|email sent/i)).toBeVisible({ timeout: 30_000 });
+    await expect(pageB.getByText(/check your email|email sent/i)).toBeVisible({ timeout: 60_000 });
 
     // Context B: get reset email (search is recipient-exact).
     const resetBody = await waitForEmail(email, "/reset-password");
@@ -73,24 +73,24 @@ test("password reset invalidates old session", async ({ browser }) => {
     // Context B: set new password.
     await pageB.locator("#reset-password").fill(newPassword);
     await pageB.getByRole("button", { name: /set password|reset/i }).click();
-    await pageB.waitForURL(/login/, { timeout: 30_000 });
+    await pageB.waitForURL(/login/, { timeout: 60_000 });
 
     // Context A: hard-reload — old refresh token should now be rejected.
     await pageA.reload();
     // Should end up on login (session invalidated by password reset).
-    await pageA.waitForURL(/login/, { timeout: 30_000 });
+    await pageA.waitForURL(/login/, { timeout: 60_000 });
 
     // Old password fails.
     await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
-    await expect(pageA.getByRole("alert")).toBeVisible({ timeout: 30_000 });
+    await expect(pageA.getByRole("alert")).toBeVisible({ timeout: 60_000 });
 
     // New password succeeds.
     await pageA.getByRole("textbox", { name: /email/i }).fill(email);
     await pageA.getByLabel(/^password/i).fill(newPassword);
     await pageA.getByRole("button", { name: /log in|sign in/i }).click();
-    await pageA.waitForURL(/dashboard/, { timeout: 30_000 });
+    await pageA.waitForURL(/dashboard/, { timeout: 60_000 });
   } finally {
     await ctxA.close();
     await ctxB.close();
@@ -119,7 +119,7 @@ test("multi-tab concurrent reload restores session", async ({ browser }) => {
     await page1.getByRole("textbox", { name: /email/i }).fill(email);
     await page1.getByLabel(/^password/i).fill(TEST_PASSWORD);
     await page1.getByRole("button", { name: /log in|sign in/i }).click();
-    await page1.waitForURL(/dashboard/, { timeout: 30_000 });
+    await page1.waitForURL(/dashboard/, { timeout: 60_000 });
 
     // Open a second page in the same context (same refresh cookie).
     const page2 = await ctx.newPage();
@@ -129,8 +129,8 @@ test("multi-tab concurrent reload restores session", async ({ browser }) => {
     await Promise.all([page1.reload(), page2.reload()]);
 
     // Both should be authenticated (not on login).
-    await page1.waitForURL(/dashboard/, { timeout: 30_000 });
-    await page2.waitForURL(/dashboard/, { timeout: 30_000 });
+    await page1.waitForURL(/dashboard/, { timeout: 60_000 });
+    await page2.waitForURL(/dashboard/, { timeout: 60_000 });
 
     // Neither should show reuse-detected / ambiguous-session error.
     const reuse1 = await page1.getByText(/reuse|ambiguous|session.*invalid/i).isVisible();

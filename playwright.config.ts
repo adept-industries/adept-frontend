@@ -16,7 +16,8 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
 
   /* Give tests more time in slow CI environments */
-  timeout: 60000,
+  timeout: 90000,
+  expect: { timeout: 60000 },
 
   /* Never allow test.only in CI. */
   forbidOnly: !!process.env["CI"],
@@ -32,6 +33,8 @@ export default defineConfig({
 
   /* No trace or video — must not capture cookies, tokens, or email bodies. */
   use: {
+    actionTimeout: 60000,
+    navigationTimeout: 60000,
     baseURL: process.env["PLAYWRIGHT_BASE_URL"] ?? "http://localhost:3000",
     trace: "off",
     video: "off",

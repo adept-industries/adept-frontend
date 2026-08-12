@@ -47,9 +47,9 @@ test("browser auth lifecycle", async ({ page }) => {
   await navigateToLink(page, verifyLink);
 
   // 4. Verify — wait for success banner then click Sign in.
-  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("link", { name: /sign in/i }).click();
-  await expect(page).toHaveURL(/login/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/login/, { timeout: 60_000 });
 
   // 5. Login.
   await page.getByRole("textbox", { name: /email/i }).fill(email);
@@ -57,7 +57,7 @@ test("browser auth lifecycle", async ({ page }) => {
   await page.getByRole("button", { name: /log in|sign in/i }).click();
 
   // 6. Confirm dashboard and current workspace visible.
-  await expect(page).toHaveURL(/dashboard/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
   // 7. Confirm localStorage has no access token.
@@ -71,18 +71,18 @@ test("browser auth lifecycle", async ({ page }) => {
   await page.reload();
 
   // 9. Confirm refresh bootstrap restores session.
-  await expect(page).toHaveURL(/dashboard/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
   // 10. Logout.
   await page.getByRole("button", { name: /log out/i }).click();
-  await expect(page).toHaveURL(/login/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/login/, { timeout: 60_000 });
 
   // 11. Hard reload.
   await page.reload();
 
   // 12. Session remains ended — still on login.
-  await expect(page).toHaveURL(/login/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/login/, { timeout: 60_000 });
 });
 
 /**
@@ -103,15 +103,15 @@ test("storage never contains access token or credentials", async ({ page }) => {
   const body = await waitForEmail(email, "/verify-email");
   const verifyLink = extractLink(body, "/verify-email");
   await navigateToLink(page, verifyLink);
-  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 60_000 });
   await page.getByRole("link", { name: /sign in/i }).click();
-  await expect(page).toHaveURL(/login/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/login/, { timeout: 60_000 });
 
   // Login.
   await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: /log in|sign in/i }).click();
-  await expect(page).toHaveURL(/dashboard/, { timeout: 30_000 });
+  await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
 
   // Check storage — only workspace preference (a UUID) should be present.
   const storageKeys = await page.evaluate(() => {
