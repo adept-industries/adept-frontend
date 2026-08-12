@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { isApiProblem } from "./problem.js";
+import { problemFromError } from "./problem.js";
 
 /**
  * Shared QueryClient with conservative retry policy:
@@ -14,7 +14,8 @@ export const queryClient = new QueryClient({
     },
     queries: {
       retry: (failureCount, error) => {
-        if (isApiProblem(error) && error.status >= 400 && error.status < 500) {
+        const problem = problemFromError(error);
+        if (problem && problem.status >= 400 && problem.status < 500) {
           return false;
         }
         return failureCount < 1;

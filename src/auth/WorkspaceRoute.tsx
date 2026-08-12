@@ -12,7 +12,9 @@ export function WorkspaceRoute({ children }: { children: React.ReactNode }) {
   const { state } = ctx;
 
   if (state.status === "bootstrapping") return <LoadingScreen />;
-  if (state.status === "anonymous") return <Navigate to="/login" replace />;
+  if (state.status === "anonymous") {
+    return <Navigate to={state.deletionRequested ? "/login?deleted=1" : "/login"} replace />;
+  }
   if (state.status === "workspaceRequired") {
     return <Navigate to="/select-workspace" replace />;
   }

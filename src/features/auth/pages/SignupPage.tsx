@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { AuthLayout } from "../../../components/layout/AuthLayout";
 import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
-import { signup } from "../api";
+import { useAuth } from "../../../auth/AuthProvider";
 import { ApiError } from "../../../api/problem";
 
 // All IANA time zones supported by the browser runtime.
@@ -24,6 +24,7 @@ const DEFAULT_TZ = (() => {
 })();
 
 export function SignupPage() {
+  const { actions } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,8 +38,10 @@ export function SignupPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    const request = { email, password, displayName, workspaceName, timezone };
+    setPassword("");
     try {
-      await signup({ email, password, displayName, workspaceName, timezone });
+      await actions.signup(request);
       await navigate("/check-email", { state: { email } });
     } catch (err) {
       if (err instanceof ApiError) {

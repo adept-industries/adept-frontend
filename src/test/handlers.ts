@@ -174,7 +174,7 @@ export const handlers = [
   // Delete workspace
   http.delete(`${API}/workspaces/current`, () =>
     HttpResponse.json(
-      { status: "DELETING", remainingWorkspaces: [] },
+      { workspaceId: "ws-1", status: "DELETING" },
       { status: 202 },
     ),
   ),

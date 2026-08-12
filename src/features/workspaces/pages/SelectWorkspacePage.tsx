@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { AuthLayout } from "../../../components/layout/AuthLayout";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -21,11 +21,9 @@ export function SelectWorkspacePage() {
   // Guard: only render in workspaceRequired state.
   if (state.status !== "workspaceRequired") {
     if (state.status === "authenticated") {
-      void navigate("/dashboard", { replace: true });
-      return null;
+      return <Navigate to="/dashboard" replace />;
     }
-    void navigate("/login", { replace: true });
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   const { user, workspaces } = state;
@@ -56,6 +54,7 @@ export function SelectWorkspacePage() {
       </p>
 
       {error && <InlineAlert kind="error" message={error} />}
+      {!error && state.notice && <InlineAlert kind="error" message={state.notice} />}
 
       <ul
         role="list"

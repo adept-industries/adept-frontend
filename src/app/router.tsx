@@ -3,6 +3,8 @@ import { createBrowserRouter, Navigate } from "react-router";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { WorkspaceRoute } from "../auth/WorkspaceRoute";
 import { RoleRoute } from "../auth/RoleRoute";
+import { PublicOnlyRoute } from "../auth/PublicOnlyRoute";
+import { WorkspaceSelectionRoute } from "../auth/WorkspaceSelectionRoute";
 import { CheckEmailPage } from "../features/auth/pages/CheckEmailPage";
 import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage";
 import { LoginPage } from "../features/auth/pages/LoginPage";
@@ -13,6 +15,7 @@ import { SelectWorkspacePage } from "../features/workspaces/pages/SelectWorkspac
 import { WorkspaceSettingsPage } from "../features/workspaces/pages/WorkspaceSettingsPage";
 import { AppShell } from "../components/layout/AppShell";
 import { NotFoundPage } from "../components/ui/NotFoundPage";
+import { captureActionToken, clearActionToken } from "../features/auth/actionTokenHandoff";
 
 /**
  * Dashboard — placeholder until Phase 3 content arrives.
@@ -37,21 +40,29 @@ function Dashboard() {
  */
 export const router = createBrowserRouter([
   // ── Public account pages ────────────────────────────────────────────────────
-  { path: "/signup", element: <SignupPage /> },
-  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <PublicOnlyRoute><SignupPage /></PublicOnlyRoute> },
+  { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
   { path: "/check-email", element: <CheckEmailPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
-  { path: "/verify-email", element: <VerifyEmailPage /> },
-  { path: "/reset-password", element: <ResetPasswordPage /> },
+  {
+    path: "/verify-email",
+    loader: () => { captureActionToken("verify-email"); return null; },
+    element: <VerifyEmailPage />,
+  },
+  {
+    path: "/reset-password",
+    loader: () => { captureActionToken("reset-password"); return null; },
+    element: <ResetPasswordPage />,
+  },
 
   // ── Workspace selection ─────────────────────────────────────────────────────
   // Available in workspaceRequired state (ProtectedRoute allows it).
   {
     path: "/select-workspace",
     element: (
-      <ProtectedRoute>
+      <WorkspaceSelectionRoute>
         <SelectWorkspacePage />
-      </ProtectedRoute>
+      </WorkspaceSelectionRoute>
     ),
   },
 
@@ -85,7 +96,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <WorkspaceRoute>
-          <RoleRoute role="MANAGER">
+          <RoleRoute allowedRoles={["MANAGER"]}>
             <WorkspaceSettingsPage />
           </RoleRoute>
         </WorkspaceRoute>
@@ -96,3 +107,10 @@ export const router = createBrowserRouter([
   // ── Catch-all ───────────────────────────────────────────────────────────────
   { path: "*", element: <NotFoundPage /> },
 ]);
+
+router.subscribe((routerState) => {
+  const activePath = routerState.navigation.location?.pathname ?? routerState.location.pathname;
+  if (!["/verify-email", "/reset-password"].includes(activePath)) {
+    clearActionToken();
+  }
+});

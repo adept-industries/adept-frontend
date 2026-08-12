@@ -13,8 +13,10 @@ export function ForgotPasswordPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
+    const requestedEmail = email;
+    setEmail("");
     try {
-      await forgotPassword(email);
+      await forgotPassword(requestedEmail);
     } finally {
       // Always show the same success message regardless of whether the account exists.
       setSubmitted(true);

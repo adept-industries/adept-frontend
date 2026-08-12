@@ -1,22 +1,7 @@
-/**
- * Typed representation of an RFC 9457 / application/problem+json response
- * returned by the Adept API on every error path.
- */
-export interface FieldViolation {
-  field: string;
-  message: string;
-}
+import type { components } from "./generated/schema.js";
 
-export interface ApiProblem {
-  type: string;
-  title: string;
-  status: number;
-  detail: string;
-  instance: string;
-  code: string;
-  traceId: string;
-  fieldErrors?: FieldViolation[];
-}
+export type FieldViolation = components["schemas"]["FieldError"];
+export type ApiProblem = components["schemas"]["ProblemDetail"];
 
 export function isApiProblem(value: unknown): value is ApiProblem {
   return (
@@ -24,7 +9,8 @@ export function isApiProblem(value: unknown): value is ApiProblem {
     value !== null &&
     "code" in value &&
     "status" in value &&
-    typeof (value as Record<string, unknown>).code === "string"
+    typeof (value as Record<string, unknown>).code === "string" &&
+    typeof (value as Record<string, unknown>).status === "number"
   );
 }
 
@@ -36,4 +22,27 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.problem = problem;
   }
+}
+
+export function problemFromError(error: unknown): ApiProblem | null {
+  if (error instanceof ApiError) return error.problem;
+  return isApiProblem(error) ? error : null;
+}
+
+export function localProblem(
+  status: number,
+  code: string,
+  title: string,
+  detail: string,
+  instance = "/api",
+): ApiProblem {
+  return {
+    type: `https://adept.local/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    title,
+    status,
+    detail,
+    instance,
+    code,
+    traceId: "local",
+  };
 }

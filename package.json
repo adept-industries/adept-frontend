@@ -12,7 +12,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "api:generate": "openapi-typescript openapi/adept-api-v1.json -o src/api/generated/schema.ts",
-    "api:check": "openapi-typescript openapi/adept-api-v1.json -o /tmp/schema-check.ts && diff src/api/generated/schema.ts /tmp/schema-check.ts",
+    "api:check": "tmp=$(mktemp) && trap 'rm -f \"$tmp\"' EXIT && openapi-typescript openapi/adept-api-v1.json -o \"$tmp\" && diff src/api/generated/schema.ts \"$tmp\"",
     "nginx:verify": "bash scripts/verify-nginx.sh",
     "e2e": "playwright test"
   },

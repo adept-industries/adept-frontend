@@ -11,6 +11,10 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = getSafeRedirect((location.state as { from?: Location } | null)?.from);
+  const deletionRequested = new URLSearchParams(location.search).get("deleted") === "1";
+  const passwordReset = new URLSearchParams(location.search).get("reset") === "1";
+  const ambiguousSession = ctx?.state.status === "anonymous" && ctx.state.ambiguousSession;
+  const sessionNotice = ctx?.state.status === "anonymous" ? ctx.state.notice : undefined;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,9 +25,15 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    const credentials = { email, password };
+    setPassword("");
     try {
-      await ctx?.actions.login({ email, password });
-      await navigate(from ?? "/dashboard", { replace: true });
+      const next = await ctx?.actions.login(credentials);
+      if (next?.status === "workspaceRequired") {
+        await navigate("/select-workspace", { replace: true });
+      } else {
+        await navigate(from ?? "/dashboard", { replace: true });
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.problem.code === "EMAIL_NOT_VERIFIED") {
@@ -47,6 +57,23 @@ export function LoginPage() {
         noValidate
         style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}
       >
+        {deletionRequested && (
+          <InlineAlert kind="success" message="Workspace deletion was requested and access stopped immediately." />
+        )}
+        {passwordReset && (
+          <InlineAlert kind="success" message="Password reset completed. Sign in with your new password." />
+        )}
+        {ambiguousSession && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <InlineAlert message="A previous session update had an uncertain result. Sign in to recover it, or clear the browser session." />
+            <button type="button" onClick={() => void ctx.actions.logout()}>
+              Clear browser session
+            </button>
+          </div>
+        )}
+        {!ambiguousSession && sessionNotice && (
+          <InlineAlert message={sessionNotice} />
+        )}
         {error && <InlineAlert message={error} />}
 
         <FormField
