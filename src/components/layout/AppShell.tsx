@@ -15,7 +15,7 @@ function AppShellNav() {
 
   if (state.status !== "authenticated") return null;
 
-  const { user, currentMembership, workspaces } = state;
+  const { currentMembership, workspaces } = state;
   const isManager = currentMembership.role === "MANAGER";
 
   return (

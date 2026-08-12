@@ -43,7 +43,6 @@ export function VerifyEmailPage() {
         }
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- captureActionToken reads window.location.hash at mount time only
   }, []);
 
   return (

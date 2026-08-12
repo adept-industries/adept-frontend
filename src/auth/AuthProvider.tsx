@@ -213,6 +213,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 }
 
 /** Hook to access auth state and actions. Must be inside AuthProvider. */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
