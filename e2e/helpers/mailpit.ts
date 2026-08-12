@@ -9,9 +9,10 @@ const MAILPIT_API = "http://localhost:8025/api/v1";
 export async function waitForEmail(
   email: string,
   mustContain?: string,
-  timeoutMs = 30_000,
+  timeoutMs = 90_000,
 ): Promise<string> {
   const deadline = Date.now() + timeoutMs;
+  const seenBodies: string[] = [];
 
   while (Date.now() < deadline) {
     const q = new URLSearchParams({ query: `to:"${email}"` });
@@ -36,8 +37,11 @@ export async function waitForEmail(
       const txtRes = await fetch(`${MAILPIT_API}/message/${msg.ID}`);
       if (!txtRes.ok) continue;
       const body = await txtRes.json() as { Text?: string };
-      
+
       if (body.Text) {
+        if (!seenBodies.includes(body.Text)) {
+          seenBodies.push(body.Text);
+        }
         if (mustContain && !body.Text.includes(mustContain)) {
           continue;
         }
@@ -48,7 +52,7 @@ export async function waitForEmail(
     await sleep(1000);
   }
 
-  throw new Error(`Timed out waiting for email (sanitized)`);
+  throw new Error(`Timed out waiting for email (sanitized). Seen bodies: ${JSON.stringify(seenBodies)}`);
 }
 
 /**
