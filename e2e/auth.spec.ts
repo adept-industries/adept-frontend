@@ -28,7 +28,7 @@ test("browser auth lifecycle", async ({ page }) => {
   // 1. Signup
   await page.goto("/signup");
   await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/display name/i).fill(TEST_DISPLAY_NAME);
+  await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
   // Timezone — select UTC if available.
@@ -92,7 +92,7 @@ test("storage never contains access token or credentials", async ({ page }) => {
   // Sign up and verify.
   await page.goto("/signup");
   await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/display name/i).fill(TEST_DISPLAY_NAME);
+  await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
   await page.getByRole("button", { name: /create account/i }).click();

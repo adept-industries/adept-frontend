@@ -15,7 +15,7 @@ async function createAndVerifyAccount(
   const page = await context.newPage();
   await page.goto("/signup");
   await page.getByLabel(/email/i).fill(email);
-  await page.getByLabel(/display name/i).fill(TEST_DISPLAY_NAME);
+  await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
   await page.getByRole("button", { name: /create account/i }).click();
