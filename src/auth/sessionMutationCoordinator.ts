@@ -100,8 +100,6 @@ export function isAmbiguousJournal(): boolean {
   const j = readJournal();
   if (!j) return false;
   if (j.status === "ambiguous") return true;
-  // Orphaned `started` with no held lock — treat as ambiguous.
-  if (j.status === "started") return true;
   return false;
 }
 

@@ -46,3 +46,125 @@ jobs:
       - name: Verify Nginx config and limit behavior
         run: npm run nginx:verify -- adept-frontend:ci
 
+  auth-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Check out the frontend under adept-frontend/.
+      - name: Check out frontend
+        uses: actions/checkout@v6
+        with:
+          path: adept-frontend
+
+      # 2. Check out adept-api main under adept-api/.
+      - name: Check out adept-api
+        uses: actions/checkout@v6
+        with:
+          repository: adept-industries/adept-api
+          ref: main
+          path: adept-api
+
+      # 3. Check out adept-engine main under adept-engine/.
+      - name: Check out adept-engine
+        uses: actions/checkout@v6
+        with:
+          repository: adept-industries/adept-engine
+          ref: main
+          path: adept-engine
+
+      # 4. Compare OpenAPI contract byte-for-byte.
+      - name: Verify OpenAPI contract matches adept-api
+        run: |
+          diff adept-frontend/openapi/adept-api-v1.json \
+               adept-api/docs/openapi/adept-api-v1.json
+
+      # 5. Set up Node using the frontend's version file.
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: adept-frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: adept-frontend/package-lock.json
+
+      # 6. Install dependencies and Playwright browsers.
+      - name: Install dependencies
+        working-directory: adept-frontend
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: adept-frontend
+        run: npx playwright install --with-deps chromium
+
+      # 7. Copy .env from the api's example file and add required secrets.
+      - name: Prepare .env
+        run: |
+          cp adept-api/infra/local/.env.example .env 2>/dev/null || \
+          cat adept-frontend/.env.example > .env
+          # Override with GitHub Actions env values (no secrets printed).
+          {
+            echo "POSTGRES_PASSWORD=ci_test_password"
+            echo "APP_JWT_SECRET_BASE64=uFM7eCgnN/svOKK+rrowrCPRVWW9B0ViyGcvEd1OKB0="
+            echo "APP_TOKEN_HASH_PEPPER_BASE64=EYtJZ0FaHmr/foRXWOx35DXWFpK9I/vwWsEcQSYWHHU="
+            echo "APP_INTEGRATION_ENCRYPTION_KEY_V1_BASE64=GUAAKQnXLwy+hgTxBypD7VsALcNScTdFhqvtDjvzE8Y="
+            echo "APP_INTEGRATION_ENCRYPTION_ACTIVE_KEY_VERSION=1"
+            echo "APP_INTERNAL_ENGINE_TOKEN=ci-engine-token"
+            echo "APP_COOKIE_SECURE=false"
+            echo "APP_FRONTEND_BASE_URL=http://localhost:3000"
+            echo "APP_PUBLIC_API_BASE_URL=http://localhost:8080"
+            echo "APP_ENGINE_BASE_URL=http://engine-api:8000"
+          } >> .env
+
+      # 8. Start the full Compose stack and wait for all services.
+      - name: Start Compose stack
+        run: |
+          docker compose \
+            --project-name adept-phase2-e2e \
+            --env-file .env \
+            -f adept-api/infra/local/compose.yaml \
+            --profile full up -d --build --wait --wait-timeout 180
+
+      # Poll Mailpit and frontend explicitly (no healthchecks in compose for these).
+      - name: Wait for Mailpit
+        run: |
+          curl --fail --silent --show-error \
+            --retry 60 --retry-delay 2 --retry-max-time 120 \
+            --retry-connrefused --retry-all-errors \
+            http://localhost:8025/api/v1/info > /dev/null
+
+      - name: Wait for frontend
+        run: |
+          curl --fail --silent --show-error \
+            --retry 60 --retry-delay 2 --retry-max-time 120 \
+            --retry-connrefused --retry-all-errors \
+            http://localhost:3000/ > /dev/null
+
+      # 9. Run Playwright tests.
+      - name: Run E2E tests
+        working-directory: adept-frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          CI: "true"
+        run: npx playwright test
+
+      # 10. Show service state and logs on failure (without printing secrets).
+      - name: Show Compose logs on failure
+        if: failure()
+        run: |
+          docker compose \
+            --project-name adept-phase2-e2e \
+            --env-file .env \
+            -f adept-api/infra/local/compose.yaml \
+            --profile full ps
+          docker compose \
+            --project-name adept-phase2-e2e \
+            --env-file .env \
+            -f adept-api/infra/local/compose.yaml \
+            --profile full logs --no-color --tail=100 api
+
+      # 11. Always stop the stack.
+      - name: Tear down Compose stack
+        if: always()
+        run: |
+          docker compose \
+            --project-name adept-phase2-e2e \
+            --env-file .env \
+            -f adept-api/infra/local/compose.yaml \
+            --profile full down -v --remove-orphans
