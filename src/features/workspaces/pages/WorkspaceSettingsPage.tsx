@@ -82,10 +82,11 @@ export function WorkspaceSettingsPage() {
       setWorkspace(updated);
       setName(updated.name);
       setTimezone(updated.timezone);
+      actions.updateCurrentWorkspace({ name: updated.name, timezone: updated.timezone });
       setSaveSuccess(true);
     } catch (err) {
       if (err instanceof ApiError) {
-        setSaveError(err.problem.detail ?? "Failed to save settings.");
+        setSaveError(err.problem.fieldErrors?.[0]?.message ?? err.problem.detail);
       } else {
         setSaveError("An unexpected error occurred.");
       }
@@ -100,29 +101,24 @@ export function WorkspaceSettingsPage() {
     setDeleteError(null);
     setDeleting(true);
     try {
-      const result = await deleteWorkspace({ confirmSlug, password: deletePassword });
-      // Clear password from state immediately.
+      const request = { confirmationSlug: confirmSlug, password: deletePassword };
       setDeletePassword("");
       setConfirmSlug("");
-
-      // Clear all session state.
+      await deleteWorkspace(request);
       accessTokenStore.clear();
       workspacePreference.clear();
       queryClient.clear();
-
-      // Navigate based on remaining workspaces.
-      const remaining = result.remainingWorkspaces ?? [];
-      if (remaining.length === 0) {
-        // No workspaces remain — go to login with a note.
-        void navigate("/login?deleted=1", { replace: true });
-      } else if (remaining.length === 1) {
-        // One remaining — refresh will auto-select it.
-        await actions.refresh();
-        void navigate("/dashboard", { replace: true });
-      } else {
-        // Multiple remaining — go to selection.
-        await actions.refresh();
-        void navigate("/select-workspace", { replace: true });
+      try {
+        const next = await actions.refresh({ withoutWorkspace: true });
+        if (next.status === "authenticated") {
+          void navigate("/dashboard", { replace: true });
+        } else if (next.status === "workspaceRequired") {
+          void navigate("/select-workspace", { replace: true });
+        } else {
+          void navigate("/login?deleted=1", { replace: true });
+        }
+      } catch {
+        actions.invalidateSession({ deletionRequested: true });
       }
     } catch (err) {
       setDeletePassword("");

@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../auth/AuthProvider";
-import { queryClient } from "../../api/queryClient";
-import { accessTokenStore } from "../../auth/accessTokenStore";
-import { workspacePreference } from "../../lib/workspacePreference";
 import { ApiError } from "../../api/problem";
 import type { WorkspaceSummary } from "../../auth/types";
 
@@ -47,30 +44,23 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
     setOpen(false);
     setError(null);
 
-    // Step 2–4: Cancel queries, clear token and cache before calling the API.
-    await queryClient.cancelQueries();
-    accessTokenStore.clear();
-    queryClient.clear();
-
     try {
       // Step 5–6: AuthProvider.selectWorkspace calls the switch API and updates state.
       await actions.selectWorkspace(workspaceId);
       void navigate("/dashboard", { replace: true });
     } catch (err) {
-      // Step 7: On failure, clear stale state and redirect.
-      accessTokenStore.clear();
-      workspacePreference.clear();
-      queryClient.clear();
-
       if (err instanceof ApiError) {
         const code = err.problem.code;
-        if (code === "REFRESH_TOKEN_INVALID" || code === "REFRESH_TOKEN_REUSE_DETECTED") {
+        if (code === "SESSION_INVALID" || code === "REFRESH_REUSE_DETECTED") {
+          actions.invalidateSession();
           void navigate("/login", { replace: true });
           return;
         }
-        setError(err.problem.detail ?? "Switch failed. Please try again.");
-      } else {
+        setError(err.problem.detail);
         void navigate("/select-workspace", { replace: true });
+      } else {
+        actions.invalidateSession({ ambiguous: true });
+        void navigate("/login", { replace: true });
       }
     } finally {
       setSwitching(false);

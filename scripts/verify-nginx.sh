@@ -8,9 +8,11 @@ set -euo pipefail
 IMAGE="${1:?Usage: verify-nginx.sh <image-tag>}"
 CONTAINER="adept-nginx-verify-$$"
 PORT=$(( RANDOM % 1000 + 9000 ))
+TMP_DIR=$(mktemp -d)
 
 cleanup() {
   docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+  rm -rf "$TMP_DIR"
 }
 trap cleanup EXIT
 
@@ -35,7 +37,7 @@ for i in $(seq 1 10); do
 done
 
 echo "==> Testing 413 (body too large) on /api/v1/auth/login"
-RESPONSE_413=$(curl -s -o /tmp/body413.json -w "%{http_code}" \
+RESPONSE_413=$(curl -s -o "$TMP_DIR/body413.json" -w "%{http_code}" \
   -X POST \
   -H "Content-Type: application/json" \
   --data "$(node -e "process.stdout.write('A'.repeat(17 * 1024))")" \
@@ -47,7 +49,7 @@ if [ "$RESPONSE_413" != "413" ]; then
 fi
 
 node -e "
-const body = require('fs').readFileSync('/tmp/body413.json', 'utf8');
+const body = require('fs').readFileSync('$TMP_DIR/body413.json', 'utf8');
 const j = JSON.parse(body);
 if (j.status !== 413) throw new Error('status != 413: ' + j.status);
 if (j.code !== 'PAYLOAD_TOO_LARGE') throw new Error('code: ' + j.code);
@@ -62,7 +64,7 @@ for i in $(seq 1 25); do
   curl -s -o /dev/null "http://127.0.0.1:${PORT}/api/v1/auth/login" || true
 done
 
-RESPONSE_429=$(curl -s -o /tmp/body429.json -w "%{http_code}" \
+RESPONSE_429=$(curl -s -D "$TMP_DIR/headers429.txt" -o "$TMP_DIR/body429.json" -w "%{http_code}" \
   "http://127.0.0.1:${PORT}/api/v1/auth/login")
 
 if [ "$RESPONSE_429" != "429" ]; then
@@ -71,11 +73,15 @@ if [ "$RESPONSE_429" != "429" ]; then
 fi
 
 node -e "
-const body = require('fs').readFileSync('/tmp/body429.json', 'utf8');
+const fs = require('fs');
+const body = fs.readFileSync('$TMP_DIR/body429.json', 'utf8');
 const j = JSON.parse(body);
 if (j.status !== 429) throw new Error('status != 429: ' + j.status);
 if (j.code !== 'RATE_LIMITED') throw new Error('code: ' + j.code);
 if (!j.traceId) throw new Error('missing traceId');
+if (!j.type || !j.title || !j.detail || !j.instance) throw new Error('missing required fields');
+const headers = fs.readFileSync('$TMP_DIR/headers429.txt', 'utf8');
+if (!/^Retry-After:\s*1\s*$/im.test(headers)) throw new Error('missing Retry-After: 1');
 console.log('429 body OK');
 "
 

@@ -60,12 +60,18 @@ test("browser auth lifecycle", async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
-  // 7. Confirm localStorage has no access token.
-  const tokenInStorage = await page.evaluate(() => {
-    const keys = Object.keys(localStorage);
-    return keys.some((k) => k.toLowerCase().includes("token") || k.toLowerCase().includes("access"));
+  // 7. Only the non-secret workspace preference may be persisted.
+  const storageKeys = await page.evaluate(() => {
+    return {
+      local: Object.keys(localStorage),
+      session: Object.keys(sessionStorage),
+    };
   });
-  expect(tokenInStorage).toBe(false);
+  const dangerousKeys = [...storageKeys.local, ...storageKeys.session].filter((key) =>
+    ["token", "password", "credential", "access"].some((part) => key.toLowerCase().includes(part)),
+  );
+  expect(dangerousKeys).toHaveLength(0);
+  expect(storageKeys.local.every((key) => key === "adept.currentWorkspaceId")).toBe(true);
 
   // 8. Hard reload.
   await page.reload();
@@ -74,62 +80,26 @@ test("browser auth lifecycle", async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
+  // Two tabs must share refresh rotation safely and remain refreshable.
+  const secondPage = await page.context().newPage();
+  await secondPage.goto("/dashboard");
+  await expect(secondPage.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+  await Promise.all([page.reload(), secondPage.reload()]);
+  await Promise.all([
+    expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible(),
+    expect(secondPage.getByRole("heading", { name: /dashboard/i })).toBeVisible(),
+  ]);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+
   // 10. Logout.
   await page.getByRole("button", { name: /log out/i }).click();
   await expect(page).toHaveURL(/login/, { timeout: 60_000 });
+  await secondPage.close();
 
   // 11. Hard reload.
   await page.reload();
 
   // 12. Session remains ended — still on login.
   await expect(page).toHaveURL(/login/, { timeout: 60_000 });
-});
-
-/**
- * Confirms storage never contains credentials or tokens after any auth operation.
- */
-test("storage never contains access token or credentials", async ({ page }) => {
-  const email = uniqueEmail();
-
-  // Sign up and verify.
-  await page.goto("/signup");
-  await page.getByRole("textbox", { name: /email/i }).fill(email);
-  await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
-  await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
-  await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
-  await page.getByRole("button", { name: /create account/i }).click();
-  await expect(page).toHaveURL(/check-email/);
-
-  const body = await waitForEmail(email, "/verify-email");
-  const verifyLink = extractLink(body, "/verify-email");
-  await navigateToLink(page, verifyLink);
-  await expect(page.getByText(/email has been verified/i)).toBeVisible({ timeout: 60_000 });
-  await page.getByRole("link", { name: /sign in/i }).click();
-  await expect(page).toHaveURL(/login/, { timeout: 60_000 });
-
-  // Login.
-  await page.getByRole("textbox", { name: /email/i }).fill(email);
-  await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
-  await page.getByRole("button", { name: /log in|sign in/i }).click();
-  await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
-
-  // Check storage — only workspace preference (a UUID) should be present.
-  const storageKeys = await page.evaluate(() => {
-    return {
-      local: Object.keys(localStorage),
-      session: Object.keys(sessionStorage),
-    };
-  });
-
-  const dangerousKeys = [...storageKeys.local, ...storageKeys.session].filter(
-    (k) =>
-      k.toLowerCase().includes("token") ||
-      k.toLowerCase().includes("password") ||
-      k.toLowerCase().includes("credential") ||
-      k.toLowerCase().includes("access"),
-  );
-  expect(dangerousKeys).toHaveLength(0);
-
-  // Confirm only the workspace preference key is present.
-  expect(storageKeys.local.every((k) => k === "adept.currentWorkspaceId")).toBe(true);
 });

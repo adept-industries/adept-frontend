@@ -12,7 +12,7 @@
 const KEY = "adept.currentWorkspaceId";
 
 const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);

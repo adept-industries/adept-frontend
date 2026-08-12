@@ -3,219 +3,365 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import { configureAuthRecovery, type SessionSnapshot } from "../api/client.js";
+import { ensureCsrf } from "../api/csrf.js";
+import { ApiError } from "../api/problem.js";
+import { queryClient } from "../api/queryClient.js";
+import {
+  getMe,
+  login as requestLogin,
+  logout as requestLogout,
+  refreshSession,
+  resetPassword as requestPasswordReset,
+  signup as requestSignup,
+  switchWorkspace,
+  type LoginBody,
+  type ResetPasswordBody,
+  type SessionResult,
+} from "../features/auth/api.js";
+import { workspacePreference } from "../lib/workspacePreference.js";
 import { accessTokenStore } from "./accessTokenStore.js";
 import { AuthContext, type AuthContextValue } from "./AuthContext.js";
 import {
-  isAmbiguousJournal,
   onSessionResult,
   runSessionMutation,
 } from "./sessionMutationCoordinator.js";
 import type { AuthState } from "./types.js";
-import {
-  forgotPassword as apiForgotPassword,
-  getMe,
-  login as apiLogin,
-  logout as apiLogout,
-  refreshSession,
-  resetPassword as apiResetPassword,
-  signup as apiSignup,
-  switchWorkspace,
-  verifyEmail as apiVerifyEmail,
-  resendVerification,
-} from "../features/auth/api.js";
-import { ensureCsrf } from "../api/csrf.js";
-import { workspacePreference } from "../lib/workspacePreference.js";
-import { queryClient } from "../api/queryClient.js";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+let bootstrapFlight: Promise<SessionResult> | null = null;
+
+function clearVolatileSession(clearPreference = true): void {
+  accessTokenStore.clear();
+  queryClient.clear();
+  if (clearPreference) workspacePreference.clear();
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [state, setState] = useState<AuthState>({ status: "bootstrapping" });
-  // Track whether bootstrap has run once to be StrictMode-safe.
-  const bootstrapped = useRef(false);
-  // Session generation — incremented on login/logout/switch/reset.
-  const generation = useRef(0);
+  const stateRef = useRef<AuthState>(state);
+  const generationRef = useRef(0);
+  const mounted = useRef(true);
+  const bootstrapAttached = useRef(false);
 
-  // ─── Bootstrap ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (bootstrapped.current) return;
-    bootstrapped.current = true;
+  const publishState = useCallback((next: AuthState): AuthState => {
+    stateRef.current = next;
+    if (mounted.current) setState(next);
+    return next;
+  }, []);
 
-    void (async () => {
-      // 1. Check for ambiguous journal — fail closed without sending refresh.
-      if (isAmbiguousJournal()) {
-        setState({ status: "anonymous", ambiguousSession: true });
-        return;
+  const invalidateSession = useCallback((options?: {
+    ambiguous?: boolean;
+    deletionRequested?: boolean;
+    notice?: string;
+  }) => {
+    generationRef.current += 1;
+    clearVolatileSession();
+    publishState({
+      status: "anonymous",
+      ...(options?.ambiguous ? { ambiguousSession: true as const } : {}),
+      ...(options?.deletionRequested ? { deletionRequested: true as const } : {}),
+      ...(options?.notice ? { notice: options.notice } : {}),
+    });
+  }, [publishState]);
+
+  const installSession = useCallback((result: SessionResult, forceGenerationChange: boolean): AuthState => {
+    if (result.kind === "workspace-required") {
+      if (forceGenerationChange || stateRef.current.status === "authenticated") {
+        generationRef.current += 1;
       }
+      accessTokenStore.clear();
+      const next: AuthState = {
+        status: "workspaceRequired",
+        user: result.user,
+        workspaces: result.workspaces,
+      };
+      return publishState(next);
+    }
 
-      // 2. Ensure CSRF.
-      try {
-        await ensureCsrf();
-      } catch {
-        setState({ status: "anonymous" });
-        return;
-      }
+    const previousWorkspace =
+      stateRef.current.status === "authenticated"
+        ? stateRef.current.currentMembership.workspaceId
+        : null;
+    if (forceGenerationChange || previousWorkspace !== result.currentMembership.workspaceId) {
+      generationRef.current += 1;
+    }
+    workspacePreference.set(result.currentMembership.workspaceId);
+    const next: AuthState = {
+      status: "authenticated",
+      ...result,
+      generation: generationRef.current,
+    };
+    return publishState(next);
+  }, [publishState]);
 
-      // 3. Attempt refresh through the coordinator.
-      try {
-        const result = await runSessionMutation("refresh", async () => {
-          const pref = workspacePreference.get();
-          return refreshSession(pref ?? undefined);
+  const refresh = useCallback(async (options?: { withoutWorkspace?: boolean }): Promise<AuthState> => {
+    const current = stateRef.current;
+    const requestedWorkspace = options?.withoutWorkspace
+      ? undefined
+      : current.status === "authenticated"
+        ? current.currentMembership.workspaceId
+        : workspacePreference.get() ?? undefined;
+    const startedGeneration = generationRef.current;
+    let result: SessionResult;
+    try {
+      result = await runSessionMutation(
+        "refresh",
+        () => refreshSession(requestedWorkspace, true),
+        {
+          automatic: true,
+          generation: startedGeneration,
+          workspaceId: requestedWorkspace,
+          userId: current.status === "authenticated" || current.status === "workspaceRequired"
+            ? current.user.id
+            : undefined,
+        },
+      );
+    } catch (error) {
+      if (error instanceof ApiError && error.problem.code === "NO_ACTIVE_MEMBERSHIP") {
+        invalidateSession({
+          deletionRequested: current.status === "anonymous" && current.deletionRequested === true,
+          notice: error.problem.detail,
         });
+      } else if (error instanceof ApiError && error.problem.code === "SESSION_AMBIGUOUS") {
+        invalidateSession({ ambiguous: true });
+      } else if (error instanceof ApiError && error.problem.code !== "SESSION_AMBIGUOUS") {
+        invalidateSession();
+      } else if (!(error instanceof ApiError)) {
+        invalidateSession({ ambiguous: true });
+      }
+      throw error;
+    }
+    if (generationRef.current !== startedGeneration) return stateRef.current;
+    return installSession(result, false);
+  }, [installSession, invalidateSession]);
 
-        if (result.kind === "workspace-required") {
-          setState({
-            status: "workspaceRequired",
-            user: result.user,
-            workspaces: result.workspaces,
-          });
-          return;
+  useEffect(() => {
+    mounted.current = true;
+    if (bootstrapAttached.current) {
+      return () => { mounted.current = false; };
+    }
+    bootstrapAttached.current = true;
+
+    if (!bootstrapFlight) {
+      const preference = workspacePreference.get() ?? undefined;
+      bootstrapFlight = ensureCsrf()
+        .then(() => runSessionMutation(
+          "refresh",
+          () => refreshSession(preference, true),
+          { automatic: true, generation: generationRef.current, workspaceId: preference },
+        ))
+        .finally(() => {
+          bootstrapFlight = null;
+        });
+    }
+
+    void bootstrapFlight
+      .then(async (result) => {
+        installSession(result, false);
+        if (result.kind === "authenticated") {
+          // Bootstrap has just rotated the cookie and issued a fresh JWT. A
+          // 401 here is terminal for this bootstrap; recursively refreshing
+          // would rotate the shared cookie a second time.
+          const me = await getMe(undefined, false);
+          if (stateRef.current.status === "authenticated") {
+            publishState({
+              status: "authenticated",
+              ...me,
+              generation: stateRef.current.generation,
+            });
+          }
         }
+      })
+      .catch((error: unknown) => {
+        clearVolatileSession();
+        if (!(error instanceof ApiError) || error.problem.code === "SESSION_AMBIGUOUS") {
+          publishState({ status: "anonymous", ambiguousSession: true });
+        } else if (error.problem.code === "NO_ACTIVE_MEMBERSHIP") {
+          publishState({ status: "anonymous", notice: error.problem.detail });
+        } else {
+          publishState({ status: "anonymous" });
+        }
+      });
 
-        // Authenticated — fetch /me for fresh data.
-        const me = await getMe();
-        generation.current += 1;
-        setState({
-          status: "authenticated",
-          ...me,
-          generation: generation.current,
-        });
+    return () => { mounted.current = false; };
+  }, [installSession, publishState]);
 
-        // Persist workspace preference.
-        workspacePreference.set(me.currentMembership.workspaceId);
-      } catch {
-        accessTokenStore.clear();
-        setState({ status: "anonymous" });
-      }
-    })();
-  }, []);
+  useEffect(() => onSessionResult((result) => {
+    if (result.outcome === "started") return;
+    if (result.outcome === "ambiguous") {
+      invalidateSession({ ambiguous: true });
+      return;
+    }
+    if (
+      result.outcome === "success" &&
+      (result.kind === "logout" || result.kind === "reset" || result.kind === "login")
+    ) {
+      generationRef.current += 1;
+      clearVolatileSession();
+      publishState({ status: "anonymous" });
+    }
+  }), [invalidateSession, publishState]);
 
-  // ─── Cross-tab result listener ───────────────────────────────────────────
   useEffect(() => {
-    const unsub = onSessionResult((result) => {
-      if (result.outcome === "ambiguous") {
-        accessTokenStore.clear();
-        queryClient.clear();
-        setState({ status: "anonymous", ambiguousSession: true });
-      }
+    configureAuthRecovery({
+      snapshot(): SessionSnapshot | null {
+        const current = stateRef.current;
+        if (current.status !== "authenticated") return null;
+        return {
+          generation: current.generation,
+          workspaceId: current.currentMembership.workspaceId,
+        };
+      },
+      async recover(origin) {
+        const current = stateRef.current;
+        if (
+          current.status !== "authenticated" ||
+          current.generation !== origin.generation ||
+          current.currentMembership.workspaceId !== origin.workspaceId
+        ) return;
+        await refresh();
+      },
     });
-    return unsub;
-  }, []);
+    return () => configureAuthRecovery(null);
+  }, [refresh]);
 
-  // ─── Actions ─────────────────────────────────────────────────────────────
-
-  const signup = useCallback(
-    async (params: {
-      email: string;
-      password: string;
-      displayName: string;
-      workspaceName: string;
-      timezone: string;
-    }) => {
-      return apiSignup(params);
-    },
-    [],
-  );
-
-  const login = useCallback(async (params: { email: string; password: string }) => {
-    const result = await runSessionMutation(
-      "login",
-      async () => apiLogin(params),
-      { isCredentialAction: true },
-    );
-    // Refresh CSRF after login (API expired the old cookie).
-    await ensureCsrf();
-
-    if (result.kind === "workspace-required") {
-      generation.current += 1;
-      setState({
-        status: "workspaceRequired",
-        user: result.user,
-        workspaces: result.workspaces,
-      });
-    } else {
-      generation.current += 1;
-      setState({
-        status: "authenticated",
-        ...result,
-        generation: generation.current,
-      });
-      workspacePreference.set(result.currentMembership.workspaceId);
+  const login = useCallback(async (params: LoginBody): Promise<AuthState> => {
+    clearVolatileSession();
+    let result: SessionResult;
+    try {
+      result = await runSessionMutation(
+        "login",
+        () => requestLogin(params, true),
+        { credentialRecovery: true, generation: generationRef.current },
+      );
+    } catch (error) {
+      if (!(error instanceof ApiError)) invalidateSession({ ambiguous: true });
+      throw error;
     }
-  }, []);
-
-  const selectWorkspace = useCallback(async (workspaceId: string) => {
-    const result = await runSessionMutation("switch", async () =>
-      switchWorkspace(workspaceId),
-    );
+    const next = installSession(result, true);
     await ensureCsrf();
-    if (result.kind === "authenticated") {
-      generation.current += 1;
-      setState({
-        status: "authenticated",
-        ...result,
-        generation: generation.current,
-      });
-      workspacePreference.set(workspaceId);
-    }
-  }, []);
+    return next;
+  }, [installSession, invalidateSession]);
 
-  const logout = useCallback(async () => {
-    await runSessionMutation("logout", async () => apiLogout(), {
-      isCredentialAction: true,
-    });
+  const selectWorkspace = useCallback(async (workspaceId: string): Promise<AuthState> => {
+    const current = stateRef.current;
+    const startedGeneration = ++generationRef.current;
+    await queryClient.cancelQueries();
     accessTokenStore.clear();
-    workspacePreference.clear();
     queryClient.clear();
-    generation.current += 1;
-    await ensureCsrf();
-    setState({ status: "anonymous" });
-  }, []);
-
-  const refresh = useCallback(async () => {
-    const pref = workspacePreference.get();
-    const result = await runSessionMutation("refresh", async () =>
-      refreshSession(pref ?? undefined),
-    );
-    if (result.kind === "workspace-required") {
-      setState({
-        status: "workspaceRequired",
-        user: result.user,
-        workspaces: result.workspaces,
-      });
-    } else {
-      generation.current += 1;
-      setState((prev) => ({
-        status: "authenticated",
-        ...result,
-        generation:
-          prev.status === "authenticated" ? prev.generation : generation.current,
-      }));
+    if (current.status === "authenticated") publishState({ status: "bootstrapping" });
+    try {
+      const result = await runSessionMutation(
+        "switch",
+        () => switchWorkspace(workspaceId, true),
+        {
+          generation: startedGeneration,
+          workspaceId,
+          userId: current.status === "authenticated" || current.status === "workspaceRequired"
+            ? current.user.id
+            : undefined,
+        },
+      );
+      return installSession(result, false);
+    } catch (error) {
+      if (error instanceof ApiError && !["SESSION_INVALID", "REFRESH_REUSE_DETECTED"].includes(error.problem.code)) {
+        if (current.status === "authenticated" || current.status === "workspaceRequired") {
+          publishState({
+            status: "workspaceRequired",
+            user: current.user,
+            workspaces: current.workspaces,
+            notice: error.problem.detail,
+          });
+        } else {
+          invalidateSession();
+        }
+      } else if (error instanceof ApiError) {
+        invalidateSession();
+      } else {
+        invalidateSession({ ambiguous: true });
+      }
+      throw error;
     }
-  }, []);
+  }, [installSession, invalidateSession, publishState]);
 
-  const value: AuthContextValue = {
+  const logout = useCallback(async (): Promise<void> => {
+    let ambiguous = false;
+    try {
+      await runSessionMutation(
+        "logout",
+        () => requestLogout(true),
+        { credentialRecovery: true, generation: generationRef.current },
+      );
+    } catch (error) {
+      ambiguous = !(error instanceof ApiError);
+      throw error;
+    } finally {
+      invalidateSession({ ambiguous });
+      await ensureCsrf().catch(() => undefined);
+    }
+  }, [invalidateSession]);
+
+  const resetPassword = useCallback(async (params: ResetPasswordBody) => {
+    try {
+      await runSessionMutation(
+        "reset",
+        () => requestPasswordReset(params, true),
+        { credentialRecovery: true, generation: generationRef.current },
+      );
+    } catch (error) {
+      if (!(error instanceof ApiError)) invalidateSession({ ambiguous: true });
+      throw error;
+    }
+    invalidateSession();
+    await ensureCsrf();
+  }, [invalidateSession]);
+
+  const updateCurrentWorkspace = useCallback((params: { name: string; timezone: string }) => {
+    const current = stateRef.current;
+    if (current.status !== "authenticated") return;
+    publishState({
+      ...current,
+      currentMembership: {
+        ...current.currentMembership,
+        workspaceName: params.name,
+        timezone: params.timezone,
+      },
+      workspaces: current.workspaces.map((workspace) =>
+        workspace.id === current.currentMembership.workspaceId
+          ? { ...workspace, name: params.name, timezone: params.timezone }
+          : workspace,
+      ),
+    });
+  }, [publishState]);
+
+  const value = useMemo<AuthContextValue>(() => ({
     state,
-    actions: { signup, login, selectWorkspace, logout, refresh } as AuthContextValue["actions"] & {
-      forgotPassword: typeof apiForgotPassword;
-      verifyEmail: typeof apiVerifyEmail;
-      resetPassword: typeof apiResetPassword;
-      resendVerification: typeof resendVerification;
+    actions: {
+      signup: requestSignup,
+      login,
+      selectWorkspace,
+      refresh,
+      logout,
+      resetPassword,
+      updateCurrentWorkspace,
+      invalidateSession,
     },
-  };
+  }), [state, login, selectWorkspace, refresh, logout, resetPassword, updateCurrentWorkspace, invalidateSession]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/** Hook to access auth state and actions. Must be inside AuthProvider. */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
+  const value = useContext(AuthContext);
+  if (!value) throw new Error("useAuth must be used inside AuthProvider");
+  return value;
 }

@@ -32,6 +32,7 @@ describe("sessionMutationCoordinator", () => {
     if (typeof globalThis.localStorage !== "undefined") {
       globalThis.localStorage.clear();
     }
+    document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
   });
 
   it("writes and clears journal around a successful mutation", async () => {
@@ -43,7 +44,7 @@ describe("sessionMutationCoordinator", () => {
       expect(j?.status).toBe("started");
       expect(j?.kind).toBe("login");
       return "ok";
-    }, { isCredentialAction: true });
+    }, { credentialRecovery: true });
 
     expect(capturedEpoch).toBeTruthy();
     // Journal cleared after success.
@@ -89,11 +90,32 @@ describe("sessionMutationCoordinator", () => {
     await runSessionMutation(
       "login",
       async () => "ok",
-      { isCredentialAction: true },
+      { credentialRecovery: true },
     );
 
     expect(isAmbiguousJournal()).toBe(false);
   });
+
+  it("fails closed without sending a request for an orphaned mutation", async () => {
+    globalThis.localStorage?.setItem(
+      "adept.sessionMutationJournal",
+      JSON.stringify({
+        epoch: "orphaned",
+        kind: "refresh",
+        status: "started",
+        startedAt: new Date().toISOString(),
+      }),
+    );
+    let calls = 0;
+
+    await expect(
+      runSessionMutation("switch", async () => {
+        calls += 1;
+        return "unexpected";
+      }),
+    ).rejects.toMatchObject({ problem: { code: "SESSION_AMBIGUOUS" } });
+
+    expect(calls).toBe(0);
+    expect(readJournal()?.status).toBe("ambiguous");
+  });
 });
-
-

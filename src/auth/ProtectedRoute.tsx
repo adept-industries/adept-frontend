@@ -21,7 +21,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (state.status === "anonymous") {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <Navigate
+        to={state.deletionRequested ? "/login?deleted=1" : "/login"}
+        state={{ from: location }}
+        replace
+      />
+    );
   }
 
   if (state.status === "workspaceRequired") {

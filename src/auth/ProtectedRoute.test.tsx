@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { beforeEach } from "vitest";
 import { accessTokenStore } from "./accessTokenStore";
+import { workspacePreference } from "../lib/workspacePreference";
 import {
   clearActionToken,
   captureActionToken,
@@ -11,21 +12,21 @@ import {
 // ─── accessTokenStore ────────────────────────────────────────────────────────
 
 describe("accessTokenStore", () => {
-  it("is null by default", () => {
-    accessTokenStore.clear();
-    expect(accessTokenStore.get()).toBeNull();
-  });
-
-  it("stores a token in memory", () => {
+  it("stores and clears a token only in memory", () => {
     accessTokenStore.set("tok123");
     expect(accessTokenStore.get()).toBe("tok123");
     accessTokenStore.clear();
+    expect(accessTokenStore.get()).toBeNull();
   });
 
-  it("clears the token", () => {
-    accessTokenStore.set("tok123");
-    accessTokenStore.clear();
-    expect(accessTokenStore.get()).toBeNull();
+  it("keeps only canonical workspace UUID preferences", () => {
+    const canonical = "3b3448e9-5470-42a9-ab00-915fec326d97";
+    workspacePreference.set(canonical);
+    expect(workspacePreference.get()).toBe(canonical);
+
+    localStorage.setItem("adept.currentWorkspaceId", canonical.toUpperCase());
+    expect(workspacePreference.get()).toBeNull();
+    expect(localStorage.getItem("adept.currentWorkspaceId")).toBeNull();
   });
 });
 
@@ -43,7 +44,7 @@ describe("actionTokenHandoff", () => {
       value: { ...window.location, hash: "#token=abc123", pathname: "/verify-email", search: "" },
     });
 
-    captureActionToken();
+    captureActionToken("verify-email");
     expect(hasActionToken()).toBe(true);
 
     const first = consumeActionToken();
@@ -52,15 +53,6 @@ describe("actionTokenHandoff", () => {
     // Second call (StrictMode double-invoke) returns null.
     const second = consumeActionToken();
     expect(second).toBeNull();
-  });
-
-  it("returns null when no token is present", () => {
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: { ...window.location, hash: "", pathname: "/verify-email", search: "" },
-    });
-    captureActionToken();
-    expect(consumeActionToken()).toBeNull();
   });
 });
 

@@ -1,97 +1,59 @@
 import type { Page } from "@playwright/test";
 
-const MAILPIT_API = "http://localhost:8025/api/v1";
+const MAILPIT_ORIGIN = "http://localhost:8025";
+const MAILPIT_API = `${MAILPIT_ORIGIN}/api/v1`;
 
-/**
- * Polls Mailpit for the latest email to a specific address.
- * Optionally filters for emails containing a specific substring.
- */
 export async function waitForEmail(
   email: string,
-  mustContain?: string,
+  expectedPath: "/verify-email" | "/reset-password",
   timeoutMs = 90_000,
 ): Promise<string> {
+  const normalizedEmail = email.toLowerCase();
   const deadline = Date.now() + timeoutMs;
-  const seenBodies: string[] = [];
 
   while (Date.now() < deadline) {
-    const q = new URLSearchParams({ query: `to:"${email}"` });
-    const res = await fetch(`${MAILPIT_API}/search?${q.toString()}`);
-    if (!res.ok) {
-      await sleep(1000);
-      continue;
-    }
-
-    const data = await res.json() as {
-      messages?: Array<{ ID: string; To: Array<{ Address: string }> }>;
-    };
-
-    const messages = data.messages ?? [];
-    for (const msg of messages) {
-      // Exact recipient match required.
-      const toMatch = msg.To.some(
-        (r) => r.Address.toLowerCase() === email.toLowerCase(),
-      );
-      if (!toMatch) continue;
-
-      const txtRes = await fetch(`${MAILPIT_API}/message/${msg.ID}`);
-      if (!txtRes.ok) continue;
-      const body = await txtRes.json() as { Text?: string };
-
-      if (body.Text) {
-        if (!seenBodies.includes(body.Text)) {
-          seenBodies.push(body.Text);
-        }
-        if (mustContain && !body.Text.includes(mustContain)) {
-          continue;
-        }
-        return body.Text;
+    const search = new URLSearchParams({ query: `to:"${normalizedEmail}"` });
+    const response = await fetch(`${MAILPIT_API}/search?${search.toString()}`);
+    if (response.ok) {
+      const result = await response.json() as {
+        messages?: Array<{ ID: string; To: Array<{ Address: string }> }>;
+      };
+      for (const message of result.messages ?? []) {
+        if (!message.To.some((recipient) => recipient.Address.toLowerCase() === normalizedEmail)) continue;
+        const textResponse = await fetch(`${MAILPIT_ORIGIN}/view/${encodeURIComponent(message.ID)}.txt`);
+        if (!textResponse.ok) continue;
+        const body = await textResponse.text();
+        if (body.includes(expectedPath)) return body;
       }
     }
-
-    await sleep(1000);
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
   }
-
-  throw new Error(`Timed out waiting for email (sanitized). Seen bodies: ${JSON.stringify(seenBodies)}`);
+  throw new Error(`Timed out waiting for the expected ${expectedPath} email.`);
 }
 
-/**
- * Extracts a same-origin tokenized link from the email body and validates its path.
- * Never embeds the raw link in error messages.
- */
 export function extractLink(
   body: string,
   expectedPath: "/verify-email" | "/reset-password",
+  expectedOrigin = process.env["PLAYWRIGHT_BASE_URL"] ?? "http://localhost:3000",
 ): string {
-  const escaped = expectedPath.replace("/", "\\/");
-  const re = new RegExp(`http://[^\\s"'<>]*${escaped}[^\\s"'<>]*`, "i");
-  const match = re.exec(body);
-  if (!match) {
-    throw new Error(`Could not find ${expectedPath} link in email (sanitized)`);
-  }
-  const link = match[0];
-  try {
-    const url = new URL(link);
-    if (!url.pathname.startsWith(expectedPath)) {
-      throw new Error("Path mismatch");
+  const candidates = body.match(/https?:\/\/[^\s"'<>]+/gi) ?? [];
+  for (const candidate of candidates) {
+    try {
+      const url = new URL(candidate.replace(/[).,]+$/, ""));
+      if (url.origin === expectedOrigin && url.pathname === expectedPath && url.hash.startsWith("#token=")) {
+        return url.toString();
+      }
+    } catch {
+      // Continue without exposing the candidate.
     }
-    return link;
-  } catch {
-    throw new Error(`Link failed path validation for ${expectedPath} (sanitized)`);
   }
+  throw new Error(`The email did not contain a valid ${expectedPath} link.`);
 }
 
-/**
- * Navigates to the tokenized link. Wraps any error in a sanitized message.
- */
 export async function navigateToLink(page: Page, link: string): Promise<void> {
   try {
-    await page.goto(link);
+    await page.goto(link, { waitUntil: "domcontentloaded" });
   } catch {
-    throw new Error("Navigation to tokenized link failed (sanitized)");
+    throw new Error("Navigation to the action link failed.");
   }
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

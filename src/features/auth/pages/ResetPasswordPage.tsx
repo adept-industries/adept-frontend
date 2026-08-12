@@ -1,84 +1,73 @@
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { AuthLayout } from "../../../components/layout/AuthLayout";
-import { FormField } from "../../../components/ui/FormField";
-import { InlineAlert } from "../../../components/ui/InlineAlert";
-import { captureActionToken, consumeActionToken, hasActionToken } from "../actionTokenHandoff";
-import { resetPassword } from "../api";
-import { ApiError } from "../../../api/problem";
+import { ApiError } from "../../../api/problem.js";
+import { useAuth } from "../../../auth/AuthProvider.js";
+import { AuthLayout } from "../../../components/layout/AuthLayout.js";
+import { FormField } from "../../../components/ui/FormField.js";
+import { InlineAlert } from "../../../components/ui/InlineAlert.js";
+import { hasActionToken, submitActionToken } from "../actionTokenHandoff.js";
 
 export function ResetPasswordPage() {
+  const { actions } = useAuth();
   const navigate = useNavigate();
-  // Token is stored in the module closure — never in state.
-  const tokenCaptured = useRef(false);
-  const [hasToken, setHasToken] = useState(false);
-
+  const [tokenAvailable, setTokenAvailable] = useState(() => hasActionToken("reset-password"));
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (tokenCaptured.current) return;
-    tokenCaptured.current = true;
-    captureActionToken();
-    setHasToken(hasActionToken());
-  }, []);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
-    const token = consumeActionToken();
-    if (!token) {
-      setError("Reset token is missing or already used. Please request a new link.");
+    setSubmitting(true);
+    const password = newPassword;
+    setNewPassword("");
+
+    const submission = submitActionToken(
+      "reset-password",
+      (token) => actions.resetPassword({ token, newPassword: password }),
+      (submissionError) =>
+        submissionError instanceof ApiError && submissionError.problem.code === "VALIDATION_FAILED",
+    );
+    if (!submission) {
+      setTokenAvailable(false);
+      setSubmitting(false);
       return;
     }
 
-    setSubmitting(true);
     try {
-      await resetPassword({ token, newPassword });
-      await navigate("/login", { replace: true });
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.problem.code === "ACTION_TOKEN_INVALID") {
-          setError("This reset link is invalid or has expired. Please request a new one.");
-        } else {
-          setError(err.problem.detail);
-        }
+      await submission;
+      await navigate("/login?reset=1", { replace: true });
+    } catch (submissionError) {
+      if (submissionError instanceof ApiError && submissionError.problem.code === "VALIDATION_FAILED") {
+        setError(submissionError.problem.fieldErrors?.[0]?.message ?? submissionError.problem.detail);
+        setTokenAvailable(true);
+      } else if (submissionError instanceof ApiError && submissionError.problem.code === "ACTION_TOKEN_INVALID") {
+        setError("This reset link is invalid or has expired. Please request a new one.");
+        setTokenAvailable(false);
       } else {
-        setError("Something went wrong. Please try again.");
+        setError("The password could not be reset safely. Please request a new link.");
+        setTokenAvailable(false);
       }
-      setHasToken(false); // Token consumed — don't allow re-use.
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (!hasToken) {
+  if (!tokenAvailable) {
     return (
       <AuthLayout title="Reset your password">
-        <InlineAlert message="No reset token found or the link has already been used." />
+        <InlineAlert message={error ?? "No reset token found or the link has already been used."} />
         <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem" }}>
-          <Link to="/forgot-password" style={{ color: "#4763d8", fontWeight: 600 }}>
-            Request a new link
-          </Link>
+          <Link to="/forgot-password">Request a new link</Link>
         </p>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout
-      title="Set a new password"
-      description="Your new password will replace the old one immediately."
-    >
-      <form
-        id="reset-form"
-        onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSubmit(e)}
-        noValidate
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
+    <AuthLayout title="Set a new password" description="Your new password replaces the old one immediately.">
+      <form onSubmit={(event) => void handleSubmit(event)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {error && <InlineAlert message={error} />}
-
         <FormField
           id="reset-password"
           label="New password"
@@ -87,25 +76,9 @@ export function ResetPasswordPage() {
           required
           hint="At least 12 characters. Maximum 72 UTF-8 bytes."
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(event) => setNewPassword(event.target.value)}
         />
-
-        <button
-          type="submit"
-          id="reset-submit"
-          disabled={submitting}
-          style={{
-            padding: "0.7rem",
-            borderRadius: "0.4rem",
-            background: "#4763d8",
-            color: "#fff",
-            border: "none",
-            fontWeight: 700,
-            fontSize: "1rem",
-            cursor: submitting ? "not-allowed" : "pointer",
-            opacity: submitting ? 0.7 : 1,
-          }}
-        >
+        <button type="submit" id="reset-submit" disabled={submitting}>
           {submitting ? "Resetting…" : "Reset password"}
         </button>
       </form>

@@ -1,3 +1,5 @@
+import type { components } from "../api/generated/schema.js";
+
 /**
  * Auth state types — discriminated union used throughout the application.
  *
@@ -5,29 +7,9 @@
  * Only safe summaries are exposed to components.
  */
 
-export interface UserSummary {
-  id: string;
-  email: string;
-  displayName: string;
-  emailVerified: boolean;
-}
-
-export interface MembershipSummary {
-  id: string;
-  workspaceId: string;
-  workspaceName: string;
-  workspaceSlug: string;
-  timezone: string;
-  role: "MANAGER" | "LEAD";
-}
-
-export interface WorkspaceSummary {
-  id: string;
-  name: string;
-  slug: string;
-  timezone: string;
-  role: "MANAGER" | "LEAD";
-}
+export type UserSummary = components["schemas"]["UserSummary"];
+export type MembershipSummary = components["schemas"]["MembershipSummary"];
+export type WorkspaceSummary = components["schemas"]["WorkspaceSummaryResponse"];
 
 // ─── Auth state machine ────────────────────────────────────────────────────
 
@@ -39,12 +21,15 @@ export interface AnonymousState {
   status: "anonymous";
   /** Set when a previous session was recovered in an ambiguous state. */
   ambiguousSession?: true;
+  deletionRequested?: true;
+  notice?: string;
 }
 
 export interface WorkspaceRequiredState {
   status: "workspaceRequired";
   user: UserSummary;
   workspaces: WorkspaceSummary[];
+  notice?: string;
 }
 
 export interface AuthenticatedState {

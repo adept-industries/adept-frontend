@@ -19,8 +19,10 @@ export function CheckEmailPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    const requestedEmail = email;
+    if (!stateEmail) setEmail("");
     try {
-      await resendVerification(email);
+      await resendVerification(requestedEmail);
       setSent(true);
     } catch {
       setError("Something went wrong. Please try again.");
