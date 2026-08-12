@@ -35,7 +35,7 @@ export default defineConfig({
   use: {
     actionTimeout: 60000,
     navigationTimeout: 60000,
-    baseURL: process.env["PLAYWRIGHT_BASE_URL"] ?? "http://localhost:3000",
+    baseURL: process.env["PLAYWRIGHT_BASE_URL"] ?? "http://localhost:5173",
     trace: "off",
     video: "off",
     /* Screenshot only on failure to aid debugging without leaking URLs. */

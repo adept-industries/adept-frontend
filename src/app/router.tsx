@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createBrowserRouter, Navigate } from "react-router";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { WorkspaceRoute } from "../auth/WorkspaceRoute";

@@ -17,26 +17,28 @@ export function FormField({ id, label, error, hint, ...inputProps }: FormFieldPr
     <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
       <label
         htmlFor={id}
-        style={{ fontWeight: 600, fontSize: "0.875rem", color: "#374151" }}
+        style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text-primary)" }}
       >
         {label}
       </label>
       {hint && (
-        <span id={hintId} style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+        <span id={hintId} style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
           {hint}
         </span>
       )}
       <input
         id={id}
+        className="form-input"
         aria-describedby={describedBy}
         aria-invalid={error ? "true" : undefined}
         style={{
-          padding: "0.6rem 0.75rem",
-          borderRadius: "0.4rem",
-          border: error ? "1.5px solid #ef4444" : "1.5px solid #d1d5db",
+          padding: "0.75rem 1rem",
+          borderRadius: "0.5rem",
+          border: error ? "1.5px solid #ef4444" : "1px solid var(--border-color)",
+          background: "var(--input-bg)",
+          color: "var(--text-primary)",
           fontSize: "1rem",
           outline: "none",
-          transition: "border-color 0.15s",
         }}
         {...inputProps}
       />

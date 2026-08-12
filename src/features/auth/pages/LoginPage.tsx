@@ -45,7 +45,7 @@ export function LoginPage() {
         id="login-form"
         onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSubmit(e)}
         noValidate
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}
       >
         {error && <InlineAlert message={error} />}
 
@@ -63,7 +63,7 @@ export function LoginPage() {
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <label
               htmlFor="login-password"
-              style={{ fontWeight: 600, fontSize: "0.875rem", color: "#374151" }}
+              style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--text-primary)" }}
             >
               Password
             </label>
@@ -76,16 +76,20 @@ export function LoginPage() {
           </div>
           <input
             id="login-password"
+            className="form-input"
             type="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={{
-              padding: "0.6rem 0.75rem",
-              borderRadius: "0.4rem",
-              border: "1.5px solid #d1d5db",
+              padding: "0.75rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid var(--border-color)",
+              background: "var(--input-bg)",
+              color: "var(--text-primary)",
               fontSize: "1rem",
+              outline: "none",
             }}
           />
         </div>
@@ -93,15 +97,16 @@ export function LoginPage() {
         <button
           type="submit"
           id="login-submit"
+          className="premium-btn"
           disabled={submitting}
           style={{
-            padding: "0.7rem",
-            borderRadius: "0.4rem",
-            background: "#4763d8",
-            color: "#fff",
+            padding: "0.85rem",
+            borderRadius: "0.5rem",
+            color: "#ffffff",
             border: "none",
-            fontWeight: 700,
-            fontSize: "1rem",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            fontSize: "1.05rem",
             cursor: submitting ? "not-allowed" : "pointer",
             opacity: submitting ? 0.7 : 1,
           }}
@@ -109,9 +114,9 @@ export function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
 
-        <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem", color: "#6b7280" }}>
+        <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
           New to Adept?{" "}
-          <Link to="/signup" style={{ color: "#4763d8", fontWeight: 600 }}>
+          <Link to="/signup" style={{ color: "var(--primary-color)", fontWeight: 600 }}>
             Create an account
           </Link>
         </p>

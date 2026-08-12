@@ -141,101 +141,123 @@ export function WorkspaceSettingsPage() {
 
   return (
     <AppShell>
-      <section
-        aria-labelledby="settings-title"
-        style={{ maxWidth: "600px", margin: "0 auto" }}
-      >
-        <p className="eyebrow" style={{ color: "#6b7280", fontSize: "0.8rem", marginBottom: "0.25rem" }}>
-          Workspace
-        </p>
-        <h1 id="settings-title" style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "2rem" }}>
-          Settings
-        </h1>
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "3rem 1.5rem" }}>
+        <header style={{ marginBottom: "3rem" }}>
+          <h1 id="settings-title" style={{ fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: 0 }}>
+            Workspace Settings
+          </h1>
+          <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem", fontSize: "1rem" }}>
+            Manage your workspace preferences and settings.
+          </p>
+        </header>
 
         {loadError && <InlineAlert kind="error" message={loadError} />}
 
         {!workspace && !loadError && (
-          <p style={{ color: "#6b7280" }}>Loading…</p>
+          <p style={{ color: "var(--text-secondary)" }}>Loading…</p>
         )}
 
         {workspace && (
           <>
-            {/* ── Name & Timezone form ─────────────────────────── */}
-            <form
-              id="workspace-settings-form"
-              onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSave(e)}
-              noValidate
-              style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2.5rem" }}
-            >
-              <FormField
-                id="workspace-name"
-                label="Workspace name"
-                type="text"
-                value={name}
-                onChange={(e) => { setName(e.target.value); setSaveSuccess(false); }}
-                required
-                autoComplete="organization"
-              />
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                <label htmlFor="workspace-timezone" style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151" }}>
-                  Timezone
-                </label>
-                <select
-                  id="workspace-timezone"
-                  value={timezone}
-                  onChange={(e) => { setTimezone(e.target.value); setSaveSuccess(false); }}
-                  style={{
-                    padding: "0.625rem 0.75rem",
-                    border: "1.5px solid #d1d5db",
-                    borderRadius: "0.375rem",
-                    fontSize: "0.9rem",
-                    color: "#111827",
-                    background: "#ffffff",
-                  }}
-                >
-                  {timezones.current.map((tz) => (
-                    <option key={tz} value={tz}>{formatTimezone(tz)}</option>
-                  ))}
-                </select>
-              </div>
-
-              {saveError && <InlineAlert kind="error" message={saveError} />}
-              {saveSuccess && <InlineAlert kind="success" message="Settings saved successfully." />}
-
-              <button
-                type="submit"
-                id="save-settings-btn"
-                disabled={saving}
-                style={{
-                  padding: "0.625rem 1.25rem",
-                  background: saving ? "#9ca3af" : "#4763d8",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "0.375rem",
-                  fontWeight: 600,
-                  cursor: saving ? "not-allowed" : "pointer",
-                  alignSelf: "flex-start",
-                }}
+            {/* ── General Settings Card ─────────────────────────── */}
+            <div style={{
+              background: "linear-gradient(145deg, rgba(30, 30, 35, 0.4) 0%, rgba(15, 15, 18, 0.6) 100%)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              borderRadius: "1rem",
+              padding: "2.5rem",
+              marginBottom: "2.5rem",
+              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
+            }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "1.5rem", color: "var(--text-primary)" }}>General Settings</h2>
+              
+              <form
+                id="workspace-settings-form"
+                onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSave(e)}
+                noValidate
+                style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
               >
-                {saving ? "Saving…" : "Save settings"}
-              </button>
-            </form>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  <FormField
+                    id="workspace-name"
+                    label="Workspace name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setSaveSuccess(false); }}
+                    required
+                    autoComplete="organization"
+                  />
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                    <label htmlFor="workspace-timezone" style={{ fontSize: "0.9rem", fontWeight: 500, color: "var(--text-primary)" }}>
+                      Timezone
+                    </label>
+                    <select
+                      id="workspace-timezone"
+                      className="form-input"
+                      value={timezone}
+                      onChange={(e) => { setTimezone(e.target.value); setSaveSuccess(false); }}
+                      style={{
+                        padding: "0.75rem 1rem",
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "0.5rem",
+                        fontSize: "0.95rem",
+                        color: "var(--text-primary)",
+                        background: "var(--input-bg)",
+                        outline: "none",
+                        width: "100%",
+                      }}
+                    >
+                      {timezones.current.map((tz) => (
+                        <option key={tz} value={tz}>{formatTimezone(tz)}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {saveError && <InlineAlert kind="error" message={saveError} />}
+                {saveSuccess && <InlineAlert kind="success" message="Settings saved successfully." />}
+
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "1.5rem" }}>
+                  <button
+                    type="submit"
+                    id="save-settings-btn"
+                    className="premium-btn"
+                    disabled={saving}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: "0.5rem",
+                      fontWeight: 600,
+                      cursor: saving ? "not-allowed" : "pointer",
+                      opacity: saving ? 0.7 : 1,
+                    }}
+                  >
+                    {saving ? "Saving…" : "Save changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
 
             {/* ── Danger zone ──────────────────────────────────── */}
             <section
               aria-labelledby="danger-title"
               style={{
-                border: "1.5px solid #fca5a5",
-                borderRadius: "0.5rem",
-                padding: "1.5rem",
-                background: "#fff5f5",
+                border: "1px solid rgba(220, 38, 38, 0.3)",
+                borderRadius: "1rem",
+                padding: "2.5rem",
+                background: "linear-gradient(145deg, rgba(30, 10, 10, 0.4) 0%, rgba(15, 5, 5, 0.6) 100%)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
-              <h2 id="danger-title" style={{ fontSize: "1rem", fontWeight: 700, color: "#dc2626", marginBottom: "0.5rem" }}>
-                Delete workspace
+              <h2 id="danger-title" style={{ fontSize: "1.2rem", fontWeight: 600, color: "#fca5a5", marginBottom: "0.5rem" }}>
+                Danger Zone
               </h2>
-              <p style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "1rem" }}>
+              <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)", marginBottom: "2rem" }}>
                 Access stops immediately and final data removal is queued. This cannot be undone.
               </p>
 
@@ -245,14 +267,21 @@ export function WorkspaceSettingsPage() {
                   type="button"
                   onClick={() => setShowDeleteForm(true)}
                   style={{
-                    padding: "0.5rem 1rem",
-                    background: "transparent",
-                    border: "1.5px solid #dc2626",
-                    borderRadius: "0.375rem",
-                    color: "#dc2626",
+                    padding: "0.6rem 1.2rem",
+                    background: "rgba(220, 38, 38, 0.1)",
+                    border: "1px solid rgba(220, 38, 38, 0.4)",
+                    borderRadius: "0.5rem",
+                    color: "#fca5a5",
                     fontWeight: 600,
                     cursor: "pointer",
-                    fontSize: "0.875rem",
+                    fontSize: "0.9rem",
+                    transition: "all 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(220, 38, 38, 0.1)";
                   }}
                 >
                   Delete this workspace
@@ -264,8 +293,8 @@ export function WorkspaceSettingsPage() {
                   noValidate
                   style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
                 >
-                  <p style={{ fontSize: "0.875rem", color: "#374151" }}>
-                    Type <strong>{workspace.slug}</strong> to confirm.
+                  <p style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>
+                    Type <strong style={{ color: "#fca5a5" }}>{workspace.slug}</strong> to confirm.
                   </p>
 
                   <FormField
@@ -297,14 +326,15 @@ export function WorkspaceSettingsPage() {
                       id="confirm-delete-btn"
                       disabled={deleting || confirmSlug !== workspace.slug}
                       style={{
-                        padding: "0.5rem 1rem",
-                        background: deleting || confirmSlug !== workspace.slug ? "#9ca3af" : "#dc2626",
-                        color: "#ffffff",
+                        padding: "0.6rem 1.2rem",
+                        background: deleting || confirmSlug !== workspace.slug ? "rgba(255,255,255,0.1)" : "#dc2626",
+                        color: deleting || confirmSlug !== workspace.slug ? "var(--text-secondary)" : "#ffffff",
                         border: "none",
-                        borderRadius: "0.375rem",
+                        borderRadius: "0.5rem",
                         fontWeight: 600,
                         cursor: deleting || confirmSlug !== workspace.slug ? "not-allowed" : "pointer",
-                        fontSize: "0.875rem",
+                        fontSize: "0.9rem",
+                        transition: "all 0.2s ease"
                       }}
                     >
                       {deleting ? "Deleting…" : "Confirm delete"}
@@ -318,13 +348,20 @@ export function WorkspaceSettingsPage() {
                         setDeleteError(null);
                       }}
                       style={{
-                        padding: "0.5rem 1rem",
+                        padding: "0.6rem 1.2rem",
                         background: "transparent",
-                        border: "1.5px solid #d1d5db",
-                        borderRadius: "0.375rem",
+                        border: "1px solid var(--border-color)",
+                        borderRadius: "0.5rem",
                         cursor: "pointer",
-                        fontSize: "0.875rem",
-                        color: "#374151",
+                        fontSize: "0.9rem",
+                        color: "var(--text-primary)",
+                        transition: "all 0.2s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
                       }}
                     >
                       Cancel
@@ -335,7 +372,7 @@ export function WorkspaceSettingsPage() {
             </section>
           </>
         )}
-      </section>
+      </div>
     </AppShell>
   );
 }
