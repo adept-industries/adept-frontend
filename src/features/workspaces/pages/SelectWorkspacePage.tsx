@@ -49,7 +49,7 @@ export function SelectWorkspacePage() {
 
   return (
     <AuthLayout title="Select workspace" description={`Signed in as ${user.email}`}>
-      <p style={{ marginBottom: "1rem", color: "#6b7280", fontSize: "0.9rem" }}>
+      <p style={{ marginBottom: "1rem", color: "var(--text-secondary)", fontSize: "0.9rem" }}>
         You belong to multiple workspaces. Choose one to continue.
       </p>
 
@@ -77,26 +77,10 @@ export function SelectWorkspacePage() {
               aria-busy={pending === ws.id}
               style={{
                 width: "100%",
-                padding: "0.875rem 1rem",
-                background: pending === ws.id ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "0.5rem",
-                cursor: pending !== null ? "not-allowed" : "pointer",
                 textAlign: "left",
-                transition: "all 0.2s ease",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-              }}
-              onMouseEnter={(e) => {
-                if (!pending) {
-                  e.currentTarget.style.borderColor = "var(--primary-color)";
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--border-color)";
-                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
               }}
             >
               <span>
@@ -108,7 +92,7 @@ export function SelectWorkspacePage() {
                 </span>
               </span>
               {pending === ws.id && (
-                <span aria-hidden style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                <span aria-hidden style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                   Joining…
                 </span>
               )}

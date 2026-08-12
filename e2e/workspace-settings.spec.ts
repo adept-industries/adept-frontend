@@ -13,7 +13,8 @@ test("Manager updates then requests workspace deletion", async ({ page }) => {
 
   await page.getByRole("link", { name: /workspace settings/i }).click();
   const renamed = `Renamed ${Date.now()}`;
-  await page.getByLabel(/workspace name/i).fill(renamed);
+  const settingsForm = page.locator("#workspace-settings-form");
+  await settingsForm.getByLabel("Workspace name", { exact: true }).fill(renamed);
   await page.getByRole("button", { name: /save changes/i }).click();
   await expect(page.getByText(/settings saved/i)).toBeVisible();
   await expect(page.getByText(renamed, { exact: true })).toBeVisible();

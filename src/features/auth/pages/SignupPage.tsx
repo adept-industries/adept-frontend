@@ -145,26 +145,14 @@ export function SignupPage() {
         <button
           type="submit"
           id="signup-submit"
-          className="premium-btn"
           disabled={submitting}
-          style={{
-            padding: "0.85rem",
-            borderRadius: "0.5rem",
-            color: "#ffffff",
-            border: "none",
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-            fontSize: "1.05rem",
-            cursor: submitting ? "not-allowed" : "pointer",
-            opacity: submitting ? 0.7 : 1,
-          }}
         >
           {submitting ? "Creating account…" : "Create account"}
         </button>
 
         <p style={{ margin: 0, textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
           Already have an account?{" "}
-          <Link to="/login" style={{ color: "var(--primary-color)", fontWeight: 600, textDecoration: "none" }}>
+          <Link to="/login" style={{ fontWeight: 600, textDecoration: "none" }}>
             Sign in
           </Link>
         </p>

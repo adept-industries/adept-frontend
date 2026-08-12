@@ -34,7 +34,7 @@ export function FormField({ id, label, error, hint, ...inputProps }: FormFieldPr
         style={{
           padding: "0.75rem 1rem",
           borderRadius: "0.5rem",
-          border: error ? "1.5px solid #ef4444" : "1px solid var(--border-color)",
+          border: "1px solid var(--border-color)",
           background: "var(--input-bg)",
           color: "var(--text-primary)",
           fontSize: "1rem",
@@ -46,7 +46,7 @@ export function FormField({ id, label, error, hint, ...inputProps }: FormFieldPr
         <span
           id={errorId}
           role="alert"
-          style={{ fontSize: "0.8rem", color: "#dc2626" }}
+          style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}
         >
           {error}
         </span>

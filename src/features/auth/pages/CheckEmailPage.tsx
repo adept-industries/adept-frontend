@@ -63,7 +63,7 @@ export function CheckEmailPage() {
           )}
 
           {stateEmail && (
-            <p style={{ margin: 0, color: "#374151", fontSize: "0.95rem" }}>
+            <p style={{ margin: 0, color: "var(--text-primary)", fontSize: "0.95rem" }}>
               Sent to <strong>{stateEmail}</strong>
             </p>
           )}
@@ -72,17 +72,6 @@ export function CheckEmailPage() {
             type="submit"
             id="resend-submit"
             disabled={submitting}
-            style={{
-              padding: "0.7rem",
-              borderRadius: "0.4rem",
-              background: "#4763d8",
-              color: "#fff",
-              border: "none",
-              fontWeight: 700,
-              fontSize: "1rem",
-              cursor: submitting ? "not-allowed" : "pointer",
-              opacity: submitting ? 0.7 : 1,
-            }}
           >
             {submitting ? "Sending…" : "Resend verification email"}
           </button>

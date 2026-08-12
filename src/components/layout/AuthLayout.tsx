@@ -55,9 +55,9 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         alignItems: "center",
         gap: "0.75rem"
       }}>
-        <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>ADEPT</span>
+        <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>Adept</span>
         <span style={{ color: "rgba(255,255,255,0.4)" }}>|</span>
-        <span style={{ color: "rgba(255,255,255,0.7)" }}>Enterprises Portal</span>
+        <span style={{ color: "rgba(255,255,255,0.7)" }}>From Insight to Impact</span>
       </div>
 
       {/* Left Side - Visuals & Logo */}
@@ -75,21 +75,9 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
           zIndex: 1
         }}
       >
-        {/* Subtle decorative glow behind logo */}
-        <div 
-          className="auth-glow"
-          style={{
-            position: "absolute",
-            top: "50%", left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: "300px", height: "300px",
-            background: "radial-gradient(circle, rgba(0,0,0,0.9) 0%, transparent 70%)",
-            filter: "blur(50px)"
-          }} 
-        />
         <div style={{ zIndex: 2, textAlign: "center" }}>
             <Link to="/">
-              <img src={logoPath} alt="Adept Logo" className="auth-logo" style={{ width: "320px", maxWidth: "80%", filter: "drop-shadow(0 0 30px rgba(0, 0, 0, 0.8))" }} />
+              <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ width: "320px", maxWidth: "80%" }} />
             </Link>
         </div>
       </div>

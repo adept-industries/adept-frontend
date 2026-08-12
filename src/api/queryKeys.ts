@@ -16,6 +16,9 @@ export const queryKeys = {
   workspaceCurrent: (workspaceId: string) =>
     [workspaceId, "workspaces", "current"] as const,
 
+  projects: (workspaceId: string) =>
+    [workspaceId, "projects"] as const,
+
   /** All keys belonging to a given workspace — use to invalidate on switch. */
   workspaceAll: (workspaceId: string) => [workspaceId] as const,
 } as const;

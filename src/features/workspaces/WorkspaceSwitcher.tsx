@@ -81,15 +81,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
           display: "flex",
           alignItems: "center",
           gap: "0.375rem",
-          padding: "0.4rem 0.75rem",
-          background: "rgba(255, 255, 255, 0.05)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "0.5rem",
-          cursor: switching ? "not-allowed" : "pointer",
-          fontSize: "0.85rem",
-          color: "var(--text-primary)",
           maxWidth: "180px",
-          transition: "all 0.2s ease"
         }}
       >
         <span
@@ -102,7 +94,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
         >
           {switching ? "Switching…" : (current?.name ?? "Workspace")}
         </span>
-        <span aria-hidden style={{ fontSize: "0.65rem", color: "#9ca3af" }}>▼</span>
+        <span aria-hidden style={{ fontSize: "0.65rem", color: "var(--text-secondary)" }}>▼</span>
       </button>
 
       {open && (
@@ -113,8 +105,8 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
             position: "absolute",
             top: "calc(100% + 8px)",
             right: 0,
-            background: "rgba(15, 15, 18, 0.9)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+            background: "var(--card-bg)",
+            border: "1px solid var(--border-color)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             borderRadius: "0.5rem",
@@ -134,19 +126,13 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
                 onClick={() => void handleSwitch(ws.id)}
                 style={{
                   width: "100%",
-                  padding: "0.6rem 0.75rem",
                   textAlign: "left",
-                  background: ws.id === currentWorkspaceId ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                  border: "none",
                   cursor: ws.id === currentWorkspaceId ? "default" : "pointer",
-                  fontSize: "0.85rem",
-                  color: "var(--text-primary)",
-                  transition: "background 0.2s ease"
                 }}
               >
                 {ws.name}
                 {ws.id === currentWorkspaceId && (
-                  <span aria-hidden style={{ marginLeft: "0.5rem", color: "#4763d8" }}>✓</span>
+                  <span aria-hidden style={{ marginLeft: "0.5rem" }}>✓</span>
                 )}
               </button>
             </li>
@@ -155,7 +141,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
       )}
 
       {error && (
-        <p role="alert" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, color: "#dc2626", fontSize: "0.8rem" }}>
+        <p role="alert" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, color: "var(--text-primary)", fontSize: "0.8rem" }}>
           {error}
         </p>
       )}

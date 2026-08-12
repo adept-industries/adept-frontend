@@ -1,6 +1,6 @@
 # Adept Frontend
 
-React 19, TypeScript, and Vite browser application for Adept. Phase 2 includes account lifecycle, refresh-backed authentication, workspace selection/switching, Manager workspace settings, and browser acceptance tests.
+React 19, TypeScript, and Vite browser application for Adept. Phase 2 includes account lifecycle, refresh-backed authentication, workspace selection/switching and creation, project selection, Manager settings, and browser acceptance tests.
 
 ## Routes
 
@@ -9,6 +9,7 @@ React 19, TypeScript, and Vite browser application for Adept. Phase 2 includes a
 - `/select-workspace` for sessions with multiple memberships
 - `/dashboard` for an authenticated workspace
 - `/dashboard/settings` for Managers
+- `/dashboard/projects` for Manager project administration
 
 Protected routes wait for refresh bootstrap. Leads receive a forbidden page for Manager settings, and authenticated users visiting login or signup return to the dashboard.
 
@@ -27,7 +28,7 @@ Open <http://localhost:5173>. Vite proxies relative `/api` requests to `http://l
 
 ## Authentication and CSRF
 
-The access JWT exists only in a module-level memory store. It is never written to browser storage, cookies, URLs, logs, or TanStack Query. The only settled local-storage value is the non-secret `adept.currentWorkspaceId` UUID.
+The access JWT exists only in a module-level memory store. It is never written to browser storage, cookies, URLs, logs, or TanStack Query. Local storage contains only the non-secret current-workspace UUID; session storage may contain a non-secret selected-project UUID per workspace.
 
 The API owns the HttpOnly refresh cookie. The frontend coordinates refresh, login, logout, workspace switch, and password reset with same-origin CSRF/session locks. Unsafe requests read the current `XSRF-TOKEN` cookie immediately before dispatch. An authenticated request may perform one coordinated refresh and one replay after a `401`; it never refreshes a `403`.
 
