@@ -91,14 +91,15 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
           display: "flex",
           alignItems: "center",
           gap: "0.375rem",
-          padding: "0.25rem 0.5rem",
-          background: "transparent",
-          border: "1px solid #e5e7eb",
-          borderRadius: "0.375rem",
+          padding: "0.4rem 0.75rem",
+          background: "rgba(255, 255, 255, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "0.5rem",
           cursor: switching ? "not-allowed" : "pointer",
-          fontSize: "0.875rem",
-          color: "#374151",
+          fontSize: "0.85rem",
+          color: "var(--text-primary)",
           maxWidth: "180px",
+          transition: "all 0.2s ease"
         }}
       >
         <span
@@ -120,12 +121,14 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
           aria-label="Switch workspace"
           style={{
             position: "absolute",
-            top: "calc(100% + 4px)",
+            top: "calc(100% + 8px)",
             right: 0,
-            background: "#ffffff",
-            border: "1px solid #e5e7eb",
+            background: "rgba(15, 15, 18, 0.9)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
             borderRadius: "0.5rem",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
             minWidth: "200px",
             zIndex: 50,
             listStyle: "none",
@@ -141,13 +144,14 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
                 onClick={() => void handleSwitch(ws.id)}
                 style={{
                   width: "100%",
-                  padding: "0.5rem 0.75rem",
+                  padding: "0.6rem 0.75rem",
                   textAlign: "left",
-                  background: ws.id === currentWorkspaceId ? "#f3f4f6" : "transparent",
+                  background: ws.id === currentWorkspaceId ? "rgba(255, 255, 255, 0.08)" : "transparent",
                   border: "none",
                   cursor: ws.id === currentWorkspaceId ? "default" : "pointer",
-                  fontSize: "0.875rem",
-                  color: "#111827",
+                  fontSize: "0.85rem",
+                  color: "var(--text-primary)",
+                  transition: "background 0.2s ease"
                 }}
               >
                 {ws.name}

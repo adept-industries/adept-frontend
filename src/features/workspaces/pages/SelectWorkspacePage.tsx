@@ -79,28 +79,32 @@ export function SelectWorkspacePage() {
               style={{
                 width: "100%",
                 padding: "0.875rem 1rem",
-                background: pending === ws.id ? "#f3f4f6" : "#ffffff",
-                border: "1.5px solid #e5e7eb",
+                background: pending === ws.id ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)",
+                border: "1px solid var(--border-color)",
                 borderRadius: "0.5rem",
                 cursor: pending !== null ? "not-allowed" : "pointer",
                 textAlign: "left",
-                transition: "border-color 0.15s, box-shadow 0.15s",
+                transition: "all 0.2s ease",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
               }}
               onMouseEnter={(e) => {
-                if (!pending) (e.currentTarget.style.borderColor = "#4763d8");
+                if (!pending) {
+                  e.currentTarget.style.borderColor = "var(--primary-color)";
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                }
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget.style.borderColor = "#e5e7eb");
+                e.currentTarget.style.borderColor = "var(--border-color)";
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
               }}
             >
               <span>
-                <strong style={{ display: "block", color: "#111827", fontSize: "0.95rem" }}>
+                <strong style={{ display: "block", color: "var(--text-primary)", fontSize: "0.95rem" }}>
                   {ws.name}
                 </strong>
-                <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                   {ws.role === "MANAGER" ? "Manager" : "Lead"} · {ws.timezone}
                 </span>
               </span>

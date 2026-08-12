@@ -60,7 +60,7 @@ export function SignupPage() {
         id="signup-form"
         onSubmit={(e: FormEvent<HTMLFormElement>) => void handleSubmit(e)}
         noValidate
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+        style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}
       >
         {error && <InlineAlert message={error} />}
 
@@ -109,22 +109,26 @@ export function SignupPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
           <label
             htmlFor="signup-timezone"
-            style={{ fontWeight: 600, fontSize: "0.875rem", color: "#374151" }}
+            style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--text-primary)" }}
           >
             Timezone
           </label>
           <select
             id="signup-timezone"
+            className="form-input"
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
             style={{
-              padding: "0.6rem 0.75rem",
-              borderRadius: "0.4rem",
-              border: "1.5px solid #d1d5db",
+              padding: "0.75rem 1rem",
+              borderRadius: "0.5rem",
+              border: "1px solid var(--border-color)",
+              background: "var(--input-bg)",
+              color: "var(--text-primary)",
               fontSize: "1rem",
+              outline: "none",
             }}
           >
             {TIME_ZONES.map((tz) => (
@@ -138,15 +142,16 @@ export function SignupPage() {
         <button
           type="submit"
           id="signup-submit"
+          className="premium-btn"
           disabled={submitting}
           style={{
-            padding: "0.7rem",
-            borderRadius: "0.4rem",
-            background: "#4763d8",
-            color: "#fff",
+            padding: "0.85rem",
+            borderRadius: "0.5rem",
+            color: "#ffffff",
             border: "none",
-            fontWeight: 700,
-            fontSize: "1rem",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            fontSize: "1.05rem",
             cursor: submitting ? "not-allowed" : "pointer",
             opacity: submitting ? 0.7 : 1,
           }}
@@ -154,9 +159,9 @@ export function SignupPage() {
           {submitting ? "Creating account…" : "Create account"}
         </button>
 
-        <p style={{ margin: 0, textAlign: "center", fontSize: "0.875rem", color: "#6b7280" }}>
+        <p style={{ margin: 0, textAlign: "center", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
           Already have an account?{" "}
-          <Link to="/login" style={{ color: "#4763d8", fontWeight: 600 }}>
+          <Link to="/login" style={{ color: "var(--primary-color)", fontWeight: 600, textDecoration: "none" }}>
             Sign in
           </Link>
         </p>
