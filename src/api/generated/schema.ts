@@ -41,6 +41,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/google/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete Google account onboarding */
+        post: operations["completeGoogleOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/google/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Start Google authentication
+         * @description Creates a short-lived OAuth handshake and redirects the browser to Google.
+         */
+        get: operations["startGoogleAuthentication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -353,6 +390,10 @@ export interface components {
             field: string;
             message: string;
         };
+        GoogleOnboardingRequest: {
+            timezone: string;
+            workspaceName: string;
+        };
         LoginRequest: {
             email: string;
             password: string;
@@ -568,6 +609,179 @@ export interface operations {
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    completeGoogleOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoogleOnboardingRequest"];
+            };
+        };
+        responses: {
+            /** @description Adept account and session created */
+            200: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The requested state conflicts with current state */
+            409: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
+                    /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    startGoogleAuthentication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to Google */
+            302: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Internal authorization endpoint that then redirects to Google. */
+                    Location?: string;
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {

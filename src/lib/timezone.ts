@@ -16,7 +16,7 @@ export type IanaTimezone = string;
 export function listTimezones(): IanaTimezone[] {
   try {
     if (typeof Intl.supportedValuesOf === "function") {
-      return Intl.supportedValuesOf("timeZone") as IanaTimezone[];
+      return Array.from(new Set(["UTC", ...Intl.supportedValuesOf("timeZone")])) as IanaTimezone[];
     }
   } catch {
     // Fallback below.

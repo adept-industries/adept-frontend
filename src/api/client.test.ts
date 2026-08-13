@@ -5,7 +5,7 @@ import { accessTokenStore } from "../auth/accessTokenStore.js";
 import { configureAuthRecovery } from "./client.js";
 import { ApiError } from "./problem.js";
 import { queryClient } from "./queryClient.js";
-import { getMe, signup } from "../features/auth/api.js";
+import { completeGoogleOnboarding, getMe, signup } from "../features/auth/api.js";
 import { getCurrentWorkspace, updateWorkspace } from "../features/workspaces/api.js";
 import { apiRequest } from "./client.js";
 import { server } from "../test/server.js";
@@ -76,6 +76,53 @@ describe("shared API client", () => {
     });
 
     expect(observedContentType).toMatch(/^multipart\/form-data; boundary=/);
+  });
+
+  it("completes Google onboarding through the public cookie-bound endpoint", async () => {
+    let observedBody: unknown;
+    let observedCsrf: string | null = null;
+    server.use(
+      http.post("/api/v1/auth/google/onboarding", async ({ request }) => {
+        observedBody = await request.json();
+        observedCsrf = request.headers.get("x-xsrf-token");
+        return HttpResponse.json({
+          accessToken: "google-session-token",
+          expiresInSeconds: 900,
+          workspaceSelectionRequired: false,
+          user: {
+            id: "u",
+            email: "google@example.com",
+            displayName: "Google User",
+            emailVerified: true,
+          },
+          currentMembership: {
+            id: "m",
+            workspaceId: "w",
+            workspaceName: "Google Workspace",
+            workspaceSlug: "google-workspace",
+            timezone: "UTC",
+            role: "MANAGER",
+          },
+          workspaces: [{
+            id: "w",
+            name: "Google Workspace",
+            slug: "google-workspace",
+            timezone: "UTC",
+            role: "MANAGER",
+          }],
+        });
+      }),
+    );
+
+    const result = await completeGoogleOnboarding({
+      workspaceName: "Google Workspace",
+      timezone: "UTC",
+    });
+
+    expect(observedBody).toEqual({ workspaceName: "Google Workspace", timezone: "UTC" });
+    expect(observedCsrf).toBe("test-csrf");
+    expect(result.kind).toBe("authenticated");
+    expect(accessTokenStore.get()).toBe("google-session-token");
   });
 
   it("performs one 401 recovery/retry and never recovers a 403", async () => {

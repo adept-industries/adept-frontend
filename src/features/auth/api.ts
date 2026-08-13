@@ -14,6 +14,8 @@ type SignupResponse = operations["signup"]["responses"][201]["content"]["applica
 export type SignupResult = Pick<SignupResponse, "emailVerificationRequired">;
 export type LoginBody = operations["login"]["requestBody"]["content"]["application/json"];
 type LoginResponse = operations["login"]["responses"][200]["content"]["application/json"];
+export type GoogleOnboardingBody = operations["completeGoogleOnboarding"]["requestBody"]["content"]["application/json"];
+type GoogleOnboardingResponse = operations["completeGoogleOnboarding"]["responses"][200]["content"]["application/json"];
 type RefreshBody = components["schemas"]["RefreshRequest"];
 type RefreshResponse = operations["refreshSession"]["responses"][200]["content"]["application/json"];
 type SwitchResponse = operations["switchWorkspace"]["responses"][200]["content"]["application/json"];
@@ -42,7 +44,9 @@ function mapWorkspace(
   return value;
 }
 
-function consumeSession(response: LoginResponse | RefreshResponse | SwitchResponse): SessionResult {
+function consumeSession(
+  response: LoginResponse | GoogleOnboardingResponse | RefreshResponse | SwitchResponse,
+): SessionResult {
   if ("accessToken" in response) accessTokenStore.set(response.accessToken);
   else accessTokenStore.clear();
 
@@ -73,6 +77,20 @@ export async function login(body: LoginBody, csrfLockHeld = false): Promise<Sess
   const response = await apiRequest<LoginResponse, LoginBody>({
     method: "POST",
     path: "/auth/login",
+    auth: "public",
+    body,
+    csrfLockHeld,
+  });
+  return consumeSession(response);
+}
+
+export async function completeGoogleOnboarding(
+  body: GoogleOnboardingBody,
+  csrfLockHeld = false,
+): Promise<SessionResult> {
+  const response = await apiRequest<GoogleOnboardingResponse, GoogleOnboardingBody>({
+    method: "POST",
+    path: "/auth/google/onboarding",
     auth: "public",
     body,
     csrfLockHeld,

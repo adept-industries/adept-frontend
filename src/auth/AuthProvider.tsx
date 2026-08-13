@@ -12,6 +12,7 @@ import { ensureCsrf } from "../api/csrf.js";
 import { ApiError } from "../api/problem.js";
 import { queryClient } from "../api/queryClient.js";
 import {
+  completeGoogleOnboarding as requestGoogleOnboarding,
   getMe,
   login as requestLogin,
   logout as requestLogout,
@@ -19,6 +20,7 @@ import {
   resetPassword as requestPasswordReset,
   signup as requestSignup,
   switchWorkspace,
+  type GoogleOnboardingBody,
   type LoginBody,
   type ResetPasswordBody,
   type SessionResult,
@@ -37,6 +39,12 @@ interface AuthProviderProps {
 }
 
 let bootstrapFlight: Promise<SessionResult> | null = null;
+
+function isGoogleLoginReturn(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.location.pathname === "/login"
+    && new URLSearchParams(window.location.search).get("google") === "success";
+}
 
 function clearVolatileSession(clearPreference = true): void {
   accessTokenStore.clear();
@@ -152,11 +160,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (!bootstrapFlight) {
       const preference = workspacePreference.get() ?? undefined;
+      const googleLoginReturn = isGoogleLoginReturn();
       bootstrapFlight = ensureCsrf()
         .then(() => runSessionMutation(
-          "refresh",
+          googleLoginReturn ? "login" : "refresh",
           () => refreshSession(preference, true),
-          { automatic: true, generation: generationRef.current, workspaceId: preference },
+          {
+            automatic: !googleLoginReturn,
+            credentialRecovery: googleLoginReturn,
+            generation: generationRef.current,
+            workspaceId: preference,
+          },
         ))
         .finally(() => {
           bootstrapFlight = null;
@@ -240,6 +254,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
       result = await runSessionMutation(
         "login",
         () => requestLogin(params, true),
+        { credentialRecovery: true, generation: generationRef.current },
+      );
+    } catch (error) {
+      if (!(error instanceof ApiError)) invalidateSession({ ambiguous: true });
+      throw error;
+    }
+    const next = installSession(result, true);
+    await ensureCsrf();
+    return next;
+  }, [installSession, invalidateSession]);
+
+  const completeGoogleOnboarding = useCallback(async (
+    params: GoogleOnboardingBody,
+  ): Promise<AuthState> => {
+    clearVolatileSession();
+    let result: SessionResult;
+    try {
+      result = await runSessionMutation(
+        "login",
+        () => requestGoogleOnboarding(params, true),
         { credentialRecovery: true, generation: generationRef.current },
       );
     } catch (error) {
@@ -347,6 +381,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     actions: {
       signup: requestSignup,
       login,
+      completeGoogleOnboarding,
       selectWorkspace,
       refresh,
       logout,
@@ -354,7 +389,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updateCurrentWorkspace,
       invalidateSession,
     },
-  }), [state, login, selectWorkspace, refresh, logout, resetPassword, updateCurrentWorkspace, invalidateSession]);
+  }), [
+    state,
+    login,
+    completeGoogleOnboarding,
+    selectWorkspace,
+    refresh,
+    logout,
+    resetPassword,
+    updateCurrentWorkspace,
+    invalidateSession,
+  ]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

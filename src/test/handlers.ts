@@ -41,6 +41,32 @@ export const handlers = [
     }),
   ),
 
+  // Google onboarding — returns the same workspace-scoped session shape.
+  http.post(`${API}/auth/google/onboarding`, () =>
+    HttpResponse.json({
+      accessToken: "test.access.token",
+      expiresInSeconds: 900,
+      workspaceSelectionRequired: false,
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        displayName: "Test User",
+        emailVerified: true,
+      },
+      currentMembership: {
+        id: "mem-1",
+        workspaceId: "ws-1",
+        workspaceName: "Acme",
+        workspaceSlug: "acme-abc123",
+        timezone: "UTC",
+        role: "MANAGER",
+      },
+      workspaces: [
+        { id: "ws-1", name: "Acme", slug: "acme-abc123", timezone: "UTC", role: "MANAGER" },
+      ],
+    }),
+  ),
+
   // Refresh — returns the same session.
   http.post(`${API}/auth/refresh`, () =>
     HttpResponse.json({

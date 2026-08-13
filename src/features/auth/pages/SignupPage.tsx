@@ -5,23 +5,11 @@ import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ApiError } from "../../../api/problem";
+import { getBrowserTimezone, listTimezones } from "../../../lib/timezone";
+import { AuthDivider, GoogleAuthButton } from "../components/GoogleAuthButton";
 
-// All IANA time zones supported by the browser runtime.
-const TIME_ZONES: string[] = (() => {
-  try {
-    return Intl.supportedValuesOf("timeZone");
-  } catch {
-    return ["UTC"];
-  }
-})();
-
-const DEFAULT_TZ = (() => {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return "UTC";
-  }
-})();
+const TIME_ZONES = listTimezones();
+const DEFAULT_TZ = getBrowserTimezone();
 
 export function SignupPage() {
   const { actions } = useAuth();
@@ -66,6 +54,9 @@ export function SignupPage() {
         style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}
       >
         {error && <InlineAlert message={error} />}
+
+        <GoogleAuthButton label="Sign up with Google" />
+        <AuthDivider />
 
         <FormField
           id="signup-email"

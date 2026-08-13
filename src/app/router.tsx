@@ -7,6 +7,7 @@ import { PublicOnlyRoute } from "../auth/PublicOnlyRoute";
 import { WorkspaceSelectionRoute } from "../auth/WorkspaceSelectionRoute";
 import { CheckEmailPage } from "../features/auth/pages/CheckEmailPage";
 import { ForgotPasswordPage } from "../features/auth/pages/ForgotPasswordPage";
+import { GoogleOnboardingPage } from "../features/auth/pages/GoogleOnboardingPage";
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { ResetPasswordPage } from "../features/auth/pages/ResetPasswordPage";
 import { SignupPage } from "../features/auth/pages/SignupPage";
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
   // ── Public account pages ────────────────────────────────────────────────────
   { path: "/signup", element: <PublicOnlyRoute><SignupPage /></PublicOnlyRoute> },
   { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
+  { path: "/google/onboarding", element: <PublicOnlyRoute><GoogleOnboardingPage /></PublicOnlyRoute> },
   { path: "/check-email", element: <CheckEmailPage /> },
   { path: "/forgot-password", element: <ForgotPasswordPage /> },
   {

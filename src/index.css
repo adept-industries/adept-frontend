@@ -298,6 +298,36 @@ button.navigation-dropdown-option[aria-selected="true"] {
   line-height: 1.5;
 }
 
+.google-auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.google-auth-mark {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+}
+
+.auth-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.auth-divider > span:first-child,
+.auth-divider > span:last-child {
+  height: 1px;
+  background: var(--border-color);
+}
+
 .loading-spinner {
   animation: adept-spin 0.9s linear infinite;
 }
