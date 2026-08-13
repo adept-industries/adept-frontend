@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import type {
+  GoogleOnboardingBody,
   LoginBody,
   ResetPasswordBody,
   SignupBody,
@@ -10,6 +11,7 @@ import type { AuthState } from "./types.js";
 export interface AuthActions {
   signup(params: SignupBody): Promise<SignupResult>;
   login(params: LoginBody): Promise<AuthState>;
+  completeGoogleOnboarding(params: GoogleOnboardingBody): Promise<AuthState>;
   selectWorkspace(workspaceId: string): Promise<AuthState>;
   refresh(options?: { withoutWorkspace?: boolean }): Promise<AuthState>;
   logout(): Promise<void>;

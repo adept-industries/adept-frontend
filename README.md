@@ -62,4 +62,6 @@ Run the browser journeys against the full Compose stack:
 PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run e2e
 ```
 
-Playwright uses Chromium, one worker, no retries, and no trace/video/screenshot artifacts because account links and cookies are sensitive. The three stateful journeys include short spacing so one CI client IP stays inside the production proxy's auth rate limit.
+Playwright uses Chromium, one worker, no retries, and no trace/video/screenshot artifacts because account links and cookies are sensitive. The stateful backend journeys include short spacing so one CI client IP stays inside the production proxy's auth rate limit.
+
+`e2e/google-auth.spec.ts` covers the Adept-side Google return, first-time onboarding, and recovery paths with deterministic route mocks. It intentionally does not automate `accounts.google.com`; use a manual local smoke test with a Google test account to verify the provider consent screen and configured redirect URI.

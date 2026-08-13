@@ -5,14 +5,25 @@ import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
 import { AuthContext } from "../../../auth/AuthContext";
 import { ApiError } from "../../../api/problem";
+import { AuthDivider, GoogleAuthButton } from "../components/GoogleAuthButton";
+
+const GOOGLE_ERROR_MESSAGES: Record<string, string> = {
+  account_exists: "An Adept account already uses this email. Sign in with your password.",
+  email_not_verified: "Google did not confirm this account's email address.",
+  no_workspace: "This account does not have access to an active workspace.",
+  authentication_failed: "Google sign-in could not be completed. Please try again.",
+};
 
 export function LoginPage() {
   const ctx = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const from = getSafeRedirect((location.state as { from?: Location } | null)?.from);
-  const deletionRequested = new URLSearchParams(location.search).get("deleted") === "1";
-  const passwordReset = new URLSearchParams(location.search).get("reset") === "1";
+  const searchParams = new URLSearchParams(location.search);
+  const deletionRequested = searchParams.get("deleted") === "1";
+  const passwordReset = searchParams.get("reset") === "1";
+  const googleErrorCode = searchParams.get("google_error");
+  const googleReturnFailed = searchParams.get("google") === "success";
   const ambiguousSession = ctx?.state.status === "anonymous" && ctx.state.ambiguousSession;
   const sessionNotice = ctx?.state.status === "anonymous" ? ctx.state.notice : undefined;
 
@@ -74,7 +85,16 @@ export function LoginPage() {
         {!ambiguousSession && sessionNotice && (
           <InlineAlert message={sessionNotice} />
         )}
+        {googleErrorCode && (
+          <InlineAlert message={GOOGLE_ERROR_MESSAGES[googleErrorCode] ?? GOOGLE_ERROR_MESSAGES.authentication_failed} />
+        )}
+        {googleReturnFailed && (
+          <InlineAlert message="Google sign-in succeeded, but the Adept session could not be restored. Please try again." />
+        )}
         {error && <InlineAlert message={error} />}
+
+        <GoogleAuthButton label="Continue with Google" />
+        <AuthDivider />
 
         <FormField
           id="login-email"

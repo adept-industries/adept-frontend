@@ -8,6 +8,11 @@ import { ApiError, isApiProblem, localProblem } from "./problem.js";
 
 const API_ROOT = `${import.meta.env.VITE_API_BASE_URL ?? "/api"}/v1`;
 
+/** Builds a browser URL for API endpoints that require top-level navigation. */
+export function apiUrl(path: string): string {
+  return `${API_ROOT}${path}`;
+}
+
 export type ApiAuthMode = "public" | "refresh-cookie" | "bearer";
 
 export interface SessionSnapshot {
@@ -93,7 +98,7 @@ export async function apiRequest<TResponse, TBody = never>(
 
     const dispatch = (csrfToken?: string) => {
       if (csrfToken) headers[CSRF_HEADER] = csrfToken;
-      return fetch(`${API_ROOT}${options.path}`, {
+      return fetch(apiUrl(options.path), {
         method: options.method,
         credentials: "include",
         headers,
