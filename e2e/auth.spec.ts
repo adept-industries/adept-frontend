@@ -60,7 +60,7 @@ test("browser auth lifecycle", async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/, { timeout: 60_000 });
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 
-  // 7. Only the non-secret workspace preference may be persisted.
+  // 7. Only non-secret workspace and display preferences may be persisted.
   const storageKeys = await page.evaluate(() => {
     return {
       local: Object.keys(localStorage),
@@ -71,7 +71,8 @@ test("browser auth lifecycle", async ({ page }) => {
     ["token", "password", "credential", "access"].some((part) => key.toLowerCase().includes(part)),
   );
   expect(dangerousKeys).toHaveLength(0);
-  expect(storageKeys.local.every((key) => key === "adept.currentWorkspaceId")).toBe(true);
+  const allowedLocalKeys = new Set(["adept.currentWorkspaceId", "adept.dashboardTheme"]);
+  expect(storageKeys.local.every((key) => allowedLocalKeys.has(key))).toBe(true);
 
   // 8. Hard reload.
   await page.reload();

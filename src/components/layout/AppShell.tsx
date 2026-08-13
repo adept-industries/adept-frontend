@@ -1,17 +1,26 @@
 import type { ReactNode } from "react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { Link } from "react-router";
 import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { useAuth } from "../../auth/AuthProvider";
 import logoPath from "../../assets/logo.png";
 import { ProjectSelector } from "../../features/projects/ProjectSelector";
+import {
+  dashboardThemePreference,
+  type DashboardTheme,
+} from "../../lib/dashboardThemePreference";
 
 interface AppShellProps {
   children: ReactNode;
 }
 
-function AppShellNav() {
+interface AppShellNavProps {
+  theme: DashboardTheme;
+  onToggleTheme: () => void;
+}
+
+function AppShellNav({ theme, onToggleTheme }: AppShellNavProps) {
   const { state, actions } = useAuth();
 
   if (state.status !== "authenticated") return null;
@@ -32,6 +41,26 @@ function AppShellNav() {
           Manage Projects
         </Link>
       )}
+
+      <button
+        id="dashboard-theme-toggle"
+        type="button"
+        className="icon-button"
+        onClick={onToggleTheme}
+        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {theme === "dark" ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" />
+          </svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+          </svg>
+        )}
+      </button>
 
       {isManager && (
         <Link
@@ -69,15 +98,25 @@ function AppShellNav() {
 export function AppShell({ children }: AppShellProps) {
   const ctx = useContext(AuthContext);
   const authenticatedState = ctx?.state.status === "authenticated" ? ctx.state : null;
+  const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    dashboardThemePreference.set(nextTheme);
+  };
 
   return (
-    <div className="dark-theme" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-color)", color: "var(--text-primary)" }}>
+    <div
+      className={`dashboard-shell ${theme}-theme`}
+      data-dashboard-theme={theme}
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-color)", color: "var(--text-primary)" }}
+    >
       <header
+        className="dashboard-header"
         style={{
-          background: "rgba(15, 15, 18, 0.7)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
           padding: "0 2rem",
           height: "4.5rem",
           display: "flex",
@@ -98,12 +137,7 @@ export function AppShell({ children }: AppShellProps) {
             <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ height: "3.5rem" }} />
           </Link>
           {authenticatedState && (
-            <div
-              style={{
-                borderLeft: "1px solid rgba(255, 255, 255, 0.2)",
-                paddingLeft: "1rem",
-              }}
-            >
+            <div className="dashboard-workspace-control" style={{ paddingLeft: "1rem" }}>
               <WorkspaceSwitcher
                 workspaces={authenticatedState.workspaces}
                 currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
@@ -112,7 +146,7 @@ export function AppShell({ children }: AppShellProps) {
           )}
         </div>
 
-        <AppShellNav />
+        <AppShellNav theme={theme} onToggleTheme={toggleTheme} />
       </header>
       <main style={{ flex: 1, padding: "2rem 1.5rem" }}>{children}</main>
     </div>
