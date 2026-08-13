@@ -187,15 +187,12 @@ export function WorkspaceSettingsPage() {
         {workspace && (
           <>
             {/* ── General Settings Card ─────────────────────────── */}
-            <div style={{
-              background: "linear-gradient(145deg, rgba(30, 30, 35, 0.4) 0%, rgba(15, 15, 18, 0.6) 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+            <div className="dashboard-panel" style={{
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
               borderRadius: "1rem",
               padding: "2.5rem",
               marginBottom: "2.5rem",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
             }}>
               <h2 style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: "1.5rem", color: "var(--text-primary)" }}>General Settings</h2>
               
@@ -246,7 +243,7 @@ export function WorkspaceSettingsPage() {
                 {saveError && <InlineAlert kind="error" message={saveError} />}
                 {saveSuccess && <InlineAlert kind="success" message="Settings saved successfully." />}
 
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)", paddingTop: "1.5rem" }}>
+                <div className="dashboard-panel-actions" style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", paddingTop: "1.5rem" }}>
                   <button
                     type="submit"
                     id="save-settings-btn"

@@ -15,6 +15,12 @@
   --danger-hover: #b91c1c;
   --danger-surface: rgba(220, 38, 38, 0.08);
   --danger-border: rgba(220, 38, 38, 0.55);
+  --dashboard-header-bg: rgba(255, 255, 255, 0.85);
+  --dashboard-subtle-border: rgba(0, 0, 0, 0.12);
+  --dashboard-divider: rgba(0, 0, 0, 0.2);
+  --dashboard-panel-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(242, 242, 242, 0.96) 100%);
+  --dashboard-panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --popover-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
 
   color: var(--text-primary);
   background: var(--bg-color);
@@ -22,6 +28,10 @@
     "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+}
+
+.light-theme {
+  color-scheme: light;
 }
 
 .dark-theme {
@@ -41,6 +51,12 @@
   --danger-hover: #dc2626;
   --danger-surface: rgba(220, 38, 38, 0.12);
   --danger-border: rgba(248, 113, 113, 0.65);
+  --dashboard-header-bg: rgba(15, 15, 18, 0.7);
+  --dashboard-subtle-border: rgba(255, 255, 255, 0.1);
+  --dashboard-divider: rgba(255, 255, 255, 0.2);
+  --dashboard-panel-bg: linear-gradient(145deg, rgba(30, 30, 35, 0.4) 0%, rgba(15, 15, 18, 0.6) 100%);
+  --dashboard-panel-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --popover-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 
@@ -118,6 +134,29 @@ button:disabled {
   padding: 0 !important;
 }
 
+.dashboard-header {
+  border-bottom: 1px solid var(--dashboard-subtle-border);
+  background: var(--dashboard-header-bg);
+}
+
+.dashboard-workspace-control {
+  border-left: 1px solid var(--dashboard-divider);
+}
+
+.dashboard-panel {
+  border: 1px solid var(--dashboard-subtle-border);
+  background: var(--dashboard-panel-bg);
+  box-shadow: var(--dashboard-panel-shadow);
+}
+
+.dashboard-panel-actions {
+  border-top: 1px solid var(--dashboard-subtle-border);
+}
+
+.light-theme .brand-logo {
+  filter: grayscale(1) invert(1);
+}
+
 .navigation-dropdown-field {
   display: flex;
   align-items: center;
@@ -173,7 +212,7 @@ button.navigation-dropdown-trigger {
   border: 1px solid var(--border-color);
   border-radius: 0.5rem;
   background: var(--card-bg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--popover-shadow);
 }
 
 .navigation-dropdown-menu--left {
