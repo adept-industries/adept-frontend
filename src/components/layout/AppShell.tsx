@@ -16,16 +16,12 @@ function AppShellNav() {
 
   if (state.status !== "authenticated") return null;
 
-  const { currentMembership, workspaces } = state;
+  const { currentMembership } = state;
   const isManager = currentMembership.role === "MANAGER";
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
       <ProjectSelector />
-      <WorkspaceSwitcher
-        workspaces={workspaces}
-        currentWorkspaceId={currentMembership.workspaceId}
-      />
 
       {isManager && (
         <Link
@@ -33,7 +29,7 @@ function AppShellNav() {
           id="nav-projects-link"
           className="button-link"
         >
-          Projects
+          Manage Projects
         </Link>
       )}
 
@@ -72,10 +68,7 @@ function AppShellNav() {
 
 export function AppShell({ children }: AppShellProps) {
   const ctx = useContext(AuthContext);
-  const workspaceName =
-    ctx?.state.status === "authenticated"
-      ? ctx.state.currentMembership.workspaceName
-      : "";
+  const authenticatedState = ctx?.state.status === "authenticated" ? ctx.state : null;
 
   return (
     <div className="dark-theme" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-color)", color: "var(--text-primary)" }}>
@@ -104,18 +97,18 @@ export function AppShell({ children }: AppShellProps) {
           >
             <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ height: "3.5rem" }} />
           </Link>
-          {workspaceName && (
-             <span
-               style={{
-                 fontSize: "0.85rem",
-                 color: "var(--text-secondary)",
-                 borderLeft: "1px solid rgba(255, 255, 255, 0.2)",
-                 paddingLeft: "1rem",
-                 fontWeight: 500,
-               }}
-             >
-               {workspaceName}
-             </span>
+          {authenticatedState && (
+            <div
+              style={{
+                borderLeft: "1px solid rgba(255, 255, 255, 0.2)",
+                paddingLeft: "1rem",
+              }}
+            >
+              <WorkspaceSwitcher
+                workspaces={authenticatedState.workspaces}
+                currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
+              />
+            </div>
           )}
         </div>
 

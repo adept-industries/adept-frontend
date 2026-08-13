@@ -1,3 +1,4 @@
+import { NavigationDropdown } from "../../components/ui/NavigationDropdown.js";
 import { useProjects } from "./useProjects.js";
 
 export function ProjectSelector() {
@@ -9,27 +10,15 @@ export function ProjectSelector() {
   if (projects.length === 0) return null;
 
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+    <div className="navigation-dropdown-field">
       <span>Project</span>
-      <select
+      <NavigationDropdown
         id="project-selector"
-        aria-label="Selected project"
-        className="form-input"
-        value={selectedProject?.id ?? ""}
-        onChange={(event) => select(event.target.value)}
-        style={{
-          minHeight: "2.65rem",
-          padding: "0.55rem 0.75rem",
-          border: "1px solid var(--border-color)",
-          borderRadius: "0.5rem",
-          background: "var(--input-bg)",
-          color: "var(--text-primary)",
-        }}
-      >
-        {projects.map((project) => (
-          <option key={project.id} value={project.id}>{project.name}</option>
-        ))}
-      </select>
-    </label>
+        ariaLabel="Selected project"
+        options={projects.map((project) => ({ id: project.id, label: project.name }))}
+        selectedId={selectedProject?.id ?? ""}
+        onSelect={select}
+      />
+    </div>
   );
 }
