@@ -56,6 +56,17 @@ docker build --tag adept-frontend:phase2 .
 npm run nginx:verify -- adept-frontend:phase2
 ```
 
+After the complete `CI` workflow succeeds for a push to `main`, the publish
+workflow builds Linux AMD64 and pushes exactly one immutable image tag:
+
+```text
+ghcr.io/adept-industries/adept-frontend:sha-<full-commit>
+```
+
+Pull-request runs, failed CI runs, and non-main branches never publish. The
+workflow uses GitHub's short-lived `GITHUB_TOKEN`; it does not require a PAT or
+any application/AWS secret.
+
 Run the browser journeys against the full Compose stack:
 
 ```bash
