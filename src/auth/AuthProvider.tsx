@@ -13,16 +13,21 @@ import { ApiError } from "../api/problem.js";
 import { queryClient } from "../api/queryClient.js";
 import {
   completeGoogleOnboarding as requestGoogleOnboarding,
+  createWorkspaceForSession as requestSessionWorkspace,
   getMe,
   login as requestLogin,
   logout as requestLogout,
+  reauthenticateWithPassword as requestPasswordReauthentication,
   refreshSession,
   resetPassword as requestPasswordReset,
   signup as requestSignup,
+  startGoogleReauthentication as requestGoogleReauthentication,
   switchWorkspace,
   type GoogleOnboardingBody,
   type LoginBody,
+  type PasswordReauthenticationBody,
   type ResetPasswordBody,
+  type SessionWorkspaceBody,
   type SessionResult,
 } from "../features/auth/api.js";
 import { workspacePreference } from "../lib/workspacePreference.js";
@@ -40,10 +45,11 @@ interface AuthProviderProps {
 
 let bootstrapFlight: Promise<SessionResult> | null = null;
 
-function isGoogleLoginReturn(): boolean {
+function isGoogleCredentialReturn(): boolean {
   if (typeof window === "undefined") return false;
-  return window.location.pathname === "/login"
-    && new URLSearchParams(window.location.search).get("google") === "success";
+  const search = new URLSearchParams(window.location.search);
+  return (window.location.pathname === "/login" && search.get("google") === "success")
+    || (window.location.pathname === "/dashboard/settings" && search.get("reauthenticated") === "1");
 }
 
 function clearVolatileSession(clearPreference = true): void {
@@ -160,14 +166,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (!bootstrapFlight) {
       const preference = workspacePreference.get() ?? undefined;
-      const googleLoginReturn = isGoogleLoginReturn();
+      const googleCredentialReturn = isGoogleCredentialReturn();
       bootstrapFlight = ensureCsrf()
         .then(() => runSessionMutation(
-          googleLoginReturn ? "login" : "refresh",
+          googleCredentialReturn ? "login" : "refresh",
           () => refreshSession(preference, true),
           {
-            automatic: !googleLoginReturn,
-            credentialRecovery: googleLoginReturn,
+            automatic: !googleCredentialReturn,
+            credentialRecovery: googleCredentialReturn,
             generation: generationRef.current,
             workspaceId: preference,
           },
@@ -285,6 +291,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return next;
   }, [installSession, invalidateSession]);
 
+  const reauthenticateWithPassword = useCallback(async (
+    params: PasswordReauthenticationBody,
+  ): Promise<AuthState> => {
+    const current = stateRef.current;
+    if (current.status !== "authenticated") return current;
+
+    let result: SessionResult;
+    try {
+      result = await runSessionMutation(
+        "login",
+        () => requestPasswordReauthentication(params, true),
+        {
+          credentialRecovery: true,
+          generation: generationRef.current,
+          userId: current.user.id,
+          workspaceId: current.currentMembership.workspaceId,
+        },
+      );
+    } catch (error) {
+      if (!(error instanceof ApiError)) invalidateSession({ ambiguous: true });
+      throw error;
+    }
+
+    const next = installSession(result, true);
+    await ensureCsrf();
+    return next;
+  }, [installSession, invalidateSession]);
+
   const selectWorkspace = useCallback(async (workspaceId: string): Promise<AuthState> => {
     const current = stateRef.current;
     const startedGeneration = ++generationRef.current;
@@ -317,6 +351,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } else {
           invalidateSession();
         }
+      } else if (error instanceof ApiError) {
+        invalidateSession();
+      } else {
+        invalidateSession({ ambiguous: true });
+      }
+      throw error;
+    }
+  }, [installSession, invalidateSession, publishState]);
+
+  const createWorkspace = useCallback(async (
+    params: SessionWorkspaceBody,
+  ): Promise<AuthState> => {
+    const current = stateRef.current;
+    if (current.status !== "workspaceRequired") return current;
+
+    const startedGeneration = ++generationRef.current;
+    await queryClient.cancelQueries();
+    accessTokenStore.clear();
+    queryClient.clear();
+    try {
+      const result = await runSessionMutation(
+        "switch",
+        () => requestSessionWorkspace(params, true),
+        {
+          generation: startedGeneration,
+          userId: current.user.id,
+        },
+      );
+      return installSession(result, false);
+    } catch (error) {
+      if (error instanceof ApiError && !["SESSION_INVALID", "REFRESH_REUSE_DETECTED"].includes(error.problem.code)) {
+        publishState({
+          status: "workspaceRequired",
+          user: current.user,
+          workspaces: current.workspaces,
+          notice: error.problem.detail,
+        });
       } else if (error instanceof ApiError) {
         invalidateSession();
       } else {
@@ -381,7 +452,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     actions: {
       signup: requestSignup,
       login,
+      reauthenticateWithPassword,
+      startGoogleReauthentication: requestGoogleReauthentication,
       completeGoogleOnboarding,
+      createWorkspace,
       selectWorkspace,
       refresh,
       logout,
@@ -392,7 +466,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }), [
     state,
     login,
+    reauthenticateWithPassword,
     completeGoogleOnboarding,
+    createWorkspace,
     selectWorkspace,
     refresh,
     logout,

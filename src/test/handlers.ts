@@ -26,6 +26,7 @@ export const handlers = [
         email: "user@example.com",
         displayName: "Test User",
         emailVerified: true,
+        hasPassword: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -41,6 +42,37 @@ export const handlers = [
     }),
   ),
 
+  // Password reauthentication — rotates the session and keeps the workspace.
+  http.post(`${API}/auth/reauthenticate/password`, () =>
+    HttpResponse.json({
+      accessToken: "test.reauthenticated.token",
+      expiresInSeconds: 900,
+      workspaceSelectionRequired: false,
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        displayName: "Test User",
+        emailVerified: true,
+        hasPassword: true,
+      },
+      currentMembership: {
+        id: "mem-1",
+        workspaceId: "ws-1",
+        workspaceName: "Acme",
+        workspaceSlug: "acme-abc123",
+        timezone: "UTC",
+        role: "MANAGER",
+      },
+      workspaces: [
+        { id: "ws-1", name: "Acme", slug: "acme-abc123", timezone: "UTC", role: "MANAGER" },
+      ],
+    }),
+  ),
+
+  http.post(`${API}/auth/google/reauthentication/start`, () =>
+    HttpResponse.json({ authorizationUrl: "/api/v1/auth/google/authorization/google" }),
+  ),
+
   // Google onboarding — returns the same workspace-scoped session shape.
   http.post(`${API}/auth/google/onboarding`, () =>
     HttpResponse.json({
@@ -52,6 +84,7 @@ export const handlers = [
         email: "user@example.com",
         displayName: "Test User",
         emailVerified: true,
+        hasPassword: false,
       },
       currentMembership: {
         id: "mem-1",
@@ -78,6 +111,7 @@ export const handlers = [
         email: "user@example.com",
         displayName: "Test User",
         emailVerified: true,
+        hasPassword: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -104,6 +138,7 @@ export const handlers = [
         email: "user@example.com",
         displayName: "Test User",
         emailVerified: true,
+        hasPassword: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -150,6 +185,7 @@ export const handlers = [
         email: "user@example.com",
         displayName: "Test User",
         emailVerified: true,
+        hasPassword: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -164,6 +200,40 @@ export const handlers = [
       ],
     }),
   ),
+
+  // Restore a workspace-scoped session for an account with no active workspace.
+  http.post(`${API}/auth/workspaces`, async ({ request }) => {
+    const body = await request.json() as { name: string; timezone: string };
+    return HttpResponse.json({
+      accessToken: "test.recovered.token",
+      expiresInSeconds: 900,
+      workspaceSelectionRequired: false,
+      user: {
+        id: "user-1",
+        email: "user@example.com",
+        displayName: "Test User",
+        emailVerified: true,
+        hasPassword: true,
+      },
+      currentMembership: {
+        id: "mem-recovered",
+        workspaceId: "ws-recovered",
+        workspaceName: body.name,
+        workspaceSlug: "recovered-workspace-abc123",
+        timezone: body.timezone,
+        role: "MANAGER",
+      },
+      workspaces: [
+        {
+          id: "ws-recovered",
+          name: body.name,
+          slug: "recovered-workspace-abc123",
+          timezone: body.timezone,
+          role: "MANAGER",
+        },
+      ],
+    }, { status: 201 });
+  }),
 
   // Workspaces list
   http.get(`${API}/workspaces`, () =>

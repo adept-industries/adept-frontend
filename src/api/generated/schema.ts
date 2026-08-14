@@ -58,6 +58,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/google/reauthentication/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Google identity verification
+         * @description Creates a browser-bound OAuth handshake that forces a fresh Google authentication.
+         */
+        post: operations["startGoogleReauthentication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/google/start": {
         parameters: {
             query?: never;
@@ -126,6 +146,23 @@ export interface paths {
         get: operations["getCurrentUser"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reauthenticate/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify the current user with a password */
+        post: operations["reauthenticateWithPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -234,6 +271,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a workspace for an account with none */
+        post: operations["createWorkspaceForSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -331,7 +385,7 @@ export interface paths {
         post?: never;
         /**
          * Request current workspace deletion
-         * @description Marks the workspace DELETING, suspends integrations, and queues one pending DELETE_WORKSPACE job. The deletion worker is intentionally deferred beyond Phase 2.
+         * @description Requires authentication within the configured sensitive-action window, marks the workspace DELETING, suspends integrations, and queues one pending DELETE_WORKSPACE job.
          */
         delete: operations["deleteCurrentWorkspace"];
         options?: never;
@@ -357,6 +411,7 @@ export interface components {
             user: components["schemas"]["UserSummary"];
             /** @enum {boolean} */
             workspaceSelectionRequired: false;
+            /** @description Active workspace memberships. Empty when the account must create a workspace. */
             workspaces: components["schemas"]["WorkspaceSummaryResponse"][];
         };
         CreateProjectRequest: {
@@ -380,7 +435,6 @@ export interface components {
         };
         DeleteWorkspaceRequest: {
             confirmationSlug: string;
-            password: string;
         };
         EmailRequest: {
             /** Format: email */
@@ -393,6 +447,9 @@ export interface components {
         GoogleOnboardingRequest: {
             timezone: string;
             workspaceName: string;
+        };
+        GoogleReauthenticationStartResponse: {
+            authorizationUrl: string;
         };
         LoginRequest: {
             email: string;
@@ -413,6 +470,9 @@ export interface components {
             workspaceId: string;
             workspaceName: string;
             workspaceSlug: string;
+        };
+        PasswordReauthenticationRequest: {
+            password: string;
         };
         /** @description RFC 9457 problem response with stable Adept fields. */
         ProblemDetail: {
@@ -481,6 +541,7 @@ export interface components {
             displayName: string;
             email: string;
             emailVerified: boolean;
+            hasPassword: boolean;
             /** Format: uuid */
             id: string;
         };
@@ -494,6 +555,7 @@ export interface components {
             user: components["schemas"]["UserSummary"];
             /** @enum {boolean} */
             workspaceSelectionRequired: true;
+            /** @description Active workspace memberships. Empty when the account must create a workspace. */
             workspaces: components["schemas"]["WorkspaceSummaryResponse"][];
         };
         WorkspaceSummaryResponse: {
@@ -729,6 +791,84 @@ export interface operations {
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    startGoogleReauthentication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Google authorization URL returned */
+            200: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoogleReauthenticationStartResponse"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
+                    /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
@@ -984,6 +1124,114 @@ export interface operations {
                 headers: {
                     /** @description Sensitive Phase 2 responses are not cached. */
                     "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    reauthenticateWithPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordReauthenticationRequest"];
+            };
+        };
+        responses: {
+            /** @description Identity verified and a recent session issued */
+            200: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
+                    /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
+                    "Set-Cookie"?: string;
                     [name: string]: unknown;
                 };
                 content: {
@@ -1486,6 +1734,113 @@ export interface operations {
             };
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    createWorkspaceForSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWorkspaceRequest"];
+            };
+        };
+        responses: {
+            /** @description Workspace and authenticated session created */
+            201: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSessionResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description May clear the adept_refresh cookie after invalid session state. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The requested state conflicts with current state */
+            409: {
                 headers: {
                     /** @description Sensitive Phase 2 responses are not cached. */
                     "Cache-Control"?: "no-store";

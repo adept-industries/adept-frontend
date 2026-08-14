@@ -9,7 +9,7 @@ describe("WorkspaceSelectionRoute", () => {
     const value: AuthContextValue = {
       state: {
         status: "workspaceRequired",
-        user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true },
+        user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true, hasPassword: true },
         workspaces: [],
       },
       actions: {} as AuthContextValue["actions"],

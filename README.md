@@ -6,7 +6,7 @@ React 19, TypeScript, and Vite browser application for Adept. Phase 2 includes a
 
 - `/signup`, `/login`, `/check-email`, `/forgot-password`
 - `/verify-email` and `/reset-password` for fragment-based email action links
-- `/select-workspace` for sessions with multiple memberships
+- `/select-workspace` for selecting among multiple memberships or creating a workspace when none remain
 - `/dashboard` for an authenticated workspace
 - `/dashboard/settings` for Managers
 - `/dashboard/projects` for Manager project administration
@@ -30,7 +30,7 @@ Open <http://localhost:5173>. Vite proxies relative `/api` requests to `http://l
 
 The access JWT exists only in a module-level memory store. It is never written to browser storage, cookies, URLs, logs, or TanStack Query. Local storage contains only the non-secret current-workspace UUID; session storage may contain a non-secret selected-project UUID per workspace.
 
-The API owns the HttpOnly refresh cookie. The frontend coordinates refresh, login, logout, workspace switch, and password reset with same-origin CSRF/session locks. Unsafe requests read the current `XSRF-TOKEN` cookie immediately before dispatch. An authenticated request may perform one coordinated refresh and one replay after a `401`; it never refreshes a `403`.
+The API owns the HttpOnly refresh cookie. The frontend coordinates refresh, login, logout, workspace switch or recovery, and password reset with same-origin CSRF/session locks. Unsafe requests read the current `XSRF-TOKEN` cookie immediately before dispatch. An authenticated request may perform one coordinated refresh and one replay after a `401`; it never refreshes a `403`.
 
 ## OpenAPI contract
 

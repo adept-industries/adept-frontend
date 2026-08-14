@@ -37,7 +37,7 @@ describe("shared API client", () => {
         publicAuthorization = request.headers.get("authorization");
         return HttpResponse.json({
           emailVerificationRequired: true,
-          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: false },
+          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: false, hasPassword: true },
           workspace: { id: "w", name: "W", slug: "w", timezone: "UTC", role: "MANAGER" },
         }, { status: 201 });
       }),
@@ -94,6 +94,7 @@ describe("shared API client", () => {
             email: "google@example.com",
             displayName: "Google User",
             emailVerified: true,
+            hasPassword: false,
           },
           currentMembership: {
             id: "m",
@@ -146,7 +147,7 @@ describe("shared API client", () => {
           return HttpResponse.json(problem(401, "SESSION_INVALID"), { status: 401 });
         }
         return HttpResponse.json({
-          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true },
+          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true, hasPassword: true },
           currentMembership: { id: "m", workspaceId: "workspace-1", workspaceName: "W", workspaceSlug: "w", timezone: "UTC", role: "MANAGER" },
           workspaces: [{ id: "workspace-1", name: "W", slug: "w", timezone: "UTC", role: "MANAGER" }],
         });

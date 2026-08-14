@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { AppShell } from "../../../components/layout/AppShell";
 import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
@@ -28,14 +28,17 @@ import { listTimezones, formatTimezone } from "../../../lib/timezone";
  *
  * Deletion:
  * - Require exact slug confirmation.
- * - Request current password.
+ * - Require a recent password or Google authentication when the session is stale.
  * - Call DELETE /workspaces/current.
  * - After 202, clear state/cache/preference and navigate based on remaining workspaces.
  */
 export function WorkspaceSettingsPage() {
   const { state, actions } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const timezones = useRef(listTimezones());
+  const googleReauthenticated = searchParams.get("reauthenticated") === "1";
+  const googleReauthenticationFailed = searchParams.has("google_reauth_error");
 
   const [workspace, setWorkspace] = useState<CurrentWorkspaceResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -56,11 +59,19 @@ export function WorkspaceSettingsPage() {
   const [creating, setCreating] = useState(false);
 
   // Deletion form state
-  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [showDeleteForm, setShowDeleteForm] = useState(
+    googleReauthenticated || googleReauthenticationFailed,
+  );
   const [confirmSlug, setConfirmSlug] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [reauthenticationPassword, setReauthenticationPassword] = useState("");
+  const [reauthenticationRequired, setReauthenticationRequired] = useState(
+    googleReauthenticationFailed,
+  );
+  const [deleteError, setDeleteError] = useState<string | null>(
+    googleReauthenticationFailed ? "Google verification was not completed. Try again." : null,
+  );
   const [deleting, setDeleting] = useState(false);
+  const [reauthenticating, setReauthenticating] = useState(false);
 
   // Load workspace on mount
   useEffect(() => {
@@ -104,40 +115,81 @@ export function WorkspaceSettingsPage() {
     }
   };
 
+  const deleteConfirmedWorkspace = async () => {
+    await deleteWorkspace({ confirmationSlug: confirmSlug });
+    setConfirmSlug("");
+    accessTokenStore.clear();
+    workspacePreference.clear();
+    queryClient.clear();
+    try {
+      const next = await actions.refresh({ withoutWorkspace: true });
+      if (next.status === "authenticated") {
+        void navigate("/dashboard", { replace: true });
+      } else if (next.status === "workspaceRequired") {
+        void navigate("/select-workspace", { replace: true });
+      } else {
+        void navigate("/login?deleted=1", { replace: true });
+      }
+    } catch {
+      actions.invalidateSession({ deletionRequested: true });
+    }
+  };
+
   const handleDelete = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!workspace) return;
+    if (!workspace || reauthenticationRequired) return;
     setDeleteError(null);
     setDeleting(true);
     try {
-      const request = { confirmationSlug: confirmSlug, password: deletePassword };
-      setDeletePassword("");
-      setConfirmSlug("");
-      await deleteWorkspace(request);
-      accessTokenStore.clear();
-      workspacePreference.clear();
-      queryClient.clear();
-      try {
-        const next = await actions.refresh({ withoutWorkspace: true });
-        if (next.status === "authenticated") {
-          void navigate("/dashboard", { replace: true });
-        } else if (next.status === "workspaceRequired") {
-          void navigate("/select-workspace", { replace: true });
-        } else {
-          void navigate("/login?deleted=1", { replace: true });
-        }
-      } catch {
-        actions.invalidateSession({ deletionRequested: true });
-      }
+      await deleteConfirmedWorkspace();
     } catch (err) {
-      setDeletePassword("");
-      if (err instanceof ApiError) {
+      if (err instanceof ApiError && err.problem.code === "REAUTHENTICATION_REQUIRED") {
+        setReauthenticationRequired(true);
+      } else if (err instanceof ApiError) {
         setDeleteError(err.problem.detail ?? "Failed to delete workspace.");
       } else {
         setDeleteError("An unexpected error occurred.");
       }
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handlePasswordReauthentication = async () => {
+    setDeleteError(null);
+    setReauthenticating(true);
+    try {
+      await actions.reauthenticateWithPassword({ password: reauthenticationPassword });
+      setReauthenticationPassword("");
+      setReauthenticationRequired(false);
+      setDeleting(true);
+      await deleteConfirmedWorkspace();
+    } catch (err) {
+      setReauthenticationPassword("");
+      if (err instanceof ApiError) {
+        setDeleteError(err.problem.detail ?? "Identity verification failed.");
+      } else {
+        setDeleteError("An unexpected error occurred.");
+      }
+    } finally {
+      setDeleting(false);
+      setReauthenticating(false);
+    }
+  };
+
+  const handleGoogleReauthentication = async () => {
+    setDeleteError(null);
+    setReauthenticating(true);
+    try {
+      const authorizationUrl = await actions.startGoogleReauthentication();
+      window.location.assign(authorizationUrl);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setDeleteError(err.problem.detail ?? "Unable to start Google verification.");
+      } else {
+        setDeleteError("An unexpected error occurred.");
+      }
+      setReauthenticating(false);
     }
   };
 
@@ -343,33 +395,76 @@ export function WorkspaceSettingsPage() {
                     placeholder={workspace.slug}
                   />
 
-                  <FormField
-                    id="delete-password"
-                    label="Your current password"
-                    type="password"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
+                  {googleReauthenticated && (
+                    <InlineAlert
+                      kind="success"
+                      message="Identity verified. Type the workspace slug to continue."
+                    />
+                  )}
+
+                  {reauthenticationRequired && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      <InlineAlert
+                        kind="info"
+                        message="For security, verify your identity again before deleting this workspace."
+                      />
+                      {state.user.hasPassword ? (
+                        <FormField
+                          id="reauthentication-password"
+                          label="Your current password"
+                          type="password"
+                          value={reauthenticationPassword}
+                          onChange={(e) => setReauthenticationPassword(e.target.value)}
+                          required
+                          autoComplete="current-password"
+                        />
+                      ) : (
+                        <p style={{ color: "var(--text-secondary)", margin: 0 }}>
+                          Continue with the Google account connected to this Adept account.
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {deleteError && <InlineAlert kind="error" message={deleteError} />}
 
                   <div style={{ display: "flex", gap: "0.75rem" }}>
-                    <button
-                      type="submit"
-                      id="confirm-delete-btn"
-                      className="danger-button"
-                      disabled={deleting || confirmSlug !== workspace.slug}
-                    >
-                      {deleting ? "Deleting…" : "Confirm delete"}
-                    </button>
+                    {!reauthenticationRequired ? (
+                      <button
+                        type="submit"
+                        id="confirm-delete-btn"
+                        className="danger-button"
+                        disabled={deleting || confirmSlug !== workspace.slug}
+                      >
+                        {deleting ? "Deleting…" : "Confirm delete"}
+                      </button>
+                    ) : state.user.hasPassword ? (
+                      <button
+                        type="button"
+                        id="verify-password-btn"
+                        className="danger-button"
+                        onClick={() => void handlePasswordReauthentication()}
+                        disabled={reauthenticating || !reauthenticationPassword}
+                      >
+                        {reauthenticating ? "Verifying…" : "Verify and delete"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        id="verify-google-btn"
+                        onClick={() => void handleGoogleReauthentication()}
+                        disabled={reauthenticating}
+                      >
+                        {reauthenticating ? "Opening Google…" : "Verify with Google"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => {
                         setShowDeleteForm(false);
                         setConfirmSlug("");
-                        setDeletePassword("");
+                        setReauthenticationPassword("");
+                        setReauthenticationRequired(false);
                         setDeleteError(null);
                       }}
                     >

@@ -70,7 +70,7 @@ function makeAuthCtx(status: AuthState["status"]): AuthContextValue {
     status === "authenticated"
       ? {
           status: "authenticated",
-          user: { id: "u1", email: "a@b.com", displayName: "A", emailVerified: true },
+          user: { id: "u1", email: "a@b.com", displayName: "A", emailVerified: true, hasPassword: true },
           currentMembership: {
             id: "m1", workspaceId: "ws1", workspaceName: "W", workspaceSlug: "w-abc",
             timezone: "UTC", role: "MANAGER",
@@ -81,7 +81,7 @@ function makeAuthCtx(status: AuthState["status"]): AuthContextValue {
       : status === "anonymous"
         ? { status: "anonymous" }
         : status === "workspaceRequired"
-          ? { status: "workspaceRequired", user: { id: "u1", email: "a@b.com", displayName: "A", emailVerified: true }, workspaces: [] }
+          ? { status: "workspaceRequired", user: { id: "u1", email: "a@b.com", displayName: "A", emailVerified: true, hasPassword: true }, workspaces: [] }
           : { status: "bootstrapping" };
 
   return {
