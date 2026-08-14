@@ -10,6 +10,7 @@ const session = {
     email: "google-user@example.com",
     displayName: "Google User",
     emailVerified: true,
+    hasPassword: false,
   },
   currentMembership: {
     id: "20000000-0000-4000-8000-000000000001",

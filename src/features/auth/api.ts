@@ -14,6 +14,16 @@ type SignupResponse = operations["signup"]["responses"][201]["content"]["applica
 export type SignupResult = Pick<SignupResponse, "emailVerificationRequired">;
 export type LoginBody = operations["login"]["requestBody"]["content"]["application/json"];
 type LoginResponse = operations["login"]["responses"][200]["content"]["application/json"];
+export type PasswordReauthenticationBody =
+  operations["reauthenticateWithPassword"]["requestBody"]["content"]["application/json"];
+type PasswordReauthenticationResponse =
+  operations["reauthenticateWithPassword"]["responses"][200]["content"]["application/json"];
+type GoogleReauthenticationStartResponse =
+  operations["startGoogleReauthentication"]["responses"][200]["content"]["application/json"];
+export type SessionWorkspaceBody =
+  operations["createWorkspaceForSession"]["requestBody"]["content"]["application/json"];
+type SessionWorkspaceResponse =
+  operations["createWorkspaceForSession"]["responses"][201]["content"]["application/json"];
 export type GoogleOnboardingBody = operations["completeGoogleOnboarding"]["requestBody"]["content"]["application/json"];
 type GoogleOnboardingResponse = operations["completeGoogleOnboarding"]["responses"][200]["content"]["application/json"];
 type RefreshBody = components["schemas"]["RefreshRequest"];
@@ -45,7 +55,13 @@ function mapWorkspace(
 }
 
 function consumeSession(
-  response: LoginResponse | GoogleOnboardingResponse | RefreshResponse | SwitchResponse,
+  response:
+    | LoginResponse
+    | PasswordReauthenticationResponse
+    | GoogleOnboardingResponse
+    | SessionWorkspaceResponse
+    | RefreshResponse
+    | SwitchResponse,
 ): SessionResult {
   if ("accessToken" in response) accessTokenStore.set(response.accessToken);
   else accessTokenStore.clear();
@@ -82,6 +98,29 @@ export async function login(body: LoginBody, csrfLockHeld = false): Promise<Sess
     csrfLockHeld,
   });
   return consumeSession(response);
+}
+
+export async function reauthenticateWithPassword(
+  body: PasswordReauthenticationBody,
+  csrfLockHeld = false,
+): Promise<SessionResult> {
+  const response = await apiRequest<PasswordReauthenticationResponse, PasswordReauthenticationBody>({
+    method: "POST",
+    path: "/auth/reauthenticate/password",
+    auth: "bearer",
+    body,
+    csrfLockHeld,
+  });
+  return consumeSession(response);
+}
+
+export async function startGoogleReauthentication(): Promise<string> {
+  const response = await apiRequest<GoogleReauthenticationStartResponse>({
+    method: "POST",
+    path: "/auth/google/reauthentication/start",
+    auth: "bearer",
+  });
+  return response.authorizationUrl;
 }
 
 export async function completeGoogleOnboarding(
@@ -121,6 +160,20 @@ export async function switchWorkspace(
     method: "POST",
     path: `/auth/switch-workspace/${encodeURIComponent(workspaceId)}`,
     auth: "refresh-cookie",
+    csrfLockHeld,
+  });
+  return consumeSession(response);
+}
+
+export async function createWorkspaceForSession(
+  body: SessionWorkspaceBody,
+  csrfLockHeld = false,
+): Promise<SessionResult> {
+  const response = await apiRequest<SessionWorkspaceResponse, SessionWorkspaceBody>({
+    method: "POST",
+    path: "/auth/workspaces",
+    auth: "refresh-cookie",
+    body,
     csrfLockHeld,
   });
   return consumeSession(response);

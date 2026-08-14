@@ -15,6 +15,7 @@ const authValue: AuthContextValue = {
       email: "manager@example.com",
       displayName: "Manager",
       emailVerified: true,
+      hasPassword: true,
     },
     currentMembership: {
       id: "20000000-0000-0000-0000-000000000001",
