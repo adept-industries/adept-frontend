@@ -41,7 +41,7 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         }} 
       />
 
-      {/* Top Left Text */}
+      {/* Top Left Text — hidden on mobile */}
       <div style={{
         position: "absolute",
         top: "2.5rem",
@@ -54,13 +54,13 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         display: "flex",
         alignItems: "center",
         gap: "0.75rem"
-      }}>
+      }} className="auth-brand-wordmark">
         <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>Adept</span>
         <span style={{ color: "rgba(255,255,255,0.4)" }}>|</span>
         <span style={{ color: "rgba(255,255,255,0.7)" }}>From Insight to Impact</span>
       </div>
 
-      {/* Left Side - Visuals & Logo */}
+      {/* Left Side - Visuals & Logo — hidden on mobile via CSS */}
       <div 
         className="auth-left-panel"
         style={{
@@ -93,6 +93,17 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         zIndex: 2
       }}>
         <div style={{ width: "100%", maxWidth: "420px" }}>
+          {/* Mobile-only logo above the card */}
+          <div className="auth-mobile-logo">
+            <Link to="/">
+              <img
+                src={logoPath}
+                alt="Adept Logo"
+                className="brand-logo"
+                style={{ width: "48px", height: "48px", objectFit: "contain" }}
+              />
+            </Link>
+          </div>
           <section
             className="card"
             style={{ 

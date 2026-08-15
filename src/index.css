@@ -365,3 +365,178 @@ h1 {
 p {
   line-height: 1.6;
 }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE SYSTEM
+   ═══════════════════════════════════════════════ */
+
+/* Hamburger button: hidden on desktop, shown on mobile */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+  padding: 0 !important;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex-shrink: 0;
+}
+
+/* Desktop nav row: always visible on desktop */
+.desktop-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+/* Mobile overlay: hidden by default, shown when open on mobile */
+.mobile-nav-drawer {
+  display: none;
+}
+
+/* ─── Mobile breakpoint (≤768px) ─────────────────── */
+@media (max-width: 768px) {
+  /* Show hamburger */
+  .mobile-menu-toggle {
+    display: inline-flex;
+  }
+
+  /* Hide horizontal nav row */
+  .desktop-nav-row {
+    display: none !important;
+  }
+
+  /* Smaller header padding */
+  .dashboard-header {
+    padding: 0 1rem !important;
+  }
+
+  /* Shrink logo */
+  .brand-logo {
+    height: 2.5rem !important;
+  }
+
+  /* Tighten workspace switcher divider */
+  .dashboard-workspace-control {
+    padding-left: 0.5rem !important;
+  }
+
+  /* Mobile drawer overlay */
+  .mobile-nav-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: fixed;
+    top: 4.5rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    background: var(--bg-color);
+    border-top: 1px solid var(--dashboard-subtle-border);
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+    /* slide-in animation */
+    animation: slideDown 0.2s ease;
+  }
+
+  .mobile-nav-drawer.closed {
+    display: none;
+  }
+
+  /* Full-width buttons in drawer */
+  .mobile-nav-drawer .button-link,
+  .mobile-nav-drawer button.navigation-dropdown-option {
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  /* Full-width dropdowns in drawer */
+  .mobile-nav-drawer button.navigation-dropdown-trigger {
+    width: 100%;
+  }
+
+  .mobile-nav-drawer .navigation-dropdown-menu {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Reduce card padding on mobile */
+  .card {
+    padding: 1.25rem;
+  }
+
+  /* Reduce main content padding */
+  .dashboard-main {
+    padding: 1.25rem 1rem !important;
+  }
+
+  /* Make section header row wrap */
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  /* Collapse grids to single column on mobile */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Ensure action button rows wrap */
+  .button-row {
+    flex-wrap: wrap;
+  }
+
+  /* Auth card full width */
+  .shell .card {
+    padding: 1.5rem 1rem;
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Auth page responsive rules */
+.auth-mobile-logo {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  /* Hide big left-panel logo on mobile */
+  .auth-left-panel {
+    display: none !important;
+  }
+
+  /* Hide wordmark on mobile (overlaps content) */
+  .auth-brand-wordmark {
+    display: none !important;
+  }
+
+  /* Show small logo above the card on mobile */
+  .auth-mobile-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .auth-mobile-logo img {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  /* Tighten login card padding on mobile */
+  .card {
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  /* Right panel fills full screen */
+  main > div:last-child {
+    padding: 2rem 1rem !important;
+    min-width: 0 !important;
+  }
+}
+
