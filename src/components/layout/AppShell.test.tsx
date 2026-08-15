@@ -66,14 +66,18 @@ describe("AppShell theme", () => {
     const user = userEvent.setup();
     renderShell();
 
-    const toggle = screen.getByRole("button", { name: "Switch to light mode" });
+    // AppShell renders two theme toggle buttons — one in the desktop nav row
+    // and one in the mobile drawer — both with the same aria-label.
+    // We target the desktop one (first in DOM order).
+    const toggles = screen.getAllByRole("button", { name: "Switch to light mode" });
+    const toggle = toggles[0];
     const shell = toggle.closest(".dashboard-shell");
     expect(shell).toHaveClass("dark-theme");
 
     await user.click(toggle);
 
     expect(shell).toHaveClass("light-theme");
-    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Switch to dark mode" })[0]).toBeInTheDocument();
     expect(localStorage.getItem("adept.dashboardTheme")).toBe("light");
   });
 });
