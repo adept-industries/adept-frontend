@@ -45,13 +45,6 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const DashboardIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-    <polyline points="9 22 9 12 15 12 15 22" />
-  </svg>
-);
-
 // ─── Desktop nav (icon-buttons) ───────────────────────────────────────────────
 
 interface DesktopNavProps {
@@ -72,21 +65,6 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
   return (
     <nav aria-label="Main navigation" className="desktop-nav-row">
       <ProjectSelector />
-
-      <Link
-        to="/dashboard"
-        id="nav-dashboard-link"
-        className="button-link"
-        style={{
-          fontWeight: path === "/dashboard" ? 600 : 400,
-          color: path === "/dashboard" ? "var(--primary-light, #818cf8)" : undefined,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.35rem",
-        }}
-      >
-        <DashboardIcon /> Dashboard
-      </Link>
 
       {isManager && (
         <>
@@ -186,21 +164,6 @@ function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
       <div style={{ height: "1px", background: "var(--dashboard-subtle-border)" }} />
 
       {/* Nav links — same bordered button style as desktop */}
-      <Link
-        to="/dashboard"
-        onClick={onClose}
-        id="mob-nav-dashboard-link"
-        className="button-link"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          ...(path === "/dashboard" ? activeStyle : {}),
-        }}
-      >
-        <DashboardIcon /> Dashboard
-      </Link>
-
       {isManager && (
         <>
           <Link
