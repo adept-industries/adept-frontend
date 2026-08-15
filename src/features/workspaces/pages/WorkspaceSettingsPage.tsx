@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { AppShell } from "../../../components/layout/AppShell";
 import { FormField } from "../../../components/ui/FormField";
 import { InlineAlert } from "../../../components/ui/InlineAlert";
@@ -220,8 +220,31 @@ export function WorkspaceSettingsPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "3rem 1.5rem" }}>
-        <header style={{ marginBottom: "3rem" }}>
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "1.5rem 1.5rem" }}>
+        {/* Navigation Breadcrumb */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <Link
+            to="/dashboard"
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              fontSize: "0.85rem",
+              color: "var(--text-secondary, #94a3b8)",
+              padding: "0.2rem 0",
+              textDecoration: "none",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Dashboard
+          </Link>
+        </div>
+
+        <header style={{ marginBottom: "2.5rem" }}>
           <h1 id="settings-title" style={{ fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: 0 }}>
             Workspace Settings
           </h1>

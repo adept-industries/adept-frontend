@@ -17,6 +17,7 @@ import { WorkspaceSettingsPage } from "../features/workspaces/pages/WorkspaceSet
 import { AppShell } from "../components/layout/AppShell";
 import { NotFoundPage } from "../components/ui/NotFoundPage";
 import { captureActionToken, clearActionToken } from "../features/auth/actionTokenHandoff";
+import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
 
@@ -129,6 +130,19 @@ export const router = createBrowserRouter([
         <WorkspaceRoute>
           <RoleRoute allowedRoles={["MANAGER"]}>
             <ProjectsPage />
+          </RoleRoute>
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/dashboard/integrations",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <RoleRoute allowedRoles={["MANAGER"]}>
+            <IntegrationsPage />
           </RoleRoute>
         </WorkspaceRoute>
       </ProtectedRoute>
