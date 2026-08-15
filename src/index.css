@@ -373,6 +373,8 @@ p {
 /* Hamburger button: hidden on desktop, shown on mobile */
 .mobile-menu-toggle {
   display: none;
+  align-items: center;
+  justify-content: center;
   background: transparent !important;
   border: none !important;
   color: var(--text-primary) !important;
@@ -399,7 +401,9 @@ p {
 @media (max-width: 768px) {
   /* Show hamburger */
   .mobile-menu-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* Hide horizontal nav row */
