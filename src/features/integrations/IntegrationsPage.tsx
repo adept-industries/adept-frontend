@@ -281,23 +281,37 @@ export function IntegrationsPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={handleSyncGithub}
-                    disabled={syncingGithub}
-                    style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
-                  >
-                    {syncingGithub ? "Syncing..." : "Sync Repositories"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button-link"
-                    onClick={handleDisconnectGithub}
-                    style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
-                  >
-                    Disconnect
-                  </button>
+                  {github.status === "ACTIVE" ? (
+                    <>
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={handleSyncGithub}
+                        disabled={syncingGithub}
+                        style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
+                      >
+                        {syncingGithub ? "Syncing..." : "Sync Repositories"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button-link"
+                        onClick={handleDisconnectGithub}
+                        style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
+                      >
+                        Disconnect
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      id="reconnect-github-btn"
+                      className="primary-button"
+                      onClick={handleConnectGithub}
+                      style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
+                    >
+                      Reconnect GitHub App
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -381,14 +395,26 @@ export function IntegrationsPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-                  <button
-                    type="button"
-                    className="button-link"
-                    onClick={handleDisconnectJira}
-                    style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
-                  >
-                    Disconnect
-                  </button>
+                  {jira.status === "ACTIVE" ? (
+                    <button
+                      type="button"
+                      className="button-link"
+                      onClick={handleDisconnectJira}
+                      style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
+                    >
+                      Disconnect
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      id="reconnect-jira-btn"
+                      className="primary-button"
+                      onClick={handleConnectJira}
+                      style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
+                    >
+                      Reconnect Jira Cloud
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
