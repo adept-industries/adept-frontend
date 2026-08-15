@@ -16,6 +16,7 @@ export function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [workspaceName, setWorkspaceName] = useState("");
   const [timezone, setTimezone] = useState(DEFAULT_TZ);
@@ -25,9 +26,21 @@ export function SignupPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 12) {
+      setError("Password must be at least 12 characters.");
+      return;
+    }
+
     setSubmitting(true);
     const request = { email, password, displayName, workspaceName, timezone };
     setPassword("");
+    setConfirmPassword("");
     try {
       await actions.signup(request);
       await navigate("/check-email", { state: { email } });
@@ -94,13 +107,19 @@ export function SignupPage() {
           type="password"
           autoComplete="new-password"
           required
-          hint={
-            <>
-              At least 12 characters. Maximum 72 UTF-8 bytes.
-            </>
-          }
+          hint="At least 12 characters. Maximum 72 UTF-8 bytes."
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <FormField
+          id="signup-confirm-password"
+          label="Confirm password"
+          type="password"
+          autoComplete="new-password"
+          required
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>

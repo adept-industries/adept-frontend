@@ -171,7 +171,6 @@ export function IntegrationsPage() {
         <div>
           <Link
             to="/dashboard"
-            className="button-link"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -180,6 +179,9 @@ export function IntegrationsPage() {
               color: "var(--text-secondary, #94a3b8)",
               padding: "0.2rem 0",
               textDecoration: "none",
+              background: "transparent",
+              border: "none",
+              fontWeight: 500,
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

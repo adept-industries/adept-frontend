@@ -30,6 +30,7 @@ test("browser auth lifecycle", async ({ page }) => {
   await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
+  await page.getByLabel(/confirm password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
   // Timezone — select UTC if available.
   const tzSelect = page.locator('select[id="timezone"]');

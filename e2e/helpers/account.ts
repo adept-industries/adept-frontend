@@ -33,6 +33,7 @@ export async function signupVerifyAndLogin(
   await page.getByRole("textbox", { name: /email/i }).fill(email);
   await page.getByLabel(/full name/i).fill(TEST_DISPLAY_NAME);
   await page.getByLabel(/^password/i).fill(TEST_PASSWORD);
+  await page.getByLabel(/confirm password/i).fill(TEST_PASSWORD);
   await page.getByLabel(/workspace name/i).fill(TEST_WORKSPACE_NAME);
   const timezone = page.getByLabel(/timezone/i);
   const options = await timezone.locator("option").all();
