@@ -54,3 +54,19 @@ jobs:
             org.opencontainers.image.title=Adept Frontend
           cache-from: type=gha,scope=adept-frontend
           cache-to: type=gha,mode=max,scope=adept-frontend
+
+      - name: Deploy to AWS Lightsail
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            set -eu
+            cd /opt/adept
+            sed -i "s|^FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/adept-industries/adept-frontend:sha-${{ github.event.workflow_run.head_sha }}|" .env.production
+            sudo docker compose --env-file .env.production -f compose.yaml pull frontend
+            sudo docker compose --env-file .env.production -f compose.yaml up -d --no-deps frontend
+            sudo docker compose --env-file .env.production -f compose.yaml ps
+            curl -fsS https://adeptindustries.dev/ > /dev/null
+            echo "Frontend Deployment Complete!"
