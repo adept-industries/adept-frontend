@@ -66,3 +66,36 @@ export function formatTimezone(tz: IanaTimezone): string {
     return tz.replace(/_/g, " ");
   }
 }
+
+/**
+ * Formats an ISO UTC date string or Date instance according to the workspace's configured timezone.
+ *
+ * Example output: "8/15/2026, 11:57:53 PM EDT"
+ */
+export function formatWorkspaceDateTime(
+  date: string | Date | null | undefined,
+  timeZone?: string,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  if (!date) return "Never";
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "Invalid Date";
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+      timeZone: timeZone || "UTC",
+      timeZoneName: "short",
+      ...options,
+    }).format(d);
+  } catch {
+    const d = typeof date === "string" ? new Date(date) : date;
+    return isNaN(d.getTime()) ? "Invalid Date" : d.toLocaleString();
+  }
+}
+

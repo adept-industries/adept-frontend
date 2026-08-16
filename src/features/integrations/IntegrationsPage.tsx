@@ -1,5 +1,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { Link } from "react-router";
+import { useAuth } from "../../auth/AuthProvider.js";
+import { formatWorkspaceDateTime } from "../../lib/timezone.js";
 import { AppShell } from "../../components/layout/AppShell.js";
 import {
   disconnectGithubIntegration,
@@ -23,6 +25,9 @@ import { RepositorySettingsModal } from "./RepositorySettingsModal.js";
 import { RepositoryJiraModal } from "./RepositoryJiraModal.js";
 
 export function IntegrationsPage() {
+  const { state: authState } = useAuth();
+  const workspaceTimezone = authState.status === "authenticated" ? authState.currentMembership.timezone : "UTC";
+
   const [github, setGithub] = useState<GithubIntegrationResponse | null>(null);
   const [jira, setJira] = useState<JiraIntegrationResponse | null>(null);
   const [repositories, setRepositories] = useState<RepositoryResponse[]>([]);
@@ -277,7 +282,7 @@ export function IntegrationsPage() {
                 <div style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                   <div>Connected Organization: <strong style={{ color: "var(--text-primary, #ffffff)" }}>{github.accountLogin}</strong></div>
                   <div>Discovered Repositories: <strong style={{ color: "var(--text-primary, #ffffff)" }}>{github.repositoryCount}</strong></div>
-                  <div>Last Synced: {github.lastSyncedAt ? new Date(github.lastSyncedAt).toLocaleString() : "Never"}</div>
+                  <div>Last Synced: {formatWorkspaceDateTime(github.lastSyncedAt, workspaceTimezone)}</div>
                 </div>
 
                 <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
@@ -391,7 +396,7 @@ export function IntegrationsPage() {
                 <div style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                   <div>Site: <strong style={{ color: "var(--text-primary, #ffffff)" }}>{jira.displayName}</strong> ({jira.siteUrl})</div>
                   <div>Discovered Projects: <strong style={{ color: "var(--text-primary, #ffffff)" }}>{jira.projectCount}</strong></div>
-                  <div>Last Synced: {jira.lastSyncedAt ? new Date(jira.lastSyncedAt).toLocaleString() : "Never"}</div>
+                  <div>Last Synced: {formatWorkspaceDateTime(jira.lastSyncedAt, workspaceTimezone)}</div>
                 </div>
 
                 <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
