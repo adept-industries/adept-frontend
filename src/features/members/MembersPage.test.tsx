@@ -119,8 +119,8 @@ describe("MembersPage", () => {
     const lookupBtn = screen.getByRole("button", { name: /Lookup/i });
     await user.click(lookupBtn);
 
-    expect(await screen.findByText(/Existing Member:/i)).toBeInTheDocument();
-    expect(screen.getByText(/can be assigned directly as a repository Lead/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Existing Workspace Member:/i)).toBeInTheDocument();
+    expect(screen.getByText(/User will be assigned directly as a repository Lead/i)).toBeInTheDocument();
   });
 
   it("assigns a Lead by email and supports target-specific unassignment", async () => {
@@ -181,7 +181,7 @@ describe("MembersPage", () => {
     const emailInput = await screen.findByLabelText(/Lead Email/i);
     await user.type(emailInput, "newlead@example.com");
 
-    const assignBtn = screen.getByRole("button", { name: /Assign as Lead/i });
+    const assignBtn = screen.getByRole("button", { name: /Assign/i });
     await user.click(assignBtn);
 
     expect(await screen.findByText(/Invitation sent to newlead@example.com for acme\/web-app/i)).toBeInTheDocument();

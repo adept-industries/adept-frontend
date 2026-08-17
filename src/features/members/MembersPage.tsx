@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { AppShell } from "../../components/layout/AppShell.js";
@@ -23,6 +23,8 @@ import {
 
 export function MembersPage() {
   const { state: authState } = useAuth();
+  const [searchParams] = useSearchParams();
+  const repoParam = searchParams.get("repo");
   const queryClient = useQueryClient();
   const workspaceId = authState.status === "authenticated" ? authState.currentMembership.workspaceId : "";
 
@@ -55,11 +57,15 @@ export function MembersPage() {
         const data = await listRepositories(false);
         if (active) {
           setRepositories(data ?? []);
-          const firstTracked = data?.find((r) => r.trackingEnabled);
-          if (firstTracked) {
-            setSelectedRepoId(firstTracked.id);
-          } else if (data && data.length > 0) {
-            setSelectedRepoId(data[0].id);
+          if (repoParam && data?.some((r) => r.id === repoParam)) {
+            setSelectedRepoId(repoParam);
+          } else {
+            const firstTracked = data?.find((r) => r.trackingEnabled);
+            if (firstTracked) {
+              setSelectedRepoId(firstTracked.id);
+            } else if (data && data.length > 0) {
+              setSelectedRepoId(data[0].id);
+            }
           }
         }
       } catch (err: unknown) {
@@ -74,7 +80,7 @@ export function MembersPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [repoParam]);
 
   // Load lead candidates when selected repository changes
   useEffect(() => {
@@ -409,35 +415,35 @@ export function MembersPage() {
                         padding: "0.75rem 1rem",
                         borderRadius: "0.5rem",
                         fontSize: "0.875rem",
-                        background: lookupResult.existingUser
-                          ? lookupResult.assignableAsLead
+                        background: lookupResult.workspaceRole === "MANAGER"
+                          ? "var(--danger-surface)"
+                          : lookupResult.assignableAsLead
                             ? "rgba(34, 197, 94, 0.1)"
-                            : "var(--danger-surface)"
-                          : "rgba(59, 130, 246, 0.1)",
+                            : "rgba(59, 130, 246, 0.1)",
                         border: `1px solid ${
-                          lookupResult.existingUser
-                            ? lookupResult.assignableAsLead
+                          lookupResult.workspaceRole === "MANAGER"
+                            ? "var(--danger-border)"
+                            : lookupResult.assignableAsLead
                               ? "rgba(34, 197, 94, 0.3)"
-                              : "var(--danger-border)"
-                            : "rgba(59, 130, 246, 0.3)"
+                              : "rgba(59, 130, 246, 0.3)"
                         }`,
-                        color: lookupResult.existingUser
-                          ? lookupResult.assignableAsLead
-                            ? "var(--text-primary)"
-                            : "var(--danger-color)"
+                        color: lookupResult.workspaceRole === "MANAGER"
+                          ? "var(--danger-color)"
                           : "var(--text-primary)",
                       }}
                     >
-                      {lookupResult.existingUser ? (
-                        lookupResult.assignableAsLead ? (
-                          <span>
-                            <strong>Existing Member:</strong> User exists and can be assigned directly as a repository Lead.
-                          </span>
-                        ) : (
-                          <span>
-                            <strong>Cannot Assign:</strong> User is a Workspace Manager and cannot be assigned as a Lead.
-                          </span>
-                        )
+                      {lookupResult.workspaceRole === "MANAGER" ? (
+                        <span>
+                          <strong>Already Manager:</strong> User is a Manager in this workspace and already has full access to all repositories.
+                        </span>
+                      ) : lookupResult.assignableAsLead ? (
+                        <span>
+                          <strong>Existing Workspace Member:</strong> User will be assigned directly as a repository Lead.
+                        </span>
+                      ) : lookupResult.existingUser ? (
+                        <span>
+                          <strong>Existing Adept User:</strong> An invitation link will be sent to <strong>{lookupResult.email}</strong> to join this workspace as Lead.
+                        </span>
                       ) : (
                         <span>
                           <strong>New Recipient:</strong> An invitation link will be sent to <strong>{lookupResult.email}</strong>.
@@ -449,10 +455,14 @@ export function MembersPage() {
                   <button
                     type="submit"
                     id="assign-lead-submit"
-                    disabled={submitting || !manualEmail.trim() || (lookupResult !== null && !lookupResult.assignableAsLead && lookupResult.existingUser)}
+                    disabled={submitting || !manualEmail.trim() || (lookupResult !== null && lookupResult.workspaceRole === "MANAGER")}
                     style={{ marginTop: "0.5rem" }}
                   >
-                    {submitting ? "Assigning…" : "Assign as Lead"}
+                    {submitting
+                      ? "Assigning…"
+                      : lookupResult?.assignableAsLead
+                        ? "Assign as Lead"
+                        : "Assign / Invite Lead"}
                   </button>
                 </form>
               </section>
