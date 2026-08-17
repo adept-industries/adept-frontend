@@ -3,9 +3,11 @@ import type { Page } from "@playwright/test";
 const MAILPIT_ORIGIN = "http://localhost:8025";
 const MAILPIT_API = `${MAILPIT_ORIGIN}/api/v1`;
 
+export type ExpectedEmailPath = "/verify-email" | "/reset-password" | "/invitations/accept" | "/accept-invite";
+
 export async function waitForEmail(
   email: string,
-  expectedPath: "/verify-email" | "/reset-password",
+  expectedPath: ExpectedEmailPath,
   timeoutMs = 90_000,
 ): Promise<string> {
   const normalizedEmail = email.toLowerCase();
@@ -33,7 +35,7 @@ export async function waitForEmail(
 
 export function extractLink(
   body: string,
-  expectedPath: "/verify-email" | "/reset-password",
+  expectedPath: ExpectedEmailPath,
   expectedOrigin = process.env["PLAYWRIGHT_BASE_URL"] ?? "http://localhost:3000",
 ): string {
   const candidates = body.match(/https?:\/\/[^\s"'<>]+/gi) ?? [];

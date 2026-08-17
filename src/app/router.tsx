@@ -41,7 +41,16 @@ function Dashboard() {
               Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong>.
               DORA metrics will be filtered to this project&apos;s repositories.
             </p>
-            <p>{selectedProject.repositories.length} linked repositories</p>
+            <p id="dashboard-repo-count">{selectedProject.repositories.length} linked repositories</p>
+            {selectedProject.repositories.length > 0 && (
+              <ul id="dashboard-repo-list" style={{ marginTop: "0.5rem", paddingLeft: "1.25rem", color: "var(--text-secondary)" }}>
+                {selectedProject.repositories.map((repo) => (
+                  <li key={repo.id}>
+                    <code>{repo.fullName}</code>
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         ) : (
           <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
