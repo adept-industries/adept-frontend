@@ -16,6 +16,23 @@ import { accessTokenStore } from "../../../auth/accessTokenStore";
 import { workspacePreference } from "../../../lib/workspacePreference";
 import { queryClient } from "../../../api/queryClient";
 import { listTimezones, formatTimezone } from "../../../lib/timezone";
+import {
+  dashboardThemePreference,
+  type DashboardTheme,
+} from "../../../lib/dashboardThemePreference";
+
+const SunIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+  </svg>
+);
 
 /**
  * WorkspaceSettingsPage — MANAGER role only.
@@ -42,6 +59,18 @@ export function WorkspaceSettingsPage() {
 
   const [workspace, setWorkspace] = useState<CurrentWorkspaceResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // Appearance / Theme state
+  const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
+
+  useEffect(() => {
+    return dashboardThemePreference.subscribe(setTheme);
+  }, []);
+
+  const handleThemeChange = (nextTheme: DashboardTheme) => {
+    setTheme(nextTheme);
+    dashboardThemePreference.set(nextTheme);
+  };
 
   // Edit form state
   const [name, setName] = useState("");
@@ -246,13 +275,35 @@ export function WorkspaceSettingsPage() {
           </Link>
         </div>
 
-        <header style={{ marginBottom: "2.5rem" }}>
-          <h1 id="settings-title" style={{ fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: 0 }}>
-            Workspace Settings
-          </h1>
-          <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem", fontSize: "1rem" }}>
-            Manage your workspace preferences and settings.
-          </p>
+        <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "2.5rem", flexWrap: "wrap" }}>
+          <div>
+            <h1 id="settings-title" style={{ fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: 0 }}>
+              Workspace Settings
+            </h1>
+            <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem", fontSize: "1rem" }}>
+              Manage your workspace preferences and settings.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            id="settings-theme-toggle-btn"
+            onClick={() => handleThemeChange(theme === "dark" ? "light" : "dark")}
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.55rem 0.95rem",
+              fontSize: "0.9rem",
+              flexShrink: 0,
+            }}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            <span>Appearance</span>
+          </button>
         </header>
 
         {loadError && <InlineAlert kind="error" message={loadError} />}

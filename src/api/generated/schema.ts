@@ -351,6 +351,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/repositories/{repositoryId}/lead-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create or reuse a pending Lead invitation */
+        post: operations["createPendingRepositoryLeadInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces": {
         parameters: {
             query?: never;
@@ -394,6 +411,23 @@ export interface paths {
         patch: operations["updateCurrentWorkspace"];
         trace?: never;
     };
+    "/api/v1/workspaces/current/members/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Look up a user by email in the current workspace */
+        post: operations["lookupCurrentWorkspaceMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -418,9 +452,25 @@ export interface components {
             description?: string;
             name: string;
         };
+        CreateRepositoryLeadInvitationRequest: {
+            /** Format: email */
+            email: string;
+        };
         CreateWorkspaceRequest: {
             name: string;
             timezone: string;
+        };
+        CurrentWorkspaceMemberLookupResponse: {
+            assignableAsLead: boolean;
+            email: string;
+            emailVerified: boolean;
+            existingUser: boolean;
+            /** Format: uuid */
+            workspaceMembershipId?: string | null;
+            /** @enum {string|null} */
+            workspaceMembershipStatus?: "ACTIVE" | "SUSPENDED" | null;
+            /** @enum {string|null} */
+            workspaceRole?: "MANAGER" | "LEAD" | null;
         };
         CurrentWorkspaceResponse: {
             /** Format: uuid */
@@ -455,6 +505,10 @@ export interface components {
             email: string;
             password: string;
         };
+        LookupWorkspaceMemberRequest: {
+            /** Format: email */
+            email: string;
+        };
         MeResponse: {
             currentMembership: components["schemas"]["MembershipSummary"];
             user: components["schemas"]["UserSummary"];
@@ -473,6 +527,21 @@ export interface components {
         };
         PasswordReauthenticationRequest: {
             password: string;
+        };
+        PendingRepositoryLeadInvitationResponse: {
+            /** Format: uuid */
+            assignmentId: string;
+            email: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: uuid */
+            invitationId: string;
+            /** Format: uuid */
+            repositoryId: string;
+            /** @enum {string} */
+            role: "MANAGER" | "LEAD";
+            /** @enum {string} */
+            status: "PENDING" | "ACCEPTED" | "REVOKED" | "EXPIRED";
         };
         /** @description RFC 9457 problem response with stable Adept fields. */
         ProblemDetail: {
@@ -2334,6 +2403,111 @@ export interface operations {
             };
         };
     };
+    createPendingRepositoryLeadInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRepositoryLeadInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Pending invitation assignment returned */
+            200: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingRepositoryLeadInvitationResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The requested state conflicts with current state */
+            409: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     listWorkspaces: {
         parameters: {
             query?: never;
@@ -2678,6 +2852,87 @@ export interface operations {
             };
             /** @description The requested state conflicts with current state */
             409: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    lookupCurrentWorkspaceMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupWorkspaceMemberRequest"];
+            };
+        };
+        responses: {
+            /** @description Lookup completed */
+            200: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentWorkspaceMemberLookupResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive Phase 2 responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
                 headers: {
                     /** @description Sensitive Phase 2 responses are not cached. */
                     "Cache-Control"?: "no-store";
