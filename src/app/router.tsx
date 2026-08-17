@@ -19,7 +19,6 @@ import { NotFoundPage } from "../components/ui/NotFoundPage";
 import { captureActionToken, clearActionToken } from "../features/auth/actionTokenHandoff";
 import { AcceptInvitePage } from "../features/auth/pages/AcceptInvitePage";
 import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
-import { MembersPage } from "../features/members/MembersPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
 
@@ -164,19 +163,6 @@ export const router = createBrowserRouter([
         <WorkspaceRoute>
           <RoleRoute allowedRoles={["MANAGER"]}>
             <IntegrationsPage />
-          </RoleRoute>
-        </WorkspaceRoute>
-      </ProtectedRoute>
-    ),
-  },
-
-  {
-    path: "/dashboard/members",
-    element: (
-      <ProtectedRoute>
-        <WorkspaceRoute>
-          <RoleRoute allowedRoles={["MANAGER"]}>
-            <MembersPage />
           </RoleRoute>
         </WorkspaceRoute>
       </ProtectedRoute>
