@@ -358,7 +358,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["getLeadAssignments"];
         put?: never;
         /** Create or reuse a pending Lead invitation */
         post: operations["createPendingRepositoryLeadInvitation"];
@@ -2399,6 +2399,28 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    getLeadAssignments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PendingRepositoryLeadInvitationResponse"][];
                 };
             };
         };

@@ -6,6 +6,7 @@ import { InlineAlert } from "../../components/ui/InlineAlert.js";
 import { listRepositories, type RepositoryResponse } from "../integrations/api.js";
 import { createProject, deleteProject, replaceProjectRepositories, updateProject } from "./api.js";
 import { useProjects } from "./useProjects.js";
+import { RepoLeadManager } from "./components/RepoLeadManager.js";
 
 export function ProjectsPage() {
   const { projects, loading, error, reload } = useProjects();
@@ -37,10 +38,12 @@ export function ProjectsPage() {
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
     setSubmitting(true);
     setMutationError(null);
     try {
-      const newProj = await createProject({ name: name.trim(), description: description.trim() || undefined });
+      const newProj = await createProject({ name: trimmedName, description: description.trim() || undefined });
       if (createRepoIds.length > 0) {
         await replaceProjectRepositories(newProj.id, { repositoryIds: createRepoIds });
       }
@@ -48,8 +51,8 @@ export function ProjectsPage() {
       setDescription("");
       setCreateRepoIds([]);
       await reload();
-    } catch {
-      setMutationError("Project could not be created.");
+    } catch (err: unknown) {
+      setMutationError(err instanceof Error ? err.message : "Project could not be created.");
     } finally {
       setSubmitting(false);
     }
@@ -61,8 +64,8 @@ export function ProjectsPage() {
     try {
       await deleteProject(projectId);
       await reload();
-    } catch {
-      setMutationError("Project could not be deleted.");
+    } catch (err: unknown) {
+      setMutationError(err instanceof Error ? err.message : "Project could not be deleted.");
     }
   };
 
@@ -78,20 +81,22 @@ export function ProjectsPage() {
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editingId) return;
+    const trimmedName = editName.trim();
+    if (!trimmedName) return;
     setSubmitting(true);
     setMutationError(null);
     try {
       await updateProject(editingId, {
-        name: editName.trim(),
-        description: editDescription.trim(),
+        name: trimmedName,
+        description: editDescription.trim() || undefined,
       });
       await replaceProjectRepositories(editingId, {
         repositoryIds: editRepoIds,
       });
       setEditingId(null);
       await reload();
-    } catch {
-      setMutationError("Project could not be updated.");
+    } catch (err: unknown) {
+      setMutationError(err instanceof Error ? err.message : "Project could not be updated.");
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +116,7 @@ export function ProjectsPage() {
 
   return (
     <AppShell>
-      <div style={{ maxWidth: "880px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ maxWidth: "920px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "1.75rem" }}>
         {/* Navigation Breadcrumb */}
         <div>
           <Link
@@ -137,16 +142,19 @@ export function ProjectsPage() {
           </Link>
         </div>
 
-        <header style={{ marginBottom: "0.5rem" }}>
+        <header style={{ marginBottom: "0.25rem" }}>
           <h1 style={{ fontSize: "2rem", margin: 0 }}>Project Settings</h1>
-          <p style={{ color: "var(--text-secondary, #94a3b8)", marginTop: "0.25rem" }}>
-            Group repositories for dashboard and DORA filtering. Repository assignment remains the Lead access rule.
+          <p style={{ color: "var(--text-secondary, #94a3b8)", marginTop: "0.35rem", fontSize: "0.95rem" }}>
+            Create projects, attach tracked repositories, and assign repository Leads directly to grant scoped access.
           </p>
         </header>
 
+        {mutationError && <InlineAlert message={mutationError} kind="error" />}
+        {error && <InlineAlert message={error} kind="error" />}
+
         {/* Create Project Card */}
-        <section className="card" style={{ width: "100%", marginBottom: "2rem", padding: "1.5rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1.25rem" }}>Create project</h2>
+        <section className="card" style={{ width: "100%", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <h2 style={{ marginTop: 0, fontSize: "1.25rem" }}>Create Project</h2>
           <form onSubmit={(event) => void handleCreate(event)} style={{ display: "grid", gap: "1.25rem" }}>
             <FormField
               id="project-name"
@@ -167,7 +175,7 @@ export function ProjectsPage() {
             {/* Repository Multi-select for Creation */}
             <div>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 500, marginBottom: "0.5rem" }}>
-                Attach Repositories ({createRepoIds.length} selected)
+                Attach Repositories & Assign Leads ({createRepoIds.length} selected)
               </label>
               {availableRepos.length === 0 ? (
                 <p style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", margin: 0 }}>
@@ -180,67 +188,100 @@ export function ProjectsPage() {
               ) : (
                 <div
                   style={{
-                    maxHeight: "180px",
-                    overflowY: "auto",
                     display: "grid",
-                    gap: "0.4rem",
-                    padding: "0.75rem",
+                    gap: "0.75rem",
+                    padding: "0.85rem",
                     backgroundColor: "var(--input-bg, #1a1a28)",
                     border: "1px solid var(--border-color, #2d2d42)",
-                    borderRadius: "6px",
+                    borderRadius: "8px",
                   }}
                 >
-                  {availableRepos.map((repo) => (
-                    <label
-                      key={repo.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.6rem",
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={createRepoIds.includes(repo.id)}
-                        onChange={() => toggleCreateRepo(repo.id)}
-                      />
-                      <span style={{ fontWeight: 500 }}>{repo.fullName}</span>
-                      <span
+                  {availableRepos.map((repo) => {
+                    const isSelected = createRepoIds.includes(repo.id);
+                    return (
+                      <div
+                        key={repo.id}
                         style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-secondary, #94a3b8)",
-                          marginLeft: "auto",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.5rem",
+                          padding: "0.6rem 0.75rem",
+                          borderRadius: "6px",
+                          backgroundColor: isSelected ? "rgba(99, 102, 241, 0.06)" : "transparent",
+                          border: `1px solid ${isSelected ? "rgba(99, 102, 241, 0.3)" : "transparent"}`,
                         }}
                       >
-                        {repo.visibility}
-                      </span>
-                    </label>
-                  ))}
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.6rem",
+                            fontSize: "0.9rem",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleCreateRepo(repo.id)}
+                          />
+                          <span style={{ fontWeight: 600 }}>{repo.fullName}</span>
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "var(--text-secondary, #94a3b8)",
+                              marginLeft: "auto",
+                            }}
+                          >
+                            {repo.visibility}
+                          </span>
+                        </label>
+
+                        {/* Inline Lead assignment for selected repo */}
+                        {isSelected && (
+                          <div style={{ paddingLeft: "1.75rem" }}>
+                            <RepoLeadManager
+                              repositoryId={repo.id}
+                              repositoryName={repo.fullName}
+                              compact
+                            />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {mutationError && <InlineAlert message={mutationError} />}
             <div>
               <button type="submit" className="primary-button" disabled={submitting || !name.trim()}>
-                {submitting ? "Creating…" : "Create project"}
+                {submitting ? "Creating…" : "Create Project"}
               </button>
             </div>
           </form>
         </section>
 
-        {error && <InlineAlert message={error} />}
-        {loading && <p style={{ color: "var(--text-secondary, #94a3b8)" }}>Loading projects…</p>}
-        {!loading && projects.length === 0 && (
-          <p style={{ color: "var(--text-secondary, #94a3b8)" }}>No projects have been created.</p>
-        )}
-
-        {/* Project List */}
-        <div style={{ display: "grid", gap: "1.25rem" }}>
+        {/* Existing Projects List */}
+        <div style={{ display: "grid", gap: "1.5rem" }}>
+          {loading && <p style={{ color: "var(--text-secondary)" }}>Loading projects…</p>}
+          {!loading && projects.length === 0 && (
+            <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>
+              No projects created yet. Create your first project above to group repositories and assign Leads.
+            </p>
+          )}
           {projects.map((project) => (
-            <section key={project.id} className="card" style={{ width: "100%", padding: "1.5rem" }}>
+            <section
+              key={project.id}
+              className="card"
+              style={{
+                width: "100%",
+                padding: "1.75rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "1.25rem",
+              }}
+            >
               {editingId === project.id ? (
                 <form onSubmit={(event) => void handleUpdate(event)} style={{ display: "grid", gap: "1.25rem" }}>
                   <FormField
@@ -262,59 +303,73 @@ export function ProjectsPage() {
                   {/* Edit Repositories Multi-select */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 500, marginBottom: "0.5rem" }}>
-                      Manage Attached Repositories ({editRepoIds.length} attached)
+                      Manage Attached Repositories & Leads ({editRepoIds.length} attached)
                     </label>
-                    {availableRepos.length === 0 ? (
-                      <p style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", margin: 0 }}>
-                        No repositories available in catalog. Connect GitHub under{" "}
-                        <Link to="/dashboard/integrations" style={{ color: "var(--primary-color, #6366f1)" }}>
-                          Integrations
-                        </Link>.
-                      </p>
-                    ) : (
-                      <div
-                        style={{
-                          maxHeight: "220px",
-                          overflowY: "auto",
-                          display: "grid",
-                          gap: "0.4rem",
-                          padding: "0.75rem",
-                          backgroundColor: "var(--input-bg, #1a1a28)",
-                          border: "1px solid var(--border-color, #2d2d42)",
-                          borderRadius: "6px",
-                        }}
-                      >
-                        {availableRepos.map((repo) => (
-                          <label
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "0.75rem",
+                        padding: "0.85rem",
+                        backgroundColor: "var(--input-bg, #1a1a28)",
+                        border: "1px solid var(--border-color, #2d2d42)",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      {availableRepos.map((repo) => {
+                        const isSelected = editRepoIds.includes(repo.id);
+                        return (
+                          <div
                             key={repo.id}
                             style={{
                               display: "flex",
-                              alignItems: "center",
-                              gap: "0.6rem",
-                              fontSize: "0.85rem",
-                              cursor: "pointer",
-                              padding: "0.25rem 0",
+                              flexDirection: "column",
+                              gap: "0.5rem",
+                              padding: "0.6rem 0.75rem",
+                              borderRadius: "6px",
+                              backgroundColor: isSelected ? "rgba(99, 102, 241, 0.06)" : "transparent",
+                              border: `1px solid ${isSelected ? "rgba(99, 102, 241, 0.3)" : "transparent"}`,
                             }}
                           >
-                            <input
-                              type="checkbox"
-                              checked={editRepoIds.includes(repo.id)}
-                              onChange={() => toggleEditRepo(repo.id)}
-                            />
-                            <span style={{ fontWeight: 500 }}>{repo.fullName}</span>
-                            <span
+                            <label
                               style={{
-                                fontSize: "0.75rem",
-                                color: "var(--text-secondary, #94a3b8)",
-                                marginLeft: "auto",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.6rem",
+                                fontSize: "0.9rem",
+                                cursor: "pointer",
                               }}
                             >
-                              {repo.visibility}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleEditRepo(repo.id)}
+                              />
+                              <span style={{ fontWeight: 600 }}>{repo.fullName}</span>
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  color: "var(--text-secondary, #94a3b8)",
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                {repo.visibility}
+                              </span>
+                            </label>
+
+                            {/* Inline Lead assignment for selected repo */}
+                            {isSelected && (
+                              <div style={{ paddingLeft: "1.75rem" }}>
+                                <RepoLeadManager
+                                  repositoryId={repo.id}
+                                  repositoryName={repo.fullName}
+                                  compact
+                                />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div style={{ display: "flex", gap: "0.75rem" }}>
@@ -327,12 +382,12 @@ export function ProjectsPage() {
                   </div>
                 </form>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
                     <div>
-                      <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 600 }}>{project.name}</h2>
+                      <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 600 }}>{project.name}</h2>
                       {project.description && (
-                        <p style={{ margin: "0.25rem 0 0 0", color: "var(--text-secondary, #94a3b8)", fontSize: "0.9rem" }}>
+                        <p style={{ margin: "0.35rem 0 0 0", color: "var(--text-secondary, #94a3b8)", fontSize: "0.9rem" }}>
                           {project.description}
                         </p>
                       )}
@@ -363,67 +418,66 @@ export function ProjectsPage() {
                     </div>
                   </div>
 
-                  {/* Attached Repositories display */}
-                  <div style={{ marginTop: "0.5rem" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                      <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--text-secondary, #94a3b8)" }}>
-                        {project.repositories.length} Attached {project.repositories.length === 1 ? "Repository" : "Repositories"}
-                      </span>
-                      {project.repositories.length > 0 && (
-                        <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
-                          Leads assigned to attached repositories gain access to this project
-                        </span>
-                      )}
+                  {/* Attached Repositories & Assigned Leads */}
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary, #94a3b8)", marginBottom: "0.6rem" }}>
+                      {project.repositories.length} Attached {project.repositories.length === 1 ? "Repository" : "Repositories"}
                     </div>
                     {project.repositories.length === 0 ? (
                       <p style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", margin: 0, fontStyle: "italic" }}>
-                        No repositories attached yet. Click &ldquo;Edit project&rdquo; to attach repositories.
+                        No repositories attached yet. Click &ldquo;Edit project&rdquo; to attach repositories and assign Leads.
                       </p>
                     ) : (
-                      <div style={{ display: "grid", gap: "0.5rem" }}>
+                      <div style={{ display: "grid", gap: "0.85rem" }}>
                         {project.repositories.map((repo) => (
                           <div
                             key={repo.id}
                             style={{
+                              padding: "0.85rem 1rem",
+                              borderRadius: "8px",
+                              backgroundColor: "var(--input-bg, #141420)",
+                              border: "1px solid var(--border-color, #2d2d42)",
                               display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "0.75rem",
-                              padding: "0.45rem 0.75rem",
-                              borderRadius: "6px",
-                              backgroundColor: "rgba(99, 102, 241, 0.08)",
-                              border: "1px solid rgba(99, 102, 241, 0.2)",
-                              fontSize: "0.85rem",
+                              flexDirection: "column",
+                              gap: "0.65rem",
                             }}
                           >
-                            <span
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "0.45rem",
-                                color: "var(--primary-light, #818cf8)",
-                                fontWeight: 500,
-                              }}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                              </svg>
-                              {repo.fullName}
-                            </span>
-                            <Link
-                              to={`/dashboard/members?repo=${repo.id}`}
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "0.25rem",
-                                fontSize: "0.8rem",
-                                fontWeight: 500,
-                                color: "var(--primary-light, #818cf8)",
-                                textDecoration: "none",
-                              }}
-                            >
-                              Assign / Manage Leads ➔
-                            </Link>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.5rem",
+                                  color: "var(--primary-light, #818cf8)",
+                                  fontWeight: 600,
+                                  fontSize: "0.95rem",
+                                }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                                </svg>
+                                {repo.fullName}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  padding: "0.15rem 0.45rem",
+                                  borderRadius: "4px",
+                                  backgroundColor: repo.trackingEnabled ? "rgba(34, 197, 94, 0.15)" : "rgba(148, 163, 184, 0.15)",
+                                  color: repo.trackingEnabled ? "#22c55e" : "var(--text-secondary, #94a3b8)",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {repo.trackingEnabled ? "Tracked" : "Untracked"}
+                              </span>
+                            </div>
+
+                            {/* Repo Lead Manager & Assignment View */}
+                            <RepoLeadManager
+                              repositoryId={repo.id}
+                              repositoryName={repo.fullName}
+                              onAssignmentsChange={() => void reload()}
+                            />
                           </div>
                         ))}
                       </div>

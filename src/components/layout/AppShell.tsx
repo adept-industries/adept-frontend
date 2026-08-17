@@ -30,15 +30,6 @@ const ProjectFolderIcon = () => (
   </svg>
 );
 
-const UsersIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-    <circle cx="9" cy="7" r="4"></circle>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-  </svg>
-);
-
 const LogoutIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -67,7 +58,7 @@ function SettingsDropdown() {
   const location = useLocation();
   const navigate = useNavigate();
   const path = location.pathname;
-  const isSettingsActive = path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/projects") || path.startsWith("/dashboard/members");
+  const isSettingsActive = path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/projects");
 
   useEffect(() => {
     if (!open) return;
@@ -175,31 +166,6 @@ function SettingsDropdown() {
             </span>
             <span>Project Settings</span>
           </button>
-
-          <button
-            type="button"
-            role="menuitem"
-            id="nav-members-menuitem"
-            className="navigation-dropdown-option"
-            onClick={() => {
-              setOpen(false);
-              void navigate("/dashboard/members");
-            }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              gap: "0.65rem",
-              textAlign: "left",
-              fontWeight: path.startsWith("/dashboard/members") ? 600 : 400,
-              color: path.startsWith("/dashboard/members") ? "var(--primary-light, #818cf8)" : undefined,
-            }}
-          >
-            <span style={{ display: "inline-flex", width: "1.25rem", justifyContent: "center", flexShrink: 0 }}>
-              <UsersIcon />
-            </span>
-            <span>Members & Leads</span>
-          </button>
         </div>
       )}
     </div>
@@ -222,25 +188,6 @@ function DesktopNav() {
     <nav aria-label="Main navigation" className="desktop-nav-row">
       {isManager && (
         <>
-          <Link
-            to="/dashboard/members"
-            id="nav-members-link"
-            className="button-link"
-            aria-label="Members & Leads"
-            title="Members & Leads"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.45rem",
-              padding: "0.55rem 0.85rem",
-              color: path.startsWith("/dashboard/members") ? "var(--primary-light, #818cf8)" : undefined,
-            }}
-          >
-            <UsersIcon />
-            <span>Members</span>
-          </Link>
-
           <Link
             to="/dashboard/integrations"
             id="nav-integrations-link"
@@ -357,15 +304,6 @@ function MobileNav({ onClose, open }: MobileNavProps) {
             }}
           >
             <ProjectFolderIcon /> Project Settings
-          </Link>
-          <Link
-            to="/dashboard/members"
-            onClick={onClose}
-            id="mob-nav-members-link"
-            className="button-link"
-            style={path.startsWith("/dashboard/members") ? activeStyle : {}}
-          >
-            Members
           </Link>
         </>
       )}

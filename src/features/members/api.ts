@@ -44,6 +44,19 @@ export function lookupWorkspaceMember(
   });
 }
 
+/** List current active and pending Lead assignments for a repository. */
+export function listRepositoryLeadAssignments(
+  repositoryId: string,
+  signal?: AbortSignal,
+): Promise<PendingRepositoryLeadInvitationResponse[]> {
+  return apiRequest<PendingRepositoryLeadInvitationResponse[]>({
+    method: "GET",
+    path: `/repositories/${repositoryId}/lead-assignments`,
+    auth: "bearer",
+    signal,
+  });
+}
+
 /** Assign a Lead to a repository or create/reuse a pending invitation. */
 export function createRepositoryLeadAssignment(
   repositoryId: string,
