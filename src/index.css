@@ -162,10 +162,23 @@ button:disabled {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .navigation-dropdown {
   position: relative;
+  flex-shrink: 0;
+}
+
+.contextual-settings-btn {
+  transition: all 0.15s ease;
+}
+
+.contextual-settings-btn:hover {
+  background: var(--button-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary-light, #818cf8) !important;
 }
 
 button.navigation-dropdown-trigger {
@@ -173,7 +186,7 @@ button.navigation-dropdown-trigger {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  width: 12rem;
+  width: 11rem;
   height: 2.65rem;
   padding: 0.55rem 0.75rem !important;
   border-color: var(--border-color) !important;
@@ -390,6 +403,8 @@ p {
   align-items: center;
   gap: 0.75rem;
   height: 100%;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Mobile overlay: hidden by default, shown when open on mobile */
@@ -397,8 +412,8 @@ p {
   display: none;
 }
 
-/* ─── Mobile breakpoint (≤768px) ─────────────────── */
-@media (max-width: 768px) {
+/* ─── Header & Nav Breakpoint (≤1080px) ─────────────────── */
+@media (max-width: 1080px) {
   /* Show hamburger */
   .mobile-menu-toggle {
     display: inline-flex !important;
@@ -424,6 +439,10 @@ p {
   /* Tighten workspace switcher divider */
   .dashboard-workspace-control {
     padding-left: 0.5rem !important;
+  }
+
+  .desktop-project-selector {
+    display: none;
   }
 
   /* Mobile drawer overlay */

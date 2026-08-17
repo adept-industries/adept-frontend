@@ -201,7 +201,7 @@ describe("IntegrationsPage", () => {
 
     renderPage();
 
-    const settingsBtn = await screen.findByRole("button", { name: /Settings/i });
+    const settingsBtn = await screen.findByRole("button", { name: "Settings" });
     await user.click(settingsBtn);
 
     expect(await screen.findByText("Repository Settings")).toBeInTheDocument();

@@ -66,16 +66,19 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
 
   return (
     <div style={{ position: "relative" }}>
-      <NavigationDropdown
-        id="workspace-switcher-trigger"
-        ariaLabel="Selected workspace"
-        options={workspaces.map((workspace) => ({ id: workspace.id, label: workspace.name }))}
-        selectedId={currentWorkspaceId}
-        onSelect={(workspaceId) => void handleSwitch(workspaceId)}
-        disabled={switching}
-        busyLabel="Switching…"
-        align="right"
-      />
+      <div className="navigation-dropdown-field">
+        <span>Workspace</span>
+        <NavigationDropdown
+          id="workspace-switcher-trigger"
+          ariaLabel="Selected workspace"
+          options={workspaces.map((workspace) => ({ id: workspace.id, label: workspace.name }))}
+          selectedId={currentWorkspaceId}
+          onSelect={(workspaceId) => void handleSwitch(workspaceId)}
+          disabled={switching}
+          busyLabel="Switching…"
+          align="left"
+        />
+      </div>
 
       {error && (
         <p role="alert" style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, color: "var(--text-primary)", fontSize: "0.8rem" }}>

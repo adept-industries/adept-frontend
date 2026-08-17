@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { useContext, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { useAuth } from "../../auth/AuthProvider";
@@ -17,42 +17,164 @@ interface AppShellProps {
 
 // ─── Shared SVGs ──────────────────────────────────────────────────────────────
 
-const SunIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" />
-  </svg>
-);
-
-const MoonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-  </svg>
-);
-
 const SettingsIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"></circle>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
 );
 
+const ProjectFolderIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
 const LogoutIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
     <polyline points="16 17 21 12 16 7"></polyline>
     <line x1="21" y1="12" x2="9" y2="12"></line>
   </svg>
 );
 
-// ─── Desktop nav (icon-buttons) ───────────────────────────────────────────────
+const GithubNavIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+);
 
-interface DesktopNavProps {
-  theme: DashboardTheme;
-  onToggleTheme: () => void;
+const JiraNavIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="#0052CC" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path d="M11.53 2c0 5.26 4.27 9.53 9.53 9.53V2h-9.53zm-9.53 9.53c0 5.26 4.27 9.53 9.53 9.53V11.53H2zm9.53 0c0 5.26 4.27 9.53 9.53 9.53V11.53h-9.53z" />
+  </svg>
+);
+
+// ─── Settings Dropdown (Unified Workspace & Project Settings) ────────────────
+
+function SettingsDropdown() {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const path = location.pathname;
+  const isSettingsActive = path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/projects");
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutside = (e: PointerEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
+  }, [open]);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        type="button"
+        id="nav-settings-dropdown-btn"
+        className="button-link"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Settings menu"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.45rem",
+          padding: "0.55rem 0.85rem",
+          color: isSettingsActive ? "var(--primary-light, #818cf8)" : undefined,
+          fontWeight: isSettingsActive ? 600 : 400,
+        }}
+      >
+        <SettingsIcon />
+        <span>Settings</span>
+        <span
+          style={{
+            fontSize: "0.65rem",
+            color: "var(--text-secondary)",
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform 0.15s ease",
+          }}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="navigation-dropdown-menu navigation-dropdown-menu--right"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 0.5rem)",
+            right: 0,
+            width: "13.5rem",
+            zIndex: 60,
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            id="nav-workspace-settings-menuitem"
+            className="navigation-dropdown-option"
+            onClick={() => {
+              setOpen(false);
+              void navigate("/dashboard/settings");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: "0.65rem",
+              textAlign: "left",
+              fontWeight: path.startsWith("/dashboard/settings") ? 600 : 400,
+              color: path.startsWith("/dashboard/settings") ? "var(--primary-light, #818cf8)" : undefined,
+            }}
+          >
+            <span style={{ display: "inline-flex", width: "1.25rem", justifyContent: "center", flexShrink: 0 }}>
+              <SettingsIcon />
+            </span>
+            <span>Workspace Settings</span>
+          </button>
+
+          <button
+            type="button"
+            role="menuitem"
+            id="nav-project-settings-menuitem"
+            className="navigation-dropdown-option"
+            onClick={() => {
+              setOpen(false);
+              void navigate("/dashboard/projects");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: "0.65rem",
+              textAlign: "left",
+              fontWeight: path.startsWith("/dashboard/projects") ? 600 : 400,
+              color: path.startsWith("/dashboard/projects") ? "var(--primary-light, #818cf8)" : undefined,
+            }}
+          >
+            <span style={{ display: "inline-flex", width: "1.25rem", justifyContent: "center", flexShrink: 0 }}>
+              <ProjectFolderIcon />
+            </span>
+            <span>Project Settings</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
+// ─── Desktop nav (icon-buttons) ───────────────────────────────────────────────
+
+function DesktopNav() {
   const { state, actions } = useAuth();
   const location = useLocation();
 
@@ -64,69 +186,29 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
 
   return (
     <nav aria-label="Main navigation" className="desktop-nav-row">
-      <ProjectSelector />
-
       {isManager && (
         <>
-          <Link
-            to="/dashboard/projects"
-            id="nav-projects-link"
-            className="button-link"
-            style={{
-              fontWeight: path.startsWith("/dashboard/projects") ? 600 : 400,
-              color: path.startsWith("/dashboard/projects") ? "var(--primary-light, #818cf8)" : undefined,
-            }}
-          >
-            Projects
-          </Link>
           <Link
             to="/dashboard/integrations"
             id="nav-integrations-link"
             className="button-link"
+            aria-label="Integrations"
+            title="Integrations (GitHub & Jira)"
             style={{
-              fontWeight: path.startsWith("/dashboard/integrations") ? 600 : 400,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.6rem",
+              padding: "0.55rem 0.95rem",
               color: path.startsWith("/dashboard/integrations") ? "var(--primary-light, #818cf8)" : undefined,
             }}
           >
-            Integrations
+            <GithubNavIcon />
+            <JiraNavIcon />
           </Link>
-          <Link
-            to="/dashboard/members"
-            id="nav-members-link"
-            className="button-link"
-            style={{
-              fontWeight: path.startsWith("/dashboard/members") ? 600 : 400,
-              color: path.startsWith("/dashboard/members") ? "var(--primary-light, #818cf8)" : undefined,
-            }}
-          >
-            Members
-          </Link>
+
+          <SettingsDropdown />
         </>
-      )}
-
-      {/* Icon-only buttons for desktop */}
-      <button
-        id="dashboard-theme-toggle"
-        type="button"
-        className="icon-button"
-        onClick={onToggleTheme}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-      </button>
-
-      {isManager && (
-        <Link
-          to="/dashboard/settings"
-          id="nav-settings-link"
-          className="button-link icon-button"
-          aria-label="Workspace settings"
-          title="Settings"
-          style={{ color: path.startsWith("/dashboard/settings") ? "var(--primary-light, #818cf8)" : undefined }}
-        >
-          <SettingsIcon />
-        </Link>
       )}
 
       <button
@@ -146,13 +228,11 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
 // ─── Mobile drawer nav (labeled buttons) ─────────────────────────────────────
 
 interface MobileNavProps {
-  theme: DashboardTheme;
-  onToggleTheme: () => void;
   onClose: () => void;
   open: boolean;
 }
 
-function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
+function MobileNav({ onClose, open }: MobileNavProps) {
   const { state, actions } = useAuth();
   const location = useLocation();
 
@@ -178,22 +258,52 @@ function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
       {isManager && (
         <>
           <Link
-            to="/dashboard/projects"
-            onClick={onClose}
-            id="mob-nav-projects-link"
-            className="button-link"
-            style={path.startsWith("/dashboard/projects") ? activeStyle : {}}
-          >
-            Projects
-          </Link>
-          <Link
             to="/dashboard/integrations"
             onClick={onClose}
             id="mob-nav-integrations-link"
             className="button-link"
-            style={path.startsWith("/dashboard/integrations") ? activeStyle : {}}
+            aria-label="Integrations"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/integrations") ? activeStyle : {}),
+            }}
           >
-            Integrations
+            <GithubNavIcon />
+            <JiraNavIcon />
+            <span>Integrations</span>
+          </Link>
+
+          <Link
+            to="/dashboard/settings"
+            onClick={onClose}
+            id="mob-nav-workspace-settings-link"
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/settings") ? activeStyle : {}),
+            }}
+            aria-label="Workspace settings"
+          >
+            <SettingsIcon /> Workspace Settings
+          </Link>
+
+          <Link
+            to="/dashboard/projects"
+            onClick={onClose}
+            id="mob-nav-projects-link"
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/projects") ? activeStyle : {}),
+            }}
+          >
+            <ProjectFolderIcon /> Project Settings
           </Link>
           <Link
             to="/dashboard/members"
@@ -205,39 +315,6 @@ function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
             Members
           </Link>
         </>
-      )}
-
-      <div style={{ height: "1px", background: "var(--dashboard-subtle-border)" }} />
-
-      {/* Utility actions — also as labeled button-links */}
-      <button
-        id="mob-dashboard-theme-toggle"
-        type="button"
-        className="button-link"
-        onClick={onToggleTheme}
-        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-        {theme === "dark" ? "Light mode" : "Dark mode"}
-      </button>
-
-      {isManager && (
-        <Link
-          to="/dashboard/settings"
-          onClick={onClose}
-          id="mob-nav-settings-link"
-          className="button-link"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            ...(path.startsWith("/dashboard/settings") ? activeStyle : {}),
-          }}
-          aria-label="Workspace settings"
-        >
-          <SettingsIcon /> Settings
-        </Link>
       )}
 
       <button
@@ -262,11 +339,9 @@ export function AppShell({ children }: AppShellProps) {
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    dashboardThemePreference.set(nextTheme);
-  };
+  useEffect(() => {
+    return dashboardThemePreference.subscribe(setTheme);
+  }, []);
 
   return (
     <div
@@ -289,7 +364,7 @@ export function AppShell({ children }: AppShellProps) {
           zIndex: 50,
         }}
       >
-        {/* Left: logo + workspace switcher */}
+        {/* Left: logo + workspace switcher + project selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", height: "100%", minWidth: 0, flex: "0 1 auto" }}>
           <Link
             to="/dashboard"
@@ -300,11 +375,14 @@ export function AppShell({ children }: AppShellProps) {
             <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ height: "3.5rem" }} />
           </Link>
           {authenticatedState && (
-            <div className="dashboard-workspace-control" style={{ paddingLeft: "1rem", minWidth: 0 }}>
+            <div className="dashboard-workspace-control" style={{ display: "flex", alignItems: "center", gap: "1rem", paddingLeft: "1rem", minWidth: 0 }}>
               <WorkspaceSwitcher
                 workspaces={authenticatedState.workspaces}
                 currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
               />
+              <div className="desktop-project-selector">
+                <ProjectSelector />
+              </div>
             </div>
           )}
         </div>
@@ -312,7 +390,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Desktop nav row — pushed right, hidden on mobile via CSS */}
         {authenticatedState && (
           <div style={{ marginLeft: "auto" }}>
-            <DesktopNav theme={theme} onToggleTheme={toggleTheme} />
+            <DesktopNav />
           </div>
         )}
 
@@ -345,8 +423,6 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile drawer */}
       {authenticatedState && (
         <MobileNav
-          theme={theme}
-          onToggleTheme={toggleTheme}
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}
         />

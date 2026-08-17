@@ -30,7 +30,8 @@ test("password reset invalidates the previous session", async ({ browser, page }
     response.request().method() === "GET" &&
     new URL(response.url()).pathname === "/api/v1/workspaces/current",
   );
-  await page.getByRole("link", { name: /workspace settings/i }).click();
+  await page.locator("#nav-settings-dropdown-btn").click();
+  await page.locator("#nav-workspace-settings-menuitem").click();
   expect((await rejectedRequest).status()).toBe(401);
   await expect(page).toHaveURL(/login/);
 
