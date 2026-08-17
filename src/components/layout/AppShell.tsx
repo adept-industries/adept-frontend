@@ -90,6 +90,17 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
           >
             Integrations
           </Link>
+          <Link
+            to="/dashboard/members"
+            id="nav-members-link"
+            className="button-link"
+            style={{
+              fontWeight: path.startsWith("/dashboard/members") ? 600 : 400,
+              color: path.startsWith("/dashboard/members") ? "var(--primary-light, #818cf8)" : undefined,
+            }}
+          >
+            Members
+          </Link>
         </>
       )}
 
@@ -183,6 +194,15 @@ function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
             style={path.startsWith("/dashboard/integrations") ? activeStyle : {}}
           >
             Integrations
+          </Link>
+          <Link
+            to="/dashboard/members"
+            onClick={onClose}
+            id="mob-nav-members-link"
+            className="button-link"
+            style={path.startsWith("/dashboard/members") ? activeStyle : {}}
+          >
+            Members
           </Link>
         </>
       )}
