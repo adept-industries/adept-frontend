@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext";
 import { ProjectContext, type ProjectContextValue } from "../../features/projects/ProjectContext";
+import { dashboardThemePreference } from "../../lib/dashboardThemePreference";
 import { AppShell } from "./AppShell";
 
 const authValue: AuthContextValue = {
@@ -62,22 +62,15 @@ describe("AppShell theme", () => {
     localStorage.removeItem("adept.dashboardTheme");
   });
 
-  it("starts dark and persists light mode after toggling", async () => {
-    const user = userEvent.setup();
-    renderShell();
-
-    // AppShell renders two theme toggle buttons — one in the desktop nav row
-    // and one in the mobile drawer — both with the same aria-label.
-    // We target the desktop one (first in DOM order).
-    const toggles = screen.getAllByRole("button", { name: "Switch to light mode" });
-    const toggle = toggles[0];
-    const shell = toggle.closest(".dashboard-shell");
+  it("starts dark and updates dynamically when theme preference changes", async () => {
+    const { container } = renderShell();
+    const shell = container.querySelector(".dashboard-shell");
     expect(shell).toHaveClass("dark-theme");
 
-    await user.click(toggle);
-
-    expect(shell).toHaveClass("light-theme");
-    expect(screen.getAllByRole("button", { name: "Switch to dark mode" })[0]).toBeInTheDocument();
+    dashboardThemePreference.set("light");
+    await waitFor(() => {
+      expect(shell).toHaveClass("light-theme");
+    });
     expect(localStorage.getItem("adept.dashboardTheme")).toBe("light");
   });
 });

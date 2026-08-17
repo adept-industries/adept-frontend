@@ -11,7 +11,7 @@ export function ProjectSelector() {
 
   return (
     <div className="navigation-dropdown-field">
-      <span>Project</span>
+      <span>Current Project</span>
       <NavigationDropdown
         id="project-selector"
         ariaLabel="Selected project"

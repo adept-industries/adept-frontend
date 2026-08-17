@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
@@ -17,19 +17,6 @@ interface AppShellProps {
 
 // ─── Shared SVGs ──────────────────────────────────────────────────────────────
 
-const SunIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" />
-  </svg>
-);
-
-const MoonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-  </svg>
-);
-
 const SettingsIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="3"></circle>
@@ -45,14 +32,21 @@ const LogoutIcon = () => (
   </svg>
 );
 
+const GithubNavIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+);
+
+const JiraNavIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="#0052CC" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path d="M11.53 2c0 5.26 4.27 9.53 9.53 9.53V2h-9.53zm-9.53 9.53c0 5.26 4.27 9.53 9.53 9.53V11.53H2zm9.53 0c0 5.26 4.27 9.53 9.53 9.53V11.53h-9.53z" />
+  </svg>
+);
+
 // ─── Desktop nav (icon-buttons) ───────────────────────────────────────────────
 
-interface DesktopNavProps {
-  theme: DashboardTheme;
-  onToggleTheme: () => void;
-}
-
-function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
+function DesktopNav() {
   const { state, actions } = useAuth();
   const location = useLocation();
 
@@ -64,8 +58,6 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
 
   return (
     <nav aria-label="Main navigation" className="desktop-nav-row">
-      <ProjectSelector />
-
       {isManager && (
         <>
           <Link
@@ -83,27 +75,22 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
             to="/dashboard/integrations"
             id="nav-integrations-link"
             className="button-link"
+            aria-label="Integrations"
+            title="Integrations (GitHub & Jira)"
             style={{
-              fontWeight: path.startsWith("/dashboard/integrations") ? 600 : 400,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.6rem",
+              padding: "0.55rem 0.95rem",
               color: path.startsWith("/dashboard/integrations") ? "var(--primary-light, #818cf8)" : undefined,
             }}
           >
-            Integrations
+            <GithubNavIcon />
+            <JiraNavIcon />
           </Link>
         </>
       )}
-
-      {/* Icon-only buttons for desktop */}
-      <button
-        id="dashboard-theme-toggle"
-        type="button"
-        className="icon-button"
-        onClick={onToggleTheme}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-        title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-      </button>
 
       {isManager && (
         <Link
@@ -135,13 +122,11 @@ function DesktopNav({ theme, onToggleTheme }: DesktopNavProps) {
 // ─── Mobile drawer nav (labeled buttons) ─────────────────────────────────────
 
 interface MobileNavProps {
-  theme: DashboardTheme;
-  onToggleTheme: () => void;
   onClose: () => void;
   open: boolean;
 }
 
-function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
+function MobileNav({ onClose, open }: MobileNavProps) {
   const { state, actions } = useAuth();
   const location = useLocation();
 
@@ -180,27 +165,22 @@ function MobileNav({ theme, onToggleTheme, onClose, open }: MobileNavProps) {
             onClick={onClose}
             id="mob-nav-integrations-link"
             className="button-link"
-            style={path.startsWith("/dashboard/integrations") ? activeStyle : {}}
+            aria-label="Integrations"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/integrations") ? activeStyle : {}),
+            }}
           >
-            Integrations
+            <GithubNavIcon />
+            <JiraNavIcon />
+            <span>Integrations</span>
           </Link>
         </>
       )}
 
       <div style={{ height: "1px", background: "var(--dashboard-subtle-border)" }} />
-
-      {/* Utility actions — also as labeled button-links */}
-      <button
-        id="mob-dashboard-theme-toggle"
-        type="button"
-        className="button-link"
-        onClick={onToggleTheme}
-        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
-        aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      >
-        {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-        {theme === "dark" ? "Light mode" : "Dark mode"}
-      </button>
 
       {isManager && (
         <Link
@@ -242,11 +222,9 @@ export function AppShell({ children }: AppShellProps) {
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    dashboardThemePreference.set(nextTheme);
-  };
+  useEffect(() => {
+    return dashboardThemePreference.subscribe(setTheme);
+  }, []);
 
   return (
     <div
@@ -269,7 +247,7 @@ export function AppShell({ children }: AppShellProps) {
           zIndex: 50,
         }}
       >
-        {/* Left: logo + workspace switcher */}
+        {/* Left: logo + workspace switcher + project selector */}
         <div style={{ display: "flex", alignItems: "center", gap: "1rem", height: "100%", minWidth: 0, flex: "0 1 auto" }}>
           <Link
             to="/dashboard"
@@ -280,11 +258,14 @@ export function AppShell({ children }: AppShellProps) {
             <img src={logoPath} alt="Adept Logo" className="brand-logo" style={{ height: "3.5rem" }} />
           </Link>
           {authenticatedState && (
-            <div className="dashboard-workspace-control" style={{ paddingLeft: "1rem", minWidth: 0 }}>
+            <div className="dashboard-workspace-control" style={{ display: "flex", alignItems: "center", gap: "1rem", paddingLeft: "1rem", minWidth: 0 }}>
               <WorkspaceSwitcher
                 workspaces={authenticatedState.workspaces}
                 currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
               />
+              <div className="desktop-project-selector">
+                <ProjectSelector />
+              </div>
             </div>
           )}
         </div>
@@ -292,7 +273,7 @@ export function AppShell({ children }: AppShellProps) {
         {/* Desktop nav row — pushed right, hidden on mobile via CSS */}
         {authenticatedState && (
           <div style={{ marginLeft: "auto" }}>
-            <DesktopNav theme={theme} onToggleTheme={toggleTheme} />
+            <DesktopNav />
           </div>
         )}
 
@@ -325,8 +306,6 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile drawer */}
       {authenticatedState && (
         <MobileNav
-          theme={theme}
-          onToggleTheme={toggleTheme}
           onClose={() => setMobileMenuOpen(false)}
           open={mobileMenuOpen}
         />
