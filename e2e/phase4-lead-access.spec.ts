@@ -32,7 +32,7 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await page.getByRole("button", { name: /Create project/i }).click();
 
     // Project should appear in project table
-    await expect(page.getByText(projectName)).toBeVisible();
+    await expect(page.getByRole("heading", { name: projectName })).toBeVisible();
 
     // 4. Return to dashboard
     await page.locator("#nav-logo").click();
