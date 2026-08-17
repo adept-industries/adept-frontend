@@ -171,6 +171,16 @@ button:disabled {
   flex-shrink: 0;
 }
 
+.contextual-settings-btn {
+  transition: all 0.15s ease;
+}
+
+.contextual-settings-btn:hover {
+  background: var(--button-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--primary-light, #818cf8) !important;
+}
+
 button.navigation-dropdown-trigger {
   display: flex;
   align-items: center;

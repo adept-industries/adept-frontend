@@ -138,7 +138,7 @@ export function ProjectsPage() {
         </div>
 
         <header style={{ marginBottom: "0.5rem" }}>
-          <h1 style={{ fontSize: "2rem", margin: 0 }}>Projects</h1>
+          <h1 style={{ fontSize: "2rem", margin: 0 }}>Project Settings</h1>
           <p style={{ color: "var(--text-secondary, #94a3b8)", marginTop: "0.25rem" }}>
             Group repositories for dashboard and DORA filtering. Repository assignment remains the Lead access rule.
           </p>
