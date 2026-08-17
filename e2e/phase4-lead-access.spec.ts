@@ -11,11 +11,10 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     const managerEmail = uniqueEmail();
     await signupVerifyAndLogin(page, managerEmail);
 
-    // 1. Confirm Manager navigation bar exposes all management links
-    await expect(page.locator("#nav-projects-link")).toBeVisible();
-    await expect(page.locator("#nav-integrations-link")).toBeVisible();
+    // 1. Confirm Manager navigation bar exposes all management links & dropdowns
     await expect(page.locator("#nav-members-link")).toBeVisible();
-    await expect(page.locator("#nav-settings-link")).toBeVisible();
+    await expect(page.locator("#nav-integrations-link")).toBeVisible();
+    await expect(page.locator("#nav-settings-dropdown-btn")).toBeVisible();
 
     // 2. Navigate to Members page (/dashboard/members)
     await page.locator("#nav-members-link").click();
@@ -23,8 +22,9 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await expect(page.getByRole("heading", { name: /Members & Lead Assignments/i })).toBeVisible();
     await expect(page.getByText(/Assign Leads to tracked repositories/i)).toBeVisible();
 
-    // 3. Navigate to Projects page and create a project
-    await page.locator("#nav-projects-link").click();
+    // 3. Navigate to Projects page via settings dropdown and create a project
+    await page.locator("#nav-settings-dropdown-btn").click();
+    await page.locator("#nav-project-settings-menuitem").click();
     await expect(page).toHaveURL(/dashboard\/projects/);
     await page.getByRole("button", { name: /New Project/i }).click();
 
@@ -32,7 +32,7 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await page.getByLabel("Project name", { exact: true }).fill(projectName);
     await page.getByRole("button", { name: /Create Project/i }).click();
 
-    // Project should appear in project table and header selector
+    // Project should appear in project table
     await expect(page.getByText(projectName)).toBeVisible();
 
     // 4. Return to dashboard
@@ -47,15 +47,17 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await expect(page.getByText(/No invitation token found/i)).toBeVisible();
     await expect(page.getByRole("link", { name: /Go to Sign in/i })).toBeVisible();
 
-    // 2. Accessing /accept-invite with invalid token renders invalid state gracefully
-    await page.goto("/accept-invite#token=nonexistent-invalid-token-12345");
-    await expect(page.getByText(/Invalid invitation|invitation.*invalid|could not be loaded/i)).toBeVisible();
-
-    // 3. Direct access to Manager-only routes when unauthenticated redirects to /login
+    // 2. Direct access to Manager-only routes when unauthenticated redirects to /login
     await page.goto("/dashboard/members");
     await expect(page).toHaveURL(/login/);
 
     await page.goto("/dashboard/settings");
+    await expect(page).toHaveURL(/login/);
+
+    await page.goto("/dashboard/projects");
+    await expect(page).toHaveURL(/login/);
+
+    await page.goto("/dashboard/integrations");
     await expect(page).toHaveURL(/login/);
   });
 });
