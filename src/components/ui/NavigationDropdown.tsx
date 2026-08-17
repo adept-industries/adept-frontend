@@ -1,8 +1,15 @@
+import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 
 export interface NavigationDropdownOption {
   id: string;
   label: string;
+}
+
+export interface NavigationDropdownAction {
+  label: string;
+  onClick: () => void;
+  icon?: ReactNode;
 }
 
 interface NavigationDropdownProps {
@@ -14,6 +21,7 @@ interface NavigationDropdownProps {
   disabled?: boolean;
   busyLabel?: string;
   align?: "left" | "right";
+  action?: NavigationDropdownAction;
 }
 
 export function NavigationDropdown({
@@ -25,6 +33,7 @@ export function NavigationDropdown({
   disabled = false,
   busyLabel,
   align = "left",
+  action,
 }: NavigationDropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -98,6 +107,37 @@ export function NavigationDropdown({
               {option.id === selectedId && <span aria-hidden>✓</span>}
             </button>
           ))}
+
+          {action && (
+            <>
+              <div
+                style={{
+                  height: "1px",
+                  background: "var(--border-color)",
+                  margin: "0.25rem 0",
+                  opacity: 0.7,
+                }}
+              />
+              <button
+                type="button"
+                className="navigation-dropdown-option"
+                onClick={() => {
+                  setOpen(false);
+                  action.onClick();
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  color: "var(--primary-light, #818cf8)",
+                  fontWeight: 500,
+                }}
+              >
+                {action.icon}
+                <span>{action.label}</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

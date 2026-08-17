@@ -10,7 +10,8 @@ test("Manager deletes the final workspace and creates a replacement", async ({ p
   const email = uniqueEmail();
   await signupVerifyAndLogin(page, email);
 
-  await page.getByRole("link", { name: /workspace settings/i }).click();
+  await page.locator("#nav-settings-dropdown-btn").click();
+  await page.locator("#nav-workspace-settings-menuitem").click();
   const renamed = `Renamed ${Date.now()}`;
   const settingsForm = page.locator("#workspace-settings-form");
   await settingsForm.getByLabel("Workspace name", { exact: true }).fill(renamed);

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { useContext, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useContext, useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { useAuth } from "../../auth/AuthProvider";
@@ -18,14 +18,20 @@ interface AppShellProps {
 // ─── Shared SVGs ──────────────────────────────────────────────────────────────
 
 const SettingsIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="3"></circle>
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
 );
 
+const ProjectFolderIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
 const LogoutIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
     <polyline points="16 17 21 12 16 7"></polyline>
     <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -44,6 +50,128 @@ const JiraNavIcon = () => (
   </svg>
 );
 
+// ─── Settings Dropdown (Unified Workspace & Project Settings) ────────────────
+
+function SettingsDropdown() {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const path = location.pathname;
+  const isSettingsActive = path.startsWith("/dashboard/settings") || path.startsWith("/dashboard/projects");
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnOutside = (e: PointerEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
+  }, [open]);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      <button
+        type="button"
+        id="nav-settings-dropdown-btn"
+        className="button-link"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label="Settings menu"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.45rem",
+          padding: "0.55rem 0.85rem",
+          color: isSettingsActive ? "var(--primary-light, #818cf8)" : undefined,
+          fontWeight: isSettingsActive ? 600 : 400,
+        }}
+      >
+        <SettingsIcon />
+        <span>Settings</span>
+        <span
+          style={{
+            fontSize: "0.65rem",
+            color: "var(--text-secondary)",
+            transform: open ? "rotate(180deg)" : "none",
+            transition: "transform 0.15s ease",
+          }}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="navigation-dropdown-menu navigation-dropdown-menu--right"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 0.5rem)",
+            right: 0,
+            width: "13.5rem",
+            zIndex: 60,
+          }}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            id="nav-workspace-settings-menuitem"
+            className="navigation-dropdown-option"
+            onClick={() => {
+              setOpen(false);
+              void navigate("/dashboard/settings");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: "0.65rem",
+              textAlign: "left",
+              fontWeight: path.startsWith("/dashboard/settings") ? 600 : 400,
+              color: path.startsWith("/dashboard/settings") ? "var(--primary-light, #818cf8)" : undefined,
+            }}
+          >
+            <span style={{ display: "inline-flex", width: "1.25rem", justifyContent: "center", flexShrink: 0 }}>
+              <SettingsIcon />
+            </span>
+            <span>Workspace Settings</span>
+          </button>
+
+          <button
+            type="button"
+            role="menuitem"
+            id="nav-project-settings-menuitem"
+            className="navigation-dropdown-option"
+            onClick={() => {
+              setOpen(false);
+              void navigate("/dashboard/projects");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              gap: "0.65rem",
+              textAlign: "left",
+              fontWeight: path.startsWith("/dashboard/projects") ? 600 : 400,
+              color: path.startsWith("/dashboard/projects") ? "var(--primary-light, #818cf8)" : undefined,
+            }}
+          >
+            <span style={{ display: "inline-flex", width: "1.25rem", justifyContent: "center", flexShrink: 0 }}>
+              <ProjectFolderIcon />
+            </span>
+            <span>Project Settings</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Desktop nav (icon-buttons) ───────────────────────────────────────────────
 
 function DesktopNav() {
@@ -60,17 +188,6 @@ function DesktopNav() {
     <nav aria-label="Main navigation" className="desktop-nav-row">
       {isManager && (
         <>
-          <Link
-            to="/dashboard/projects"
-            id="nav-projects-link"
-            className="button-link"
-            style={{
-              fontWeight: path.startsWith("/dashboard/projects") ? 600 : 400,
-              color: path.startsWith("/dashboard/projects") ? "var(--primary-light, #818cf8)" : undefined,
-            }}
-          >
-            Projects
-          </Link>
           <Link
             to="/dashboard/integrations"
             id="nav-integrations-link"
@@ -89,20 +206,9 @@ function DesktopNav() {
             <GithubNavIcon />
             <JiraNavIcon />
           </Link>
-        </>
-      )}
 
-      {isManager && (
-        <Link
-          to="/dashboard/settings"
-          id="nav-settings-link"
-          className="button-link icon-button"
-          aria-label="Workspace settings"
-          title="Settings"
-          style={{ color: path.startsWith("/dashboard/settings") ? "var(--primary-light, #818cf8)" : undefined }}
-        >
-          <SettingsIcon />
-        </Link>
+          <SettingsDropdown />
+        </>
       )}
 
       <button
@@ -152,15 +258,6 @@ function MobileNav({ onClose, open }: MobileNavProps) {
       {isManager && (
         <>
           <Link
-            to="/dashboard/projects"
-            onClick={onClose}
-            id="mob-nav-projects-link"
-            className="button-link"
-            style={path.startsWith("/dashboard/projects") ? activeStyle : {}}
-          >
-            Projects
-          </Link>
-          <Link
             to="/dashboard/integrations"
             onClick={onClose}
             id="mob-nav-integrations-link"
@@ -177,27 +274,38 @@ function MobileNav({ onClose, open }: MobileNavProps) {
             <JiraNavIcon />
             <span>Integrations</span>
           </Link>
+
+          <Link
+            to="/dashboard/settings"
+            onClick={onClose}
+            id="mob-nav-workspace-settings-link"
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/settings") ? activeStyle : {}),
+            }}
+            aria-label="Workspace settings"
+          >
+            <SettingsIcon /> Workspace Settings
+          </Link>
+
+          <Link
+            to="/dashboard/projects"
+            onClick={onClose}
+            id="mob-nav-projects-link"
+            className="button-link"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              ...(path.startsWith("/dashboard/projects") ? activeStyle : {}),
+            }}
+          >
+            <ProjectFolderIcon /> Project Settings
+          </Link>
         </>
-      )}
-
-      <div style={{ height: "1px", background: "var(--dashboard-subtle-border)" }} />
-
-      {isManager && (
-        <Link
-          to="/dashboard/settings"
-          onClick={onClose}
-          id="mob-nav-settings-link"
-          className="button-link"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            ...(path.startsWith("/dashboard/settings") ? activeStyle : {}),
-          }}
-          aria-label="Workspace settings"
-        >
-          <SettingsIcon /> Settings
-        </Link>
       )}
 
       <button

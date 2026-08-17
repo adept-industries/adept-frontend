@@ -67,7 +67,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
   return (
     <div style={{ position: "relative" }}>
       <div className="navigation-dropdown-field">
-        <span>Current Workspace</span>
+        <span>Workspace</span>
         <NavigationDropdown
           id="workspace-switcher-trigger"
           ariaLabel="Selected workspace"
