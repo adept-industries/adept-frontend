@@ -26,11 +26,10 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await page.locator("#nav-settings-dropdown-btn").click();
     await page.locator("#nav-project-settings-menuitem").click();
     await expect(page).toHaveURL(/dashboard\/projects/);
-    await page.getByRole("button", { name: /New Project/i }).click();
 
     const projectName = `Platform Project ${Date.now()}`;
     await page.getByLabel("Project name", { exact: true }).fill(projectName);
-    await page.getByRole("button", { name: /Create Project/i }).click();
+    await page.getByRole("button", { name: /Create project/i }).click();
 
     // Project should appear in project table
     await expect(page.getByText(projectName)).toBeVisible();
