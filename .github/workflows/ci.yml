@@ -148,23 +148,27 @@ jobs:
       - name: Show Compose logs on failure
         if: failure()
         run: |
-          docker compose \
-            --project-name adept-phase2-e2e \
-            --env-file .env \
-            -f adept-api/infra/local/compose.yaml \
-            --profile full ps
-          docker compose \
-            --project-name adept-phase2-e2e \
-            --env-file .env \
-            -f adept-api/infra/local/compose.yaml \
-            --profile full logs --no-color --tail=100 api
+          if [ -f .env ]; then
+            docker compose \
+              --project-name adept-phase2-e2e \
+              --env-file .env \
+              -f adept-api/infra/local/compose.yaml \
+              --profile full ps
+            docker compose \
+              --project-name adept-phase2-e2e \
+              --env-file .env \
+              -f adept-api/infra/local/compose.yaml \
+              --profile full logs --no-color --tail=100 api
+          fi
 
       # 11. Always stop the stack.
       - name: Tear down Compose stack
         if: always()
         run: |
-          docker compose \
-            --project-name adept-phase2-e2e \
-            --env-file .env \
-            -f adept-api/infra/local/compose.yaml \
-            --profile full down -v --remove-orphans
+          if [ -f .env ]; then
+            docker compose \
+              --project-name adept-phase2-e2e \
+              --env-file .env \
+              -f adept-api/infra/local/compose.yaml \
+              --profile full down -v --remove-orphans
+          fi
