@@ -305,6 +305,15 @@ function MobileNav({ onClose, open }: MobileNavProps) {
           >
             <ProjectFolderIcon /> Project Settings
           </Link>
+          <Link
+            to="/dashboard/members"
+            onClick={onClose}
+            id="mob-nav-members-link"
+            className="button-link"
+            style={path.startsWith("/dashboard/members") ? activeStyle : {}}
+          >
+            Members
+          </Link>
         </>
       )}
 

@@ -54,14 +54,15 @@ function mapWorkspace(
   return value;
 }
 
-function consumeSession(
+export function consumeSession(
   response:
     | LoginResponse
     | PasswordReauthenticationResponse
     | GoogleOnboardingResponse
     | SessionWorkspaceResponse
     | RefreshResponse
-    | SwitchResponse,
+    | SwitchResponse
+    | components["schemas"]["AuthSessionResponse"],
 ): SessionResult {
   if ("accessToken" in response) accessTokenStore.set(response.accessToken);
   else accessTokenStore.clear();

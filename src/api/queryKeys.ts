@@ -19,6 +19,18 @@ export const queryKeys = {
   projects: (workspaceId: string) =>
     [workspaceId, "projects"] as const,
 
+  repositories: (workspaceId: string, trackingOnly?: boolean) =>
+    [workspaceId, "repositories", { trackingOnly }] as const,
+
+  leadCandidates: (workspaceId: string, repositoryId: string) =>
+    [workspaceId, "repositories", repositoryId, "lead-candidates"] as const,
+
+  mappedJiraProjects: (workspaceId: string, repositoryId: string) =>
+    [workspaceId, "repositories", repositoryId, "jira-projects"] as const,
+
+  invitationPreview: (token: string) =>
+    ["invitations", "preview", token] as const,
+
   /** All keys belonging to a given workspace — use to invalidate on switch. */
   workspaceAll: (workspaceId: string) => [workspaceId] as const,
 } as const;

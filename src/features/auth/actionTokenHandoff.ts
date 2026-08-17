@@ -1,4 +1,4 @@
-export type ActionTokenRoute = "verify-email" | "reset-password";
+export type ActionTokenRoute = "verify-email" | "reset-password" | "accept-invite";
 
 interface ActionTokenGuard {
   route: ActionTokenRoute | null;
@@ -13,17 +13,26 @@ export function captureActionToken(route: ActionTokenRoute): void {
   if (guard.route === route && (guard.token || guard.flight)) return;
   if (guard.route !== route) clearActionToken();
 
-  const parameters = new URLSearchParams(window.location.hash.slice(1));
-  const token = parameters.get("token");
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  let token = hashParams.get("token");
+  if (!token) {
+    const searchParams = new URLSearchParams(window.location.search);
+    token = searchParams.get("token");
+  }
   if (!token) return;
 
-  history.replaceState(null, "", window.location.pathname + window.location.search);
+  history.replaceState(null, "", window.location.pathname);
   guard.route = route;
   guard.token = token;
 }
 
 export function hasActionToken(route?: ActionTokenRoute): boolean {
   return guard.token !== null && (route === undefined || guard.route === route);
+}
+
+export function getActionToken(route?: ActionTokenRoute): string | null {
+  if (route !== undefined && guard.route !== route) return null;
+  return guard.token;
 }
 
 /**

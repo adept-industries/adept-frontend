@@ -17,7 +17,9 @@ import { WorkspaceSettingsPage } from "../features/workspaces/pages/WorkspaceSet
 import { AppShell } from "../components/layout/AppShell";
 import { NotFoundPage } from "../components/ui/NotFoundPage";
 import { captureActionToken, clearActionToken } from "../features/auth/actionTokenHandoff";
+import { AcceptInvitePage } from "../features/auth/pages/AcceptInvitePage";
 import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
+import { MembersPage } from "../features/members/MembersPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
 
@@ -72,6 +74,16 @@ export const router = createBrowserRouter([
     path: "/reset-password",
     loader: () => { captureActionToken("reset-password"); return null; },
     element: <ResetPasswordPage />,
+  },
+  {
+    path: "/accept-invite",
+    loader: () => { captureActionToken("accept-invite"); return null; },
+    element: <AcceptInvitePage />,
+  },
+  {
+    path: "/invitations/accept",
+    loader: () => { captureActionToken("accept-invite"); return null; },
+    element: <AcceptInvitePage />,
   },
 
   // ── Workspace selection ─────────────────────────────────────────────────────
@@ -149,13 +161,26 @@ export const router = createBrowserRouter([
     ),
   },
 
+  {
+    path: "/dashboard/members",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <RoleRoute allowedRoles={["MANAGER"]}>
+            <MembersPage />
+          </RoleRoute>
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+
   // ── Catch-all ───────────────────────────────────────────────────────────────
   { path: "*", element: <NotFoundPage /> },
 ]);
 
 router.subscribe((routerState) => {
   const activePath = routerState.navigation.location?.pathname ?? routerState.location.pathname;
-  if (!["/verify-email", "/reset-password"].includes(activePath)) {
+  if (!["/verify-email", "/reset-password", "/accept-invite", "/invitations/accept"].includes(activePath)) {
     clearActionToken();
   }
 });
