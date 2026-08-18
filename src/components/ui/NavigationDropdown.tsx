@@ -79,6 +79,7 @@ export function NavigationDropdown({
         aria-controls={`${id}-menu`}
         aria-label={ariaLabel}
         disabled={disabled}
+        title={selected?.label}
         onClick={() => setOpen((current) => !current)}
       >
         <span className="navigation-dropdown-value">
@@ -101,10 +102,15 @@ export function NavigationDropdown({
               role="option"
               aria-selected={option.id === selectedId}
               className="navigation-dropdown-option"
+              title={option.label}
               onClick={() => handleSelect(option.id)}
             >
-              <span>{option.label}</span>
-              {option.id === selectedId && <span aria-hidden>✓</span>}
+              <span className="navigation-dropdown-option-label">{option.label}</span>
+              {option.id === selectedId && (
+                <span className="navigation-dropdown-option-check" aria-hidden>
+                  ✓
+                </span>
+              )}
             </button>
           ))}
 
