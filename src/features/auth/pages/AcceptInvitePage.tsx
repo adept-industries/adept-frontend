@@ -11,7 +11,7 @@ import {
   previewInvitation,
   type InvitationPreviewResponse,
 } from "../../members/api.js";
-import { GoogleAuthButton } from "../components/GoogleAuthButton.js";
+import { AuthDivider, GoogleAuthButton } from "../components/GoogleAuthButton.js";
 
 type AcceptPageState = "loading" | "valid" | "expired" | "invalid" | "no-token";
 
@@ -307,8 +307,23 @@ export function AcceptInvitePage() {
             )
           ) : (
             <>
+              <div
+                onClick={() => {
+                  if (token) {
+                    sessionStorage.setItem(
+                      "adept_post_auth_redirect",
+                      `/accept-invite?token=${encodeURIComponent(token)}`
+                    );
+                  }
+                }}
+              >
+                <GoogleAuthButton label="Sign up with Google to Accept" />
+              </div>
+
+              <AuthDivider />
+
               <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-                Complete your account details to join as a Lead:
+                Or create an account with email and password:
               </p>
               <FormField
                 id="display-name"

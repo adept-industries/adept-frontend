@@ -110,6 +110,7 @@ describe("AcceptInvitePage", () => {
     expect(screen.getByText("lead.engineer@acme.com")).toBeInTheDocument();
     expect(screen.getByText("acme/backend")).toBeInTheDocument();
     expect(screen.getByText("acme/frontend")).toBeInTheDocument();
+    expect(screen.getByText("Sign up with Google to Accept")).toBeInTheDocument();
 
     // Fill new user form
     const nameInput = screen.getByLabelText(/Your Name/i);
