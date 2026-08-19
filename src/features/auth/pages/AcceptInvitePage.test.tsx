@@ -201,6 +201,30 @@ describe("AcceptInvitePage", () => {
     });
   });
 
+  it("handles existing Google user without password by displaying Google sign-in option", async () => {
+    window.location.hash = "#token=google-user-token";
+
+    server.use(
+      http.get("/api/v1/invitations/preview", () => {
+        return HttpResponse.json({
+          workspaceName: "Acme Platform",
+          role: "LEAD",
+          email: "google.lead@acme.com",
+          repositories: ["acme/backend"],
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          existingAccount: true,
+          hasPassword: false,
+        });
+      })
+    );
+
+    renderPage("/accept-invite#token=google-user-token");
+
+    expect(await screen.findByText(/registered with Google/i)).toBeInTheDocument();
+    expect(screen.getByText("Sign in with Google to Accept")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Password/i)).not.toBeInTheDocument();
+  });
+
   it("renders expired invitation state when token is expired", async () => {
     window.location.hash = "#token=expired-token";
 
