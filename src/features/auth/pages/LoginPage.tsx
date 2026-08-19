@@ -43,7 +43,12 @@ export function LoginPage() {
       if (next?.status === "workspaceRequired") {
         await navigate("/select-workspace", { replace: true });
       } else {
-        await navigate(from ?? "/dashboard", { replace: true });
+        const postAuthRedirect = sessionStorage.getItem("adept_post_auth_redirect");
+        const target = from ?? postAuthRedirect ?? "/dashboard";
+        if (postAuthRedirect) {
+          sessionStorage.removeItem("adept_post_auth_redirect");
+        }
+        await navigate(target, { replace: true });
       }
     } catch (err) {
       if (err instanceof ApiError) {

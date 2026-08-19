@@ -11,6 +11,7 @@ import {
   previewInvitation,
   type InvitationPreviewResponse,
 } from "../../members/api.js";
+import { GoogleAuthButton } from "../components/GoogleAuthButton.js";
 
 type AcceptPageState = "loading" | "valid" | "expired" | "invalid" | "no-token";
 
@@ -257,24 +258,52 @@ export function AcceptInvitePage() {
         <form onSubmit={(e) => void handleSubmit(e)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {preview?.existingAccount ? (
             isCurrentlySameUser ? (
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                You are currently signed in as <strong>{preview.email}</strong>. Click below to accept the invitation.
-              </p>
-            ) : (
-              <div>
-                <p style={{ margin: "0 0 1rem 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                  An Adept account with email <strong>{preview.email}</strong> exists. Enter your password to verify your identity and accept the invitation:
+              <>
+                <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                  You are currently signed in as <strong>{preview.email}</strong>. Click below to accept the invitation.
                 </p>
-                <FormField
-                  id="accept-password"
-                  label="Password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <button type="submit" id="accept-invite-submit" disabled={submitting} style={{ marginTop: "0.5rem" }}>
+                  {submitting ? "Accepting…" : "Accept & Join Workspace"}
+                </button>
+              </>
+            ) : preview.hasPassword === false ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                  An Adept account with email <strong>{preview.email}</strong> exists and was registered with Google. Sign in with Google to verify your identity and accept this invitation:
+                </p>
+                <div
+                  onClick={() => {
+                    if (token) {
+                      sessionStorage.setItem(
+                        "adept_post_auth_redirect",
+                        `/accept-invite?token=${encodeURIComponent(token)}`
+                      );
+                    }
+                  }}
+                >
+                  <GoogleAuthButton label="Sign in with Google to Accept" />
+                </div>
               </div>
+            ) : (
+              <>
+                <div>
+                  <p style={{ margin: "0 0 1rem 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+                    An Adept account with email <strong>{preview.email}</strong> exists. Enter your password to verify your identity and accept the invitation:
+                  </p>
+                  <FormField
+                    id="accept-password"
+                    label="Password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <button type="submit" id="accept-invite-submit" disabled={submitting} style={{ marginTop: "0.5rem" }}>
+                  {submitting ? "Accepting…" : "Accept & Join Workspace"}
+                </button>
+              </>
             )
           ) : (
             <>
@@ -310,16 +339,11 @@ export function AcceptInvitePage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
+              <button type="submit" id="accept-invite-submit" disabled={submitting} style={{ marginTop: "0.5rem" }}>
+                {submitting ? "Accepting…" : "Create Account & Join"}
+              </button>
             </>
           )}
-
-          <button type="submit" id="accept-invite-submit" disabled={submitting} style={{ marginTop: "0.5rem" }}>
-            {submitting
-              ? "Accepting…"
-              : preview?.existingAccount
-              ? "Accept & Join Workspace"
-              : "Create Account & Join"}
-          </button>
         </form>
 
         <p style={{ margin: 0, textAlign: "center", fontSize: "0.85rem", color: "var(--text-secondary)" }}>

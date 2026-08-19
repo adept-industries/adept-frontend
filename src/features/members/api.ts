@@ -22,6 +22,7 @@ export interface InvitationPreviewResponse {
   repositories: string[];
   expiresAt: string;
   existingAccount: boolean;
+  hasPassword?: boolean;
 }
 
 export interface AcceptInvitationRequest {
