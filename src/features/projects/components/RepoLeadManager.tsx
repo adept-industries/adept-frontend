@@ -334,7 +334,7 @@ export function RepoLeadManager({
                 <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)" }}>Loading GitHub contributors…</p>
               ) : candidates.length === 0 ? (
                 <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", fontStyle: "italic" }}>
-                  No contributor candidates found via GitHub API. Use Option 2 (Work Email) to invite directly.
+                  No contributor candidates found via GitHub API. Use Work Email to invite directly.
                 </p>
               ) : (
                 <div style={{ maxHeight: "200px", overflowY: "auto", display: "grid", gap: "0.4rem" }}>
