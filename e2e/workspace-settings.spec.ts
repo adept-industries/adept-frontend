@@ -10,14 +10,13 @@ test("Manager deletes the final workspace and creates a replacement", async ({ p
   const email = uniqueEmail();
   await signupVerifyAndLogin(page, email);
 
-  await page.locator("#nav-settings-dropdown-btn").click();
-  await page.locator("#nav-workspace-settings-menuitem").click();
+  await page.locator("#sidebar-nav-settings").click();
   const renamed = `Renamed ${Date.now()}`;
   const settingsForm = page.locator("#workspace-settings-form");
   await settingsForm.getByLabel("Workspace name", { exact: true }).fill(renamed);
   await page.getByRole("button", { name: /save changes/i }).click();
   await expect(page.getByText(/settings saved/i)).toBeVisible();
-  await expect(page.getByText(renamed, { exact: true })).toBeVisible();
+  await expect(settingsForm.getByLabel("Workspace name", { exact: true })).toHaveValue(renamed);
 
   await page.getByRole("button", { name: /delete this workspace/i }).click();
   const slug = await page.getByLabel(/workspace slug/i).getAttribute("placeholder");
@@ -36,5 +35,5 @@ test("Manager deletes the final workspace and creates a replacement", async ({ p
   await page.getByRole("combobox", { name: "Timezone" }).selectOption("UTC");
   await page.getByRole("button", { name: "Create workspace" }).click();
   await expect(page).toHaveURL(/dashboard/);
-  await expect(page.getByText("Replacement Workspace", { exact: true })).toBeVisible();
+  await expect(page.locator(".dash-inline-controls").getByText("Replacement Workspace", { exact: true })).toBeVisible();
 });

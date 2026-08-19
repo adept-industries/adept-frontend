@@ -12,12 +12,11 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await signupVerifyAndLogin(page, managerEmail);
 
     // 1. Confirm Manager navigation bar exposes management links & dropdowns
-    await expect(page.locator("#nav-integrations-link")).toBeVisible();
-    await expect(page.locator("#nav-settings-dropdown-btn")).toBeVisible();
+    await expect(page.locator("#sidebar-nav-integrations")).toBeVisible();
+    await expect(page.locator("#sidebar-nav-settings")).toBeVisible();
 
     // 2. Navigate to Project Settings page via settings dropdown
-    await page.locator("#nav-settings-dropdown-btn").click();
-    await page.locator("#nav-project-settings-menuitem").click();
+    await page.locator("#sidebar-nav-projects").click();
     await expect(page).toHaveURL(/dashboard\/projects/);
     await expect(page.getByRole("heading", { name: /Project Settings/i })).toBeVisible();
     await expect(page.getByText(/Create projects, attach tracked repositories, and assign repository Leads/i)).toBeVisible();
@@ -31,7 +30,7 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await expect(page.getByRole("heading", { name: projectName })).toBeVisible();
 
     // 4. Return to dashboard
-    await page.locator("#nav-logo").click();
+    await page.locator("#sidebar-logo-link").click();
     await expect(page).toHaveURL(/dashboard/);
     await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
   });
