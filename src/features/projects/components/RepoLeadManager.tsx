@@ -304,7 +304,7 @@ export function RepoLeadManager({
                 cursor: "pointer",
               }}
             >
-              Option 1: GitHub Contributors
+              GitHub Contributors
             </button>
             <button
               type="button"
@@ -320,7 +320,7 @@ export function RepoLeadManager({
                 cursor: "pointer",
               }}
             >
-              Option 2: Work Email
+              Work Email
             </button>
           </div>
 
