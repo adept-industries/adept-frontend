@@ -22,43 +22,154 @@ import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
 
+import { useContext } from "react";
+import { AuthContext } from "../auth/AuthContext";
+import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
+import { ProjectSelector } from "../features/projects/ProjectSelector";
+
 /**
- * Dashboard — placeholder until Phase 3 content arrives.
- * Wrapped in AppShell which provides navigation/logout.
+ * Dashboard — Phase 2 content with stats cards and project grid.
+ * Wrapped in AppShell which provides the floating sidebar navigation.
  */
 function Dashboard() {
   const { selectedProject, projects, error } = useProjects();
+  const ctx = useContext(AuthContext);
+  const authenticatedState = ctx?.state.status === "authenticated" ? ctx.state : null;
+
+  const totalRepos = projects.reduce((acc, p) => acc + p.repositories.length, 0);
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
   return (
     <AppShell>
-      <section aria-labelledby="dash-title" style={{ maxWidth: "600px", margin: "0 auto" }}>
-        <p style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginBottom: "0.25rem" }}>Phase 2</p>
-        <h1 id="dash-title" style={{ fontSize: "1.5rem", fontWeight: 700 }}>Dashboard</h1>
-        {error && <p role="alert">{error}</p>}
-        {selectedProject ? (
-          <>
-            <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
-              Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong>.
-              DORA metrics will be filtered to this project&apos;s repositories.
-            </p>
-            <p id="dashboard-repo-count">{selectedProject.repositories.length} linked repositories</p>
-            {selectedProject.repositories.length > 0 && (
-              <ul id="dashboard-repo-list" style={{ marginTop: "0.5rem", paddingLeft: "1.25rem", color: "var(--text-secondary)" }}>
-                {selectedProject.repositories.map((repo) => (
-                  <li key={repo.id}>
-                    <code>{repo.fullName}</code>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
-        ) : (
-          <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>
-            {projects.length === 0
-              ? "No visible projects yet. A Manager can create one and attach repositories after GitHub synchronization."
-              : "Select a project to filter this dashboard."}
+      {/* Welcome header with inline controls */}
+      <div className="dash-header-row">
+        <div className="dash-welcome">
+          <p className="dash-welcome-eyebrow">{dateStr}</p>
+          <h1 id="dash-title" className="dash-welcome-title">Dashboard</h1>
+          <p className="dash-welcome-sub">
+            {selectedProject
+              ? <>Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong> — DORA metrics filtered to this project.</>
+              : projects.length > 0
+                ? "Select a project to filter this dashboard."
+                : "Welcome! Get started by creating a project and connecting your repositories."}
           </p>
+        </div>
+
+        {authenticatedState && (
+          <div className="dash-inline-controls">
+            <WorkspaceSwitcher
+              workspaces={authenticatedState.workspaces}
+              currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
+            />
+            <div className="topbar-divider" aria-hidden="true" />
+            <ProjectSelector />
+          </div>
         )}
-      </section>
+      </div>
+
+      {error && <p role="alert" style={{ color: "var(--danger-color)", marginBottom: "1rem" }}>{error}</p>}
+
+      {/* Stats cards */}
+      <div className="dash-stats-grid">
+        <div className="stat-card">
+          <div className="stat-card-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <div className="stat-card-value">{projects.length}</div>
+          <div className="stat-card-label">Projects</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-icon" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div className="stat-card-value">{totalRepos}</div>
+          <div className="stat-card-label">Linked Repositories</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </div>
+          <div className="stat-card-value">—</div>
+          <div className="stat-card-label">Team Members</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card-icon" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div className="stat-card-value">—</div>
+          <div className="stat-card-label">Active Integrations</div>
+        </div>
+      </div>
+
+      {/* Projects section */}
+      {projects.length > 0 ? (
+        <>
+          <h2 className="dash-section-title">Your Projects</h2>
+          <div className="dash-projects-grid">
+            {projects.map((project, i) => (
+              <div
+                key={project.id}
+                className="project-card"
+                style={{ animationDelay: `${0.05 + i * 0.05}s` }}
+              >
+                <div className="project-card-header">
+                  <h3 className="project-card-name">{project.name}</h3>
+                  <span className="project-card-badge">Active</span>
+                </div>
+                <div className="project-card-repos">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                  {project.repositories.length} {project.repositories.length === 1 ? "repository" : "repositories"}
+                </div>
+                {project.repositories.length > 0 && (
+                  <ul style={{ margin: 0, padding: "0 0 0 1rem", listStyle: "disc", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
+                    {project.repositories.slice(0, 3).map((repo) => (
+                      <li key={repo.id} style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                        <code style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>{repo.fullName}</code>
+                      </li>
+                    ))}
+                    {project.repositories.length > 3 && (
+                      <li style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                        +{project.repositories.length - 3} more
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="dash-empty">
+          <div className="dash-empty-icon">📂</div>
+          <h2 className="dash-empty-title">No projects yet</h2>
+          <p className="dash-empty-desc">
+            A Manager can create a project and attach repositories after GitHub synchronization.
+            Once set up, DORA metrics will appear here.
+          </p>
+        </div>
+      )}
     </AppShell>
   );
 }
