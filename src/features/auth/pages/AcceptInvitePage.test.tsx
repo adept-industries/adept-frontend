@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../../../auth/AuthContext.js";
-import type { AnonymousState } from "../../../auth/types.js";
+import type { AnonymousState, AuthState } from "../../../auth/types.js";
 import { renderWithProviders } from "../../../test/renderWithProviders.js";
 import { server } from "../../../test/server.js";
 import { AcceptInvitePage } from "./AcceptInvitePage.js";
@@ -14,8 +14,10 @@ function anonymousState(): AnonymousState {
   };
 }
 
-function renderPage(initialPath = "/accept-invite#token=valid-token-123") {
-  const state = anonymousState();
+function renderPage(
+  initialPath = "/accept-invite#token=valid-token-123",
+  state: AuthState = anonymousState()
+) {
   const actions = {
     logout: vi.fn(),
   } as unknown as AuthContextValue["actions"];
@@ -223,6 +225,93 @@ describe("AcceptInvitePage", () => {
     expect(await screen.findByText(/registered with Google/i)).toBeInTheDocument();
     expect(screen.getByText("Sign in with Google to Accept")).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Password/i)).not.toBeInTheDocument();
+  });
+
+  it("allows currently signed-in Google user to accept without entering password", async () => {
+    window.location.hash = "#token=google-user-token";
+
+    let capturedBody: unknown = null;
+
+    server.use(
+      http.get("/api/v1/invitations/preview", () => {
+        return HttpResponse.json({
+          workspaceName: "Acme Platform",
+          role: "LEAD",
+          email: "google.lead@acme.com",
+          repositories: ["acme/backend"],
+          expiresAt: new Date(Date.now() + 86400000).toISOString(),
+          existingAccount: true,
+          hasPassword: false,
+        });
+      }),
+      http.post("/api/v1/invitations/accept", async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json({
+          kind: "authenticated",
+          user: {
+            id: "user-123",
+            email: "google.lead@acme.com",
+            displayName: "Google Lead",
+            avatarUrl: null,
+            status: "ACTIVE",
+          },
+          workspaces: [
+            {
+              id: "ws-1",
+              name: "Acme Platform",
+              slug: "acme-platform",
+              role: "LEAD",
+              status: "ACTIVE",
+            },
+          ],
+          currentWorkspace: {
+            id: "ws-1",
+            name: "Acme Platform",
+            slug: "acme-platform",
+            role: "LEAD",
+            status: "ACTIVE",
+          },
+          accessToken: "jwt-token-after-accept",
+          expiresInSeconds: 900,
+        });
+      })
+    );
+
+    const loggedInState: AuthState = {
+      status: "authenticated",
+      user: {
+        id: "user-123",
+        email: "google.lead@acme.com",
+        displayName: "Google Lead",
+        emailVerified: true,
+        hasPassword: false,
+      },
+      currentMembership: {
+        id: "m-1",
+        workspaceId: "personal-ws",
+        workspaceSlug: "personal",
+        workspaceName: "Personal",
+        role: "MANAGER",
+        timezone: "UTC",
+      },
+      workspaces: [],
+      generation: 1,
+    };
+
+    renderPage("/accept-invite#token=google-user-token", loggedInState);
+
+    expect(await screen.findByText(/You are currently signed in as/i)).toBeInTheDocument();
+    const submitBtn = screen.getByRole("button", { name: /Accept & Join Workspace/i });
+    expect(submitBtn).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(submitBtn);
+
+    await waitFor(() => {
+      expect(capturedBody).toEqual({
+        token: "google-user-token",
+      });
+    });
   });
 
   it("renders expired invitation state when token is expired", async () => {

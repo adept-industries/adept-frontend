@@ -103,7 +103,7 @@ export async function acceptInvitation(
   const response = await apiRequest<components["schemas"]["AuthSessionResponse"], AcceptInvitationRequest>({
     method: "POST",
     path: "/invitations/accept",
-    auth: "public",
+    auth: "optional",
     body,
   });
   return consumeSession(response);

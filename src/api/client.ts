@@ -13,7 +13,7 @@ export function apiUrl(path: string): string {
   return `${API_ROOT}${path}`;
 }
 
-export type ApiAuthMode = "public" | "refresh-cookie" | "bearer";
+export type ApiAuthMode = "public" | "refresh-cookie" | "bearer" | "optional";
 
 export interface SessionSnapshot {
   generation: number;
@@ -91,7 +91,7 @@ export async function apiRequest<TResponse, TBody = never>(
       Accept: "application/json, application/problem+json",
     };
     if (requestBody !== undefined && !formDataBody) headers["Content-Type"] = "application/json";
-    if (options.auth === "bearer") {
+    if (options.auth === "bearer" || options.auth === "optional") {
       const token = accessTokenStore.get();
       if (token) headers.Authorization = `Bearer ${token}`;
     }
