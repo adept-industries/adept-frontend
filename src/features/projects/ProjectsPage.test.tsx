@@ -178,7 +178,7 @@ describe("ProjectsPage with Lead Assignments", () => {
     const addLeadBtn = await screen.findByRole("button", { name: /\+ Add \/ Invite Lead/i });
     await user.click(addLeadBtn);
 
-    const emailTabBtn = screen.getByRole("button", { name: /Option 2: Work Email/i });
+    const emailTabBtn = screen.getByRole("button", { name: /Work Email/i });
     await user.click(emailTabBtn);
 
     const emailInput = screen.getByLabelText(/Lead Work Email/i);

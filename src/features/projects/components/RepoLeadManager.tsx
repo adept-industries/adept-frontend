@@ -4,6 +4,7 @@ import {
   deleteLeadAssignment,
   listRepositoryLeadAssignments,
   lookupWorkspaceMember,
+  resendInvitation,
   type CurrentWorkspaceMemberLookupResponse,
   type LeadCandidateResponse,
   type PendingRepositoryLeadInvitationResponse,
@@ -116,6 +117,22 @@ export function RepoLeadManager({
     }
   };
 
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  const handleResend = async (invitationId: string, email: string) => {
+    setResendingId(invitationId);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      await resendInvitation(invitationId);
+      setSuccessMessage(`Invitation email resent to ${email}`);
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to resend invitation.");
+    } finally {
+      setResendingId(null);
+    }
+  };
+
   const handleUnassign = async (assignmentId: string, email: string) => {
     if (!window.confirm(`Unassign ${email} from ${repositoryName}?`)) return;
     setErrorMessage(null);
@@ -175,6 +192,27 @@ export function RepoLeadManager({
               >
                 {assignment.status === "PENDING" ? "Pending Invite" : "Active Lead"}
               </span>
+              {assignment.status === "PENDING" && assignment.invitationId && (
+                <button
+                  type="button"
+                  aria-label={`Resend invite to ${assignment.email}`}
+                  disabled={resendingId === assignment.invitationId}
+                  onClick={() => void handleResend(assignment.invitationId!, assignment.email)}
+                  style={{
+                    background: "rgba(245, 158, 11, 0.15)",
+                    border: "1px solid rgba(245, 158, 11, 0.4)",
+                    borderRadius: "3px",
+                    color: "#f59e0b",
+                    cursor: resendingId === assignment.invitationId ? "not-allowed" : "pointer",
+                    padding: "0.05rem 0.35rem",
+                    fontSize: "0.7rem",
+                    fontWeight: 500,
+                  }}
+                  title="Resend invitation email"
+                >
+                  {resendingId === assignment.invitationId ? "Resending…" : "Resend"}
+                </button>
+              )}
               <button
                 type="button"
                 aria-label={`Unassign ${assignment.email}`}
@@ -266,7 +304,7 @@ export function RepoLeadManager({
                 cursor: "pointer",
               }}
             >
-              Option 1: GitHub Contributors
+              GitHub Contributors
             </button>
             <button
               type="button"
@@ -282,7 +320,7 @@ export function RepoLeadManager({
                 cursor: "pointer",
               }}
             >
-              Option 2: Work Email
+              Work Email
             </button>
           </div>
 
@@ -296,7 +334,7 @@ export function RepoLeadManager({
                 <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)" }}>Loading GitHub contributors…</p>
               ) : candidates.length === 0 ? (
                 <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", fontStyle: "italic" }}>
-                  No contributor candidates found via GitHub API. Use Option 2 (Work Email) to invite directly.
+                  No contributor candidates found via GitHub API. Use Work Email to invite directly.
                 </p>
               ) : (
                 <div style={{ maxHeight: "200px", overflowY: "auto", display: "grid", gap: "0.4rem" }}>
