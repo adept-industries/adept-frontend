@@ -1,7 +1,7 @@
 import { apiRequest } from "../../api/client.js";
 
 export type IntegrationStatus = "ACTIVE" | "REVOKED" | "SUSPENDED";
-export type DeploymentSignal = "WORKFLOW_RUN" | "DEPLOYMENT" | "RELEASE_TAG" | "MERGE_TO_BRANCH";
+export type DeploymentSignal = "WORKFLOW_RUN" | "DEPLOYMENT";
 export type MetricGranularity = "DAY" | "WEEK" | "MONTH";
 
 export interface RepositorySettings {
@@ -9,7 +9,6 @@ export interface RepositorySettings {
   productionBranchPatterns: string[];
   productionEnvironmentPatterns: string[];
   deploymentWorkflowNamePatterns: string[];
-  releaseTagPatterns: string[];
   incidentSource: "JIRA" | "MANUAL" | "BOTH";
   doraExclusions: string[];
   defaultMetricGranularity: MetricGranularity;

@@ -139,8 +139,17 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
   const isAuthenticated = state.status === "authenticated";
   const isManager = isAuthenticated && state.currentMembership.role === "MANAGER";
 
-  const email = isAuthenticated ? (state as { email?: string }).email : undefined;
-  const initials = email ? email.slice(0, 2).toUpperCase() : "U";
+  const user = isAuthenticated ? state.user : undefined;
+  const displayName = user?.displayName?.trim() || user?.email || "User";
+  const initials = (() => {
+    if (!user) return "U";
+    const name = user.displayName?.trim() || user.email || "";
+    const parts = name.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase() || "U";
+  })();
   const role = isAuthenticated ? state.currentMembership.role : "";
 
   const toggleTheme = () => {
@@ -232,7 +241,7 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
             <div className="sidebar-user-row">
               <div className="sidebar-avatar" aria-hidden="true">{initials}</div>
               <div className="sidebar-user-info">
-                <div className="sidebar-user-name">{email ?? "User"}</div>
+                <div className="sidebar-user-name">{displayName}</div>
                 <div className="sidebar-user-role">{role}</div>
               </div>
             </div>
