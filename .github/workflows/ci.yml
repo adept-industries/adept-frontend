@@ -55,20 +55,48 @@ jobs:
         with:
           path: adept-frontend
 
-      # 2. Check out adept-api main under adept-api/.
+      - name: Resolve API and engine refs
+        id: companion-refs
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          COMPANION_REF: ${{ github.head_ref }}
+        run: |
+          api_ref="main"
+          engine_ref="main"
+
+          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$COMPANION_REF" ]; then
+            if git ls-remote --exit-code \
+              https://github.com/adept-industries/adept-api.git \
+              "refs/heads/$COMPANION_REF" >/dev/null 2>&1; then
+              api_ref="$COMPANION_REF"
+            fi
+            if git ls-remote --exit-code \
+              https://github.com/adept-industries/adept-engine.git \
+              "refs/heads/$COMPANION_REF" >/dev/null 2>&1; then
+              engine_ref="$COMPANION_REF"
+            fi
+          fi
+
+          echo "Using API ref: $api_ref"
+          echo "Using engine ref: $engine_ref"
+          echo "api_ref=$api_ref" >> "$GITHUB_OUTPUT"
+          echo "engine_ref=$engine_ref" >> "$GITHUB_OUTPUT"
+
+      # 2. Check out adept-api under adept-api/.
       - name: Check out adept-api
         uses: actions/checkout@v6
         with:
           repository: adept-industries/adept-api
-          ref: main
+          ref: ${{ steps.companion-refs.outputs.api_ref }}
           path: adept-api
 
-      # 3. Check out adept-engine main under adept-engine/.
+      # 3. Check out adept-engine under adept-engine/.
       - name: Check out adept-engine
         uses: actions/checkout@v6
         with:
           repository: adept-industries/adept-engine
-          ref: main
+          ref: ${{ steps.companion-refs.outputs.engine_ref }}
           path: adept-engine
 
       # 4. Compare OpenAPI contract byte-for-byte.

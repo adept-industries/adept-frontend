@@ -73,4 +73,12 @@ describe("AppShell theme", () => {
     });
     expect(localStorage.getItem("adept.dashboardTheme")).toBe("light");
   });
+
+  it("renders authenticated user displayName and initials in sidebar", () => {
+    const { container } = renderShell();
+    const userName = container.querySelector(".sidebar-user-name");
+    const avatar = container.querySelector(".sidebar-avatar");
+    expect(userName).toHaveTextContent("Manager");
+    expect(avatar).toHaveTextContent("MA");
+  });
 });

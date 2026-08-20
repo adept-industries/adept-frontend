@@ -26,9 +26,6 @@ export function RepositorySettingsModal({
   const [deploymentWorkflowNamePatterns, setDeploymentWorkflowNamePatterns] = useState<string>(
     (current?.deploymentWorkflowNamePatterns ?? ["*deploy*", "*production*", "*release*"]).join(", ")
   );
-  const [releaseTagPatterns, setReleaseTagPatterns] = useState<string>(
-    (current?.releaseTagPatterns ?? ["v*.*.*", "release-*"]).join(", ")
-  );
   const [incidentSource, setIncidentSource] = useState<"JIRA" | "MANUAL" | "BOTH">(
     current?.incidentSource ?? "BOTH"
   );
@@ -56,7 +53,6 @@ export function RepositorySettingsModal({
         productionBranchPatterns: parseList(productionBranchPatterns),
         productionEnvironmentPatterns: parseList(productionEnvironmentPatterns),
         deploymentWorkflowNamePatterns: parseList(deploymentWorkflowNamePatterns),
-        releaseTagPatterns: parseList(releaseTagPatterns),
         incidentSource,
         defaultMetricGranularity,
         backfillDays: Number(backfillDays),
@@ -158,8 +154,6 @@ export function RepositorySettingsModal({
             >
               <option value="WORKFLOW_RUN">GitHub Actions Workflow Run (Recommended)</option>
               <option value="DEPLOYMENT">GitHub Deployment API Event</option>
-              <option value="RELEASE_TAG">GitHub Release / Git Tag</option>
-              <option value="MERGE_TO_BRANCH">Merge to Production Branch</option>
             </select>
             <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
               Defines what constitutes a production deployment event for DORA metrics.
@@ -221,28 +215,6 @@ export function RepositorySettingsModal({
                 value={deploymentWorkflowNamePatterns}
                 onChange={(e) => setDeploymentWorkflowNamePatterns(e.target.value)}
                 placeholder="*deploy*, *production*, *release*"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--input-bg, #242436)",
-                  border: "1px solid var(--border-color, #3b3b54)",
-                  color: "var(--text-primary, #ffffff)",
-                }}
-              />
-            </div>
-          )}
-
-          {deploymentSignal === "RELEASE_TAG" && (
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-                Release Tag Patterns
-              </label>
-              <input
-                type="text"
-                value={releaseTagPatterns}
-                onChange={(e) => setReleaseTagPatterns(e.target.value)}
-                placeholder="v*.*.*, release-*"
                 style={{
                   width: "100%",
                   padding: "0.5rem",
