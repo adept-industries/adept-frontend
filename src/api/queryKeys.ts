@@ -5,6 +5,9 @@
  * switching workspace invalidates only that workspace's cache entries.
  * This convention must be followed by every future workspace-scoped query.
  */
+
+import type { DoraMetricsFilters, DoraMetricsSeriesFilters } from "../features/metrics/types.js";
+
 export const queryKeys = {
   /** User identity — not workspace-scoped. */
   me: () => ["me"] as const,
@@ -30,6 +33,14 @@ export const queryKeys = {
 
   invitationPreview: (token: string) =>
     ["invitations", "preview", token] as const,
+
+  /** DORA metrics summary — workspace-scoped, filter-aware. */
+  doraMetricsSummary: (workspaceId: string, filters: DoraMetricsFilters) =>
+    [workspaceId, "metrics", "summary", filters] as const,
+
+  /** DORA metrics time series — workspace-scoped, filter-aware. */
+  doraMetricsSeries: (workspaceId: string, filters: DoraMetricsSeriesFilters) =>
+    [workspaceId, "metrics", "series", filters] as const,
 
   /** All keys belonging to a given workspace — use to invalidate on switch. */
   workspaceAll: (workspaceId: string) => [workspaceId] as const,

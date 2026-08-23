@@ -274,4 +274,125 @@ export const handlers = [
       { status: 202 },
     ),
   ),
+
+  // DORA metrics — summary
+  http.get(`${API}/metrics/summary`, () =>
+    HttpResponse.json({
+      workspaceId: "ws-1",
+      projectId: null,
+      repositoryId: null,
+      repositoryCount: 2,
+      periodStart: "2026-07-24T00:00:00Z",
+      periodEnd:   "2026-08-23T00:00:00Z",
+      deploymentFrequency: {
+        value: 4.5,
+        unit: "deployments/week",
+        sampleSize: 18,
+        rating: "HIGH",
+        dimensions: { total_deployments: 18, period_days: 30 },
+      },
+      changeLeadTime: {
+        value: 2.4,
+        unit: "hours",
+        sampleSize: 14,
+        rating: "HIGH",
+        dimensions: { p50: 2.4, mean: 3.1, p75: 4.2, p90: 5.8 },
+      },
+      recoveryTime: {
+        value: 0.8,
+        unit: "hours",
+        sampleSize: 2,
+        rating: "ELITE",
+        dimensions: { p50: 0.8 },
+      },
+      changeFailureRate: {
+        value: 5.26,
+        unit: "percent",
+        sampleSize: 19,
+        rating: "HIGH",
+        dimensions: { total_deployments: 19, failed_deployments: 1 },
+      },
+      calculatedAt: "2026-08-23T12:00:00Z",
+    }),
+  ),
+
+  // DORA metrics — series
+  http.get(`${API}/metrics/series`, () =>
+    HttpResponse.json({
+      workspaceId: "ws-1",
+      projectId: null,
+      repositoryId: null,
+      repositoryCount: 2,
+      granularity: "DAY",
+      series: [
+        {
+          metricType: "DEPLOYMENT_FREQUENCY",
+          periodStart: "2026-08-20T00:00:00Z",
+          periodEnd:   "2026-08-21T00:00:00Z",
+          value: 2.0,
+          unit: "deployments/day",
+          sampleSize: 2,
+          dimensions: {},
+        },
+        {
+          metricType: "DEPLOYMENT_FREQUENCY",
+          periodStart: "2026-08-21T00:00:00Z",
+          periodEnd:   "2026-08-22T00:00:00Z",
+          value: 3.0,
+          unit: "deployments/day",
+          sampleSize: 3,
+          dimensions: {},
+        },
+        {
+          metricType: "CHANGE_LEAD_TIME_HOURS",
+          periodStart: "2026-08-20T00:00:00Z",
+          periodEnd:   "2026-08-21T00:00:00Z",
+          value: 2.1,
+          unit: "hours",
+          sampleSize: 2,
+          dimensions: {},
+        },
+        {
+          metricType: "CHANGE_LEAD_TIME_HOURS",
+          periodStart: "2026-08-21T00:00:00Z",
+          periodEnd:   "2026-08-22T00:00:00Z",
+          value: 2.8,
+          unit: "hours",
+          sampleSize: 3,
+          dimensions: {},
+        },
+        {
+          metricType: "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS",
+          periodStart: "2026-08-22T00:00:00Z",
+          periodEnd:   "2026-08-23T00:00:00Z",
+          value: 0.8,
+          unit: "hours",
+          sampleSize: 1,
+          dimensions: {},
+        },
+        {
+          metricType: "CHANGE_FAILURE_RATE_PERCENT",
+          periodStart: "2026-08-20T00:00:00Z",
+          periodEnd:   "2026-08-21T00:00:00Z",
+          value: 10.0,
+          unit: "percent",
+          sampleSize: 10,
+          dimensions: {},
+        },
+        {
+          metricType: "CHANGE_FAILURE_RATE_PERCENT",
+          periodStart: "2026-08-21T00:00:00Z",
+          periodEnd:   "2026-08-22T00:00:00Z",
+          value: 5.0,
+          unit: "percent",
+          sampleSize: 20,
+          dimensions: {},
+        },
+      ],
+    }),
+  ),
+
+  // Projects (default empty — tests override as needed)
+  http.get(`${API}/projects`, () => HttpResponse.json([])),
 ];
+

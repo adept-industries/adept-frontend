@@ -21,6 +21,7 @@ import { AcceptInvitePage } from "../features/auth/pages/AcceptInvitePage";
 import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
+import { DoraMetricsSection } from "../features/metrics/DoraMetricsSection";
 
 import { useContext } from "react";
 import { AuthContext } from "../auth/AuthContext";
@@ -36,7 +37,7 @@ function Dashboard() {
   const ctx = useContext(AuthContext);
   const authenticatedState = ctx?.state.status === "authenticated" ? ctx.state : null;
 
-  const totalRepos = projects.reduce((acc, p) => acc + p.repositories.length, 0);
+
 
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -71,53 +72,8 @@ function Dashboard() {
 
       {error && <p role="alert" style={{ color: "var(--danger-color)", marginBottom: "1rem" }}>{error}</p>}
 
-      {/* Stats cards */}
-      <div className="dash-stats-grid">
-        <div className="stat-card">
-          <div className="stat-card-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-            </svg>
-          </div>
-          <div className="stat-card-value">{projects.length}</div>
-          <div className="stat-card-label">Projects</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-icon" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <div className="stat-card-value">{totalRepos}</div>
-          <div className="stat-card-label">Linked Repositories</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <div className="stat-card-value">—</div>
-          <div className="stat-card-label">Team Members</div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-card-icon" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-          </div>
-          <div className="stat-card-value">—</div>
-          <div className="stat-card-label">Active Integrations</div>
-        </div>
-      </div>
+      {/* DORA Metrics Section */}
+      <DoraMetricsSection selectedProjectId={selectedProject?.id ?? null} />
 
       {/* Projects section */}
       {projects.length > 0 ? (

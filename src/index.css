@@ -1365,3 +1365,364 @@ p {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   DORA METRICS
+   ═══════════════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+
+.dora-section {
+  margin-bottom: 2rem;
+}
+
+.dora-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Filter bar ── */
+
+.dora-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--card-bg);
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+}
+
+.dora-filter-btn {
+  /* Reset inherited button styles */
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.78rem !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 0.35rem !important;
+  min-height: unset !important;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.dora-filter-btn:hover:not(:disabled):not(.dora-filter-btn--active) {
+  background: var(--surface-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+.dora-filter-btn--active {
+  background: var(--primary-surface) !important;
+  color: var(--primary-light, #818cf8) !important;
+  font-weight: 600 !important;
+}
+
+/* ── DORA card anatomy ── */
+
+.dora-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  /* Full-height card links to listitem */
+  height: 100%;
+}
+
+.dora-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.dora-card-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-surface, rgba(99,102,241,0.1));
+  color: var(--primary-light, #818cf8);
+  flex-shrink: 0;
+}
+
+/* ── Rating badges ── */
+
+.dora-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dora-badge--elite {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.dora-badge--high {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-light, #818cf8);
+}
+
+.dora-badge--medium {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.dora-badge--low {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.dora-badge--unknown {
+  background: rgba(115, 115, 115, 0.1);
+  color: var(--text-secondary);
+}
+
+/* ── Card value row ── */
+
+.dora-card-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  line-height: 1;
+}
+
+.dora-card-value {
+  font-size: 1.9rem !important;
+}
+
+.dora-card-unit {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ── Card labels ── */
+
+.dora-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.dora-card-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.dora-card-meta {
+  margin-top: 0.1rem;
+}
+
+.dora-card-sample {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* ── Failure breakdown (CFR card) ── */
+
+.dora-card-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  margin-top: 0.1rem;
+}
+
+.dora-breakdown-failed {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.dora-breakdown-sep {
+  color: var(--text-secondary);
+}
+
+.dora-breakdown-total {
+  color: var(--text-secondary);
+}
+
+/* ── Percentile drawer (Lead Time card) ── */
+
+.dora-card-percentiles-wrapper {
+  margin-top: 0.25rem;
+}
+
+.dora-percentile-toggle {
+  /* Reset button */
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: unset !important;
+  padding: 0 !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  color: var(--primary-light, #818cf8) !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dora-percentile-toggle:hover {
+  opacity: 0.8;
+}
+
+.dora-percentiles-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.5rem;
+  margin: 0.4rem 0 0;
+  padding: 0.5rem 0.6rem;
+  background: var(--surface-muted);
+  border-radius: 0.4rem;
+  border: 1px solid var(--stat-card-border);
+  font-size: 0.72rem;
+}
+
+.dora-percentiles-grid dt {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dora-percentiles-grid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ── Sparkline chart ── */
+
+.dora-card-chart {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  overflow: hidden;
+}
+
+.dora-chart-svg {
+  display: block;
+  width: 100%;
+  height: 48px;
+  overflow: visible;
+}
+
+.dora-chart-empty {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+/* ── Skeleton loader ── */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.dora-skeleton {
+  pointer-events: none;
+}
+
+.dora-skel-header,
+.dora-skel-value,
+.dora-skel-label,
+.dora-skel-chart {
+  border-radius: 0.4rem;
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--border-color) 50%,
+    var(--surface-muted) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+.dora-skel-header {
+  height: 28px;
+  width: 70%;
+  margin-bottom: 0.5rem;
+}
+
+.dora-skel-value {
+  height: 36px;
+  width: 50%;
+  margin-bottom: 0.35rem;
+}
+
+.dora-skel-label {
+  height: 14px;
+  width: 85%;
+  margin-bottom: 0.25rem;
+}
+
+.dora-skel-chart {
+  height: 48px;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+/* ── Cards grid override — 4 col on desktop ── */
+
+.dora-cards-grid {
+  margin-bottom: 0;
+}
+
+.dora-cards-grid > [role="listitem"] {
+  display: flex;
+}
+
+.dora-cards-grid > [role="listitem"] > .dora-card {
+  flex: 1;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1080px) {
+  .dora-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .dora-cards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .dora-cards-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
