@@ -10,6 +10,8 @@ interface WorkspaceSwitcherProps {
   workspaces: WorkspaceSummary[];
   /** The current workspace ID. */
   currentWorkspaceId: string;
+  /** Dropdown menu alignment. */
+  align?: "left" | "right";
 }
 
 /**
@@ -24,7 +26,7 @@ interface WorkspaceSwitcherProps {
  * 6. On success: store new token / preference, rebuild auth state, navigate.
  * 7. On failure: clear unsafe stale state, redirect to selection/login.
  */
-export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceSwitcherProps) {
+export function WorkspaceSwitcher({ workspaces, currentWorkspaceId, align = "left" }: WorkspaceSwitcherProps) {
   const { actions } = useAuth();
   const navigate = useNavigate();
   const [switching, setSwitching] = useState(false);
@@ -76,7 +78,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId }: WorkspaceS
           onSelect={(workspaceId) => void handleSwitch(workspaceId)}
           disabled={switching}
           busyLabel="Switching…"
-          align="left"
+          align={align}
         />
       </div>
 
