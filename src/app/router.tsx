@@ -58,14 +58,19 @@ function Dashboard() {
         </div>
 
         {authenticatedState && (
-          <div className="dash-inline-controls">
-            <WorkspaceSwitcher
-              workspaces={authenticatedState.workspaces}
-              currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
-            />
-            <div className="topbar-divider" aria-hidden="true" />
-            <ProjectSelector />
-          </div>
+          <>
+            <div className="dash-inline-controls">
+              <WorkspaceSwitcher
+                workspaces={authenticatedState.workspaces}
+                currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
+              />
+              <div className="topbar-divider" aria-hidden="true" />
+              <ProjectSelector />
+            </div>
+            <div className="mobile-project-selector">
+              <ProjectSelector />
+            </div>
+          </>
         )}
       </div>
 

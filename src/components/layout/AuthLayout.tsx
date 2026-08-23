@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router";
 import logoPath from "../../assets/logo.png";
 
@@ -9,6 +9,15 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ title, description, children }: AuthLayoutProps) {
+  useEffect(() => {
+    document.documentElement.classList.remove("light-theme", "dark-theme");
+    document.documentElement.classList.add("dark-theme");
+    
+    return () => {
+      document.documentElement.classList.remove("dark-theme");
+    };
+  }, []);
+
   return (
     <main 
       className="dark-theme"

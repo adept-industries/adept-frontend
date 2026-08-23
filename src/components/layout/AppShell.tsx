@@ -264,6 +264,15 @@ export function AppShell({ children }: AppShellProps) {
     return dashboardThemePreference.subscribe(setTheme);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.classList.remove("light-theme", "dark-theme");
+    document.documentElement.classList.add(`${theme}-theme`);
+    // Cleanup if unmounted so other parts of the app don't inherit the dashboard theme
+    return () => {
+      document.documentElement.classList.remove("light-theme", "dark-theme");
+    };
+  }, [theme]);
+
   const location = useLocation();
   useEffect(() => {
     setMobileOpen(false);
