@@ -5,6 +5,7 @@ import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { useAuth } from "../../auth/AuthProvider";
 import logoPath from "../../assets/logo.png";
+import { ProjectSelector } from "../../features/projects/ProjectSelector";
 
 import {
   dashboardThemePreference,
@@ -180,6 +181,10 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
 
         {/* Nav */}
         <nav className="sidebar-nav">
+          <div className="sidebar-mobile-project-selector">
+            <ProjectSelector />
+          </div>
+
           <div className="sidebar-nav-section">
             <SidebarNavItem
               to="/dashboard"

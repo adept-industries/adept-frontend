@@ -1024,7 +1024,7 @@ p {
   max-width: 12rem;
 }
 
-.mobile-project-selector {
+.sidebar-mobile-project-selector {
   display: none;
 }
 
@@ -1033,22 +1033,24 @@ p {
     display: none; /* Handled by mobile topbar */
   }
 
-  .mobile-project-selector {
+  .sidebar-mobile-project-selector {
     display: flex;
     width: 100%;
-    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 0.25rem;
   }
   
-  .mobile-project-selector .navigation-dropdown-field {
+  .sidebar-mobile-project-selector .navigation-dropdown-field {
     width: 100%;
   }
 
-  .mobile-project-selector .navigation-dropdown {
+  .sidebar-mobile-project-selector .navigation-dropdown {
     width: 100%;
     flex: 1;
   }
 
-  .mobile-project-selector button.navigation-dropdown-trigger {
+  .sidebar-mobile-project-selector button.navigation-dropdown-trigger {
     width: 100%;
     max-width: none;
   }
@@ -1296,10 +1298,52 @@ p {
   .mobile-menu-toggle {
     display: inline-flex !important;
   }
+
+  /* Make workspace switcher more compact inside mobile topbar */
+  .sidebar-mobile-topbar button.navigation-dropdown-trigger {
+    width: auto;
+    min-width: 5rem;
+    max-width: 9rem;
+    padding: 0.4rem 0.5rem !important;
+  }
 }
 
 @media (max-width: 480px) {
   .dash-stats-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  .stat-card {
+    padding: 0.75rem 0.75rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .stat-card-value {
+    font-size: 1.4rem !important;
+  }
+
+  .stat-card-label {
+    font-size: 0.65rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .stat-card-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  
+  .stat-card-icon svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Save space on very narrow screens so the menu toggle doesn't get pushed off-screen */
+  .sidebar-mobile-topbar .navigation-dropdown-field > span:first-child {
+    display: none;
+  }
+  
+  .sidebar-mobile-logo span {
+    display: none;
   }
 }

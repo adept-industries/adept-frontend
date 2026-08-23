@@ -50,7 +50,7 @@ function Dashboard() {
           <h1 id="dash-title" className="dash-welcome-title">Dashboard</h1>
           <p className="dash-welcome-sub">
             {selectedProject
-              ? <>Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong> — DORA metrics filtered to this project.</>
+              ? <>Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong> - DORA metrics filtered to this project.</>
               : projects.length > 0
                 ? "Select a project to filter this dashboard."
                 : "Welcome! Get started by creating a project and connecting your repositories."}
@@ -67,9 +67,6 @@ function Dashboard() {
               <div className="topbar-divider" aria-hidden="true" />
               <ProjectSelector />
             </div>
-            <div className="mobile-project-selector">
-              <ProjectSelector />
-            </div>
           </>
         )}
       </div>
@@ -81,7 +78,7 @@ function Dashboard() {
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
           </div>
           <div className="stat-card-value">{projects.length}</div>
@@ -91,9 +88,9 @@ function Dashboard() {
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: "rgba(16,185,129,0.12)", color: "#34d399" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
           <div className="stat-card-value">{totalRepos}</div>
@@ -103,10 +100,10 @@ function Dashboard() {
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: "rgba(245,158,11,0.12)", color: "#fbbf24" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
           <div className="stat-card-value">—</div>
@@ -116,7 +113,7 @@ function Dashboard() {
         <div className="stat-card">
           <div className="stat-card-icon" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
           <div className="stat-card-value">—</div>
@@ -141,9 +138,9 @@ function Dashboard() {
                 </div>
                 <div className="project-card-repos">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                   {project.repositories.length} {project.repositories.length === 1 ? "repository" : "repositories"}
                 </div>
