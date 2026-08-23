@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { AuthContext } from "../../auth/AuthContext";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
+import { ProjectSelector } from "../../features/projects/ProjectSelector";
 import { useAuth } from "../../auth/AuthProvider";
 import logoPath from "../../assets/logo.png";
 
@@ -178,6 +178,17 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
           <span className="sidebar-brand-name">Adept</span>
         </Link>
 
+        {/* Mobile-only: workspace & project selectors inside sidebar */}
+        {isAuthenticated && (
+          <div className="sidebar-mobile-controls">
+            <WorkspaceSwitcher
+              workspaces={state.workspaces}
+              currentWorkspaceId={state.currentMembership.workspaceId}
+            />
+            <ProjectSelector />
+          </div>
+        )}
+
         {/* Nav */}
         <nav className="sidebar-nav">
           <div className="sidebar-nav-section">
@@ -255,8 +266,6 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
 // ─── AppShell ─────────────────────────────────────────────────────────────────
 
 export function AppShell({ children }: AppShellProps) {
-  const ctx = useContext(AuthContext);
-  const authenticatedState = ctx?.state.status === "authenticated" ? ctx.state : null;
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -299,33 +308,25 @@ export function AppShell({ children }: AppShellProps) {
             <span>Adept</span>
           </Link>
 
-          {authenticatedState && (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <WorkspaceSwitcher
-                workspaces={authenticatedState.workspaces}
-                currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
-              />
-              <button
-                type="button"
-                className="mobile-menu-toggle"
-                onClick={() => setMobileOpen((p) => !p)}
-                aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileOpen}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: "transparent",
-                  border: "none",
-                  padding: "0.25rem",
-                  cursor: "pointer",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {mobileOpen ? <CloseIcon /> : <MenuIcon />}
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMobileOpen((p) => !p)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileOpen}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              border: "none",
+              padding: "0.25rem",
+              cursor: "pointer",
+              color: "var(--text-primary)",
+            }}
+          >
+            {mobileOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
         </header>
 
         <main className="dashboard-main">

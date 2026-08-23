@@ -58,7 +58,6 @@ function Dashboard() {
         </div>
 
         {authenticatedState && (
-          <>
             <div className="dash-inline-controls">
               <WorkspaceSwitcher
                 workspaces={authenticatedState.workspaces}
@@ -67,10 +66,6 @@ function Dashboard() {
               <div className="topbar-divider" aria-hidden="true" />
               <ProjectSelector />
             </div>
-            <div className="mobile-project-selector">
-              <ProjectSelector />
-            </div>
-          </>
         )}
       </div>
 
