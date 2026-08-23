@@ -67,7 +67,7 @@ export function WorkspaceSwitcher({ workspaces, currentWorkspaceId, align = "lef
   };
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="workspace-switcher-wrapper" style={{ position: "relative" }}>
       <div className="navigation-dropdown-field">
         <span>Workspace</span>
         <NavigationDropdown
