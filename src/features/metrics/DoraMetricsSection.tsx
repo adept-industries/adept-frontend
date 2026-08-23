@@ -104,11 +104,12 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
   });
 
   const isLoading = summaryLoading || seriesLoading;
-  const allEmpty = summary &&
+  const allEmpty = !summary || (
     summary.deploymentFrequency.sampleSize === 0 &&
     summary.changeLeadTime.sampleSize === 0 &&
     summary.recoveryTime.sampleSize === 0 &&
-    summary.changeFailureRate.sampleSize === 0;
+    summary.changeFailureRate.sampleSize === 0
+  );
 
   const items = seriesData?.series ?? [];
 
@@ -134,14 +135,14 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
 
       {/* Cards grid */}
       <div className="dash-stats-grid dora-cards-grid" role="list">
-        {isLoading || !summary ? (
+        {isLoading ? (
           <>
             <SkeletonCard id="dora-skel-1" />
             <SkeletonCard id="dora-skel-2" />
             <SkeletonCard id="dora-skel-3" />
             <SkeletonCard id="dora-skel-4" />
           </>
-        ) : allEmpty ? (
+        ) : allEmpty || !summary ? (
           /* Empty state occupies the full 4-col row */
           <div className="dora-empty dash-empty" style={{ gridColumn: "1 / -1" }}>
             <div className="dash-empty-icon">📊</div>
