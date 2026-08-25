@@ -148,6 +148,14 @@ export function updateRepository(
   });
 }
 
+export function requestRepositoryBackfill(repositoryId: string): Promise<void> {
+  return apiRequest<void>({
+    method: "POST",
+    path: `/repositories/${repositoryId}/backfill`,
+    auth: "bearer",
+  });
+}
+
 export function getLeadCandidates(repositoryId: string, signal?: AbortSignal): Promise<LeadCandidateResponse[]> {
   return apiRequest<LeadCandidateResponse[]>({
     method: "GET",

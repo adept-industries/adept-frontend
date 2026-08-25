@@ -145,6 +145,8 @@ describe("IntegrationsPage", () => {
 
   it("opens repository settings modal and allows saving new settings", async () => {
     const user = userEvent.setup();
+    let savedSettings: Record<string, unknown> | undefined;
+    let backfillRequests = 0;
 
     server.use(
       http.get("/api/v1/integrations/github", () => HttpResponse.json(null)),
@@ -162,7 +164,7 @@ describe("IntegrationsPage", () => {
             defaultBranch: "main",
             visibility: "PRIVATE",
             archived: false,
-            trackingEnabled: false,
+            trackingEnabled: true,
             settings: {
               deploymentSignal: "WORKFLOW_RUN",
               productionBranchPatterns: ["main"],
@@ -181,6 +183,7 @@ describe("IntegrationsPage", () => {
       http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
       http.patch("/api/v1/repositories/repo-1", async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
+        savedSettings = body.settings as Record<string, unknown>;
         return HttpResponse.json({
           id: "repo-1",
           workspaceId: "ws-1",
@@ -192,10 +195,14 @@ describe("IntegrationsPage", () => {
           defaultBranch: "main",
           visibility: "PRIVATE",
           archived: false,
-          trackingEnabled: false,
+          trackingEnabled: true,
           settings: body.settings,
           lastSyncedAt: new Date().toISOString(),
         });
+      }),
+      http.post("/api/v1/repositories/repo-1/backfill", () => {
+        backfillRequests += 1;
+        return new HttpResponse(null, { status: 202 });
       })
     );
 
@@ -205,11 +212,18 @@ describe("IntegrationsPage", () => {
     await user.click(settingsBtn);
 
     expect(await screen.findByText("Repository Settings")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Rebuild DORA Data" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("DORA data rebuild queued");
+    expect(backfillRequests).toBe(1);
+
+    await user.clear(screen.getByLabelText("DORA Exclusions"));
+    await user.type(screen.getByLabelText("DORA Exclusions"), "*preview*, *staging*");
     const saveBtn = screen.getByRole("button", { name: /Save Settings/i });
     await user.click(saveBtn);
 
     await waitFor(() => {
       expect(screen.queryByText("Repository Settings")).not.toBeInTheDocument();
     });
+    expect(savedSettings?.doraExclusions).toEqual(["*preview*", "*staging*"]);
   });
 });

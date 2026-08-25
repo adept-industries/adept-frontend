@@ -195,12 +195,12 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
               />
             </div>
 
-            {/* 3. Recovery Time (MTTR) */}
+            {/* 3. Median Recovery Time */}
             <div role="listitem">
               <DoraMetricCard
                 cardId="dora-card-rt"
                 title="Recovery Time"
-                subtitle="Mean time to restore service (MTTR)"
+                subtitle="Median time to restore service"
                 metric={summary.recoveryTime}
                 series={seriesFor(items, "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS")}
                 icon={<IconShield />}
@@ -232,7 +232,6 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
               }).format(new Date(summary.calculatedAt))} (${summary.timezone})`
             : "Metrics have not been calculated yet"}
           {summary.stale ? " · Data may be stale" : ""}
-          {` · ${summary.calculationVersion}`}
         </p>
       )}
     </section>

@@ -671,6 +671,26 @@ export interface paths {
         patch: operations["update"];
         trace?: never;
     };
+    "/api/v1/repositories/{repositoryId}/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rebuild a repository's DORA data
+         * @description Queues a deduplicated backfill and recalculation for a tracked, non-archived repository.
+         */
+        post: operations["requestBackfill"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/repositories/{repositoryId}/jira-projects": {
         parameters: {
             query?: never;
@@ -3467,6 +3487,72 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RepositoryResponse"];
+                };
+            };
+        };
+    };
+    requestBackfill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repository rebuild accepted */
+            202: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
         };
