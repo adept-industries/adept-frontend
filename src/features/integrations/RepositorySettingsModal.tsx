@@ -5,12 +5,14 @@ interface RepositorySettingsModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   onSave: (settings: Partial<RepositorySettings>) => Promise<void>;
+  onRebuild: () => Promise<void>;
 }
 
 export function RepositorySettingsModal({
   repository,
   onClose,
   onSave,
+  onRebuild,
 }: RepositorySettingsModalProps) {
   const current = repository.settings;
 
@@ -29,11 +31,16 @@ export function RepositorySettingsModal({
   const [incidentSource, setIncidentSource] = useState<"GITHUB" | "JIRA" | "MANUAL" | "BOTH">(
     current?.incidentSource ?? "GITHUB"
   );
+  const [doraExclusions, setDoraExclusions] = useState<string>(
+    (current?.doraExclusions ?? []).join(", ")
+  );
   const [defaultMetricGranularity, setDefaultMetricGranularity] = useState<MetricGranularity>(
     current?.defaultMetricGranularity ?? "WEEK"
   );
   const [backfillDays, setBackfillDays] = useState<number>(current?.backfillDays ?? 90);
   const [saving, setSaving] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildQueued, setRebuildQueued] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,6 +61,7 @@ export function RepositorySettingsModal({
         productionEnvironmentPatterns: parseList(productionEnvironmentPatterns),
         deploymentWorkflowNamePatterns: parseList(deploymentWorkflowNamePatterns),
         incidentSource,
+        doraExclusions: parseList(doraExclusions),
         defaultMetricGranularity,
         backfillDays: Number(backfillDays),
       });
@@ -62,6 +70,20 @@ export function RepositorySettingsModal({
       setError(err instanceof Error ? err.message : "Failed to update repository settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRebuild = async () => {
+    setRebuilding(true);
+    setRebuildQueued(false);
+    setError(null);
+    try {
+      await onRebuild();
+      setRebuildQueued(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to queue DORA data rebuild");
+    } finally {
+      setRebuilding(false);
     }
   };
 
@@ -152,11 +174,11 @@ export function RepositorySettingsModal({
                 color: "var(--text-primary, #ffffff)",
               }}
             >
-              <option value="WORKFLOW_RUN">GitHub Actions Workflow Run (Recommended)</option>
-              <option value="DEPLOYMENT">GitHub Deployment API Event</option>
+              <option value="WORKFLOW_RUN">GitHub Actions Workflow Run</option>
+              <option value="DEPLOYMENT">GitHub Deployment API Event (AWS rollout)</option>
             </select>
             <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
-              Defines what constitutes a production deployment event for DORA metrics.
+              Use Deployment API events when image publication and the live rollout are separate steps.
             </span>
           </div>
 
@@ -226,6 +248,33 @@ export function RepositorySettingsModal({
               />
             </div>
           )}
+
+          <div>
+            <label
+              htmlFor="repository-dora-exclusions"
+              style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}
+            >
+              DORA Exclusions
+            </label>
+            <input
+              id="repository-dora-exclusions"
+              type="text"
+              value={doraExclusions}
+              onChange={(e) => setDoraExclusions(e.target.value)}
+              placeholder="*preview*, *staging*"
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                borderRadius: "6px",
+                backgroundColor: "var(--input-bg, #242436)",
+                border: "1px solid var(--border-color, #3b3b54)",
+                color: "var(--text-primary, #ffffff)",
+              }}
+            />
+            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
+              Comma-separated workflow-name or deployment-environment globs to exclude.
+            </span>
+          </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
             <div>
@@ -298,7 +347,24 @@ export function RepositorySettingsModal({
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
+          {rebuildQueued && (
+            <div role="status" style={{ color: "var(--text-secondary, #94a3b8)", fontSize: "0.8rem" }}>
+              DORA data rebuild queued.
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", marginTop: "1rem" }}>
+            <button
+              type="button"
+              className="button-link"
+              onClick={() => void handleRebuild()}
+              disabled={saving || rebuilding || repository.archived || !repository.trackingEnabled}
+              title={!repository.trackingEnabled ? "Enable tracking before rebuilding DORA data" : undefined}
+              style={{ padding: "0.5rem 1rem" }}
+            >
+              {rebuilding ? "Queuing..." : "Rebuild DORA Data"}
+            </button>
+            <div style={{ display: "flex", gap: "0.75rem" }}>
             <button
               type="button"
               className="button-link"
@@ -316,6 +382,7 @@ export function RepositorySettingsModal({
             >
               {saving ? "Saving..." : "Save Settings"}
             </button>
+            </div>
           </div>
         </form>
       </div>

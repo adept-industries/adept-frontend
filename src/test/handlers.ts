@@ -304,7 +304,7 @@ export const handlers = [
       periodStart: "2026-07-24T00:00:00Z",
       periodEnd:   "2026-08-23T00:00:00Z",
       timezone: "UTC",
-      calculationVersion: "dora-v2",
+      calculationVersion: "dora-v3",
       deploymentFrequency: {
         value: 4.5,
         unit: "deployments/week",
@@ -349,7 +349,7 @@ export const handlers = [
       periodEnd: "2026-08-23T00:00:00Z",
       timezone: "UTC",
       granularity: "DAY",
-      calculationVersion: "dora-v2",
+      calculationVersion: "dora-v3",
       calculatedAt: "2026-08-23T12:00:00Z",
       stale: false,
       series: [

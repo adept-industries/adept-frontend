@@ -56,7 +56,7 @@ const SUMMARY_FIXTURE = {
   periodStart: "2026-07-24T00:00:00Z",
   periodEnd: "2026-08-23T00:00:00Z",
   timezone: "UTC",
-  calculationVersion: "dora-v2",
+  calculationVersion: "dora-v3",
   deploymentFrequency: {
     value: 4.5,
     unit: "deployments/week",
@@ -125,11 +125,12 @@ describe("DoraMetricsSection", () => {
     expect(screen.getByText("2.4h")).toBeInTheDocument();
     // Recovery Time
     expect(screen.getByText("Recovery Time")).toBeInTheDocument();
+    expect(screen.getByText("Median time to restore service")).toBeInTheDocument();
     expect(screen.getByText("0.8h")).toBeInTheDocument();
     // Change Failure Rate
     expect(screen.getByText("Change Failure Rate")).toBeInTheDocument();
     expect(screen.getByText("5.3%")).toBeInTheDocument();
-    expect(screen.getByLabelText("Metric calculation status")).toHaveTextContent("dora-v2");
+    expect(screen.getByLabelText("Metric calculation status")).not.toHaveTextContent("dora-v3");
   });
 
   it("renders an API failure separately from an empty dataset", async () => {

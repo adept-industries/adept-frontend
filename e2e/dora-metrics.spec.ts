@@ -97,7 +97,7 @@ async function mockAuthenticatedDashboard(page: Page, requestedSummaries: URL[])
         periodStart: "2026-07-26T00:00:00Z",
         periodEnd: "2026-08-25T00:00:00Z",
         timezone: "UTC",
-        calculationVersion: "dora-v2",
+        calculationVersion: "dora-v3",
         deploymentFrequency: metric(4.5, "deployments/week", 18, "HIGH"),
         changeLeadTime: {
           ...metric(2.4, "hours", 14, "HIGH"),
@@ -125,7 +125,7 @@ async function mockAuthenticatedDashboard(page: Page, requestedSummaries: URL[])
       periodEnd: "2026-08-25T00:00:00Z",
       timezone: "UTC",
       granularity: "DAY",
-      calculationVersion: "dora-v2",
+      calculationVersion: "dora-v3",
       calculatedAt: "2026-08-25T08:00:00Z",
       stale: false,
       series: [],
@@ -144,7 +144,8 @@ test("dashboard renders contract-backed DORA values", async ({ page }) => {
   await expect(page.getByText("2.4h", { exact: true })).toBeVisible();
   await expect(page.getByText("0.8h", { exact: true })).toBeVisible();
   await expect(page.getByText("5.3%", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("Metric calculation status")).toContainText("dora-v2");
+  await expect(page.getByText("Median time to restore service")).toBeVisible();
+  await expect(page.getByLabel("Metric calculation status")).not.toContainText("dora-v3");
 
   await expect(page.getByRole("group", { name: "Time range" })).toBeVisible();
   await expect(page.getByLabel("Repository")).toHaveCount(0);

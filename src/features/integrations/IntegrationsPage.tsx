@@ -12,6 +12,7 @@ import {
   getJiraIntegration,
   listJiraProjects,
   listRepositories,
+  requestRepositoryBackfill,
   syncGithubRepositories,
   updateJiraProjectTracking,
   updateRepository,
@@ -146,6 +147,11 @@ export function IntegrationsPage() {
       prev.map((r) => (r.id === selectedRepoForSettings.id ? updated : r))
     );
     setSelectedRepoForSettings(null);
+  };
+
+  const handleRebuildRepoData = async () => {
+    if (!selectedRepoForSettings) return;
+    await requestRepositoryBackfill(selectedRepoForSettings.id);
   };
 
   const handleToggleJiraTracking = async (project: JiraProjectResponse) => {
@@ -663,6 +669,7 @@ export function IntegrationsPage() {
             repository={selectedRepoForSettings}
             onClose={() => setSelectedRepoForSettings(null)}
             onSave={handleSaveRepoSettings}
+            onRebuild={handleRebuildRepoData}
           />
         )}
 
