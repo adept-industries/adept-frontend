@@ -247,24 +247,4 @@ describe("DoraMetricsSection", () => {
     expect(url.searchParams.get("projectId")).toBe("proj-123");
   });
 
-  it("filters metrics to a selected repository", async () => {
-    const capturedUrls: string[] = [];
-    server.use(
-      http.get(`${API}/metrics/summary`, ({ request }) => {
-        capturedUrls.push(request.url);
-        return HttpResponse.json(SUMMARY_FIXTURE);
-      }),
-    );
-    renderSection();
-    const user = userEvent.setup();
-
-    const repositorySelect = await screen.findByRole("combobox", { name: "Repository" });
-    await waitFor(() => expect(screen.getByRole("option", { name: "acme/backend" })).toBeInTheDocument());
-    await user.selectOptions(repositorySelect, "repo-1");
-
-    await waitFor(() => {
-      const latest = new URL(capturedUrls[capturedUrls.length - 1]);
-      expect(latest.searchParams.get("repositoryId")).toBe("repo-1");
-    });
-  });
 });

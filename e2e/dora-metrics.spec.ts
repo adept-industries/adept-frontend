@@ -133,7 +133,7 @@ async function mockAuthenticatedDashboard(page: Page, requestedSummaries: URL[])
   }));
 }
 
-test("dashboard renders contract-backed DORA values and repository scope", async ({ page }) => {
+test("dashboard renders contract-backed DORA values", async ({ page }) => {
   const requestedSummaries: URL[] = [];
   await mockAuthenticatedDashboard(page, requestedSummaries);
 
@@ -146,9 +146,6 @@ test("dashboard renders contract-backed DORA values and repository scope", async
   await expect(page.getByText("5.3%", { exact: true })).toBeVisible();
   await expect(page.getByLabel("Metric calculation status")).toContainText("dora-v2");
 
-  await page.getByLabel("Repository").selectOption(REPOSITORY_ID);
-  await expect.poll(() => requestedSummaries.some(
-    (url) => url.searchParams.get("repositoryId") === REPOSITORY_ID,
-  )).toBe(true);
-  expect(requestedSummaries.at(-1)?.searchParams.get("projectId")).toBeNull();
+  await expect(page.getByRole("group", { name: "Time range" })).toBeVisible();
+  await expect(page.getByLabel("Repository")).toHaveCount(0);
 });

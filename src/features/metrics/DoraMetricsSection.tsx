@@ -1,8 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../../auth/AuthProvider.js";
-import { queryKeys } from "../../api/queryKeys.js";
-import { listRepositories } from "../integrations/api.js";
+import { useMemo, useState } from "react";
 import { useDoraMetricsSummary, useDoraMetricsSeries } from "./useDoraMetrics.js";
 import { DoraMetricCard } from "./DoraMetricCard.js";
 import type { DoraMetricsFilters, MetricSeriesItemDto, MetricType } from "./types.js";
@@ -93,32 +89,13 @@ interface DoraMetricsSectionProps {
 
 export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProps) {
   const [preset, setPreset] = useState<TimeRangePreset>("30d");
-  const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>("");
   const range = useMemo(() => presetToRange(preset), [preset]);
-  const { state } = useAuth();
-  const workspaceId = state.status === "authenticated"
-    ? state.currentMembership.workspaceId
-    : null;
-
-  const repositoriesQuery = useQuery({
-    queryKey: workspaceId
-      ? queryKeys.repositories(workspaceId, true)
-      : ["metric-repositories-disabled"],
-    queryFn: ({ signal }) => listRepositories(true, signal),
-    enabled: !!workspaceId,
-    staleTime: 60_000,
-  });
-
-  useEffect(() => {
-    setSelectedRepositoryId("");
-  }, [selectedProjectId]);
 
   const filters: DoraMetricsFilters = useMemo(() => ({
     projectId:  selectedProjectId ?? null,
-    repositoryId: selectedProjectId ? null : selectedRepositoryId || null,
     from: range.from,
     to:   range.to,
-  }), [selectedProjectId, selectedRepositoryId, range]);
+  }), [selectedProjectId, range]);
 
   const summaryQuery = useDoraMetricsSummary(filters);
   const seriesQuery = useDoraMetricsSeries({
@@ -145,21 +122,7 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
       {/* Section header + filter bar */}
       <div className="dora-section-header">
         <h2 className="dash-section-title" style={{ margin: 0 }}>DORA Metrics</h2>
-        <div className="dora-filter-bar" role="group" aria-label="Metric filters">
-          <label htmlFor="dora-repository-filter" className="sr-only">Repository</label>
-          <select
-            id="dora-repository-filter"
-            aria-label="Repository"
-            value={selectedRepositoryId}
-            disabled={!!selectedProjectId || repositoriesQuery.isLoading}
-            onChange={(event) => setSelectedRepositoryId(event.target.value)}
-            className="dora-filter-btn"
-          >
-            <option value="">{selectedProjectId ? "Project repositories" : "All repositories"}</option>
-            {!selectedProjectId && repositoriesQuery.data?.map((repository) => (
-              <option key={repository.id} value={repository.id}>{repository.fullName}</option>
-            ))}
-          </select>
+        <div className="dora-filter-bar" role="group" aria-label="Time range">
           {PRESETS.map((p) => (
             <button
               key={p.value}
