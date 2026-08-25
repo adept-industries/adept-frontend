@@ -1,10 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright configuration for Phase 2 E2E tests.
+ * Playwright configuration for browser acceptance tests.
  *
  * Rules:
- * - Chromium only for Phase 2 CI.
+ * - Chromium only in CI.
  * - 1 worker for mail/session determinism.
  * - retries: 0 (tests consume stateful tokens and create/delete data).
  * - No trace or video recording to avoid storing credentials/tokens.

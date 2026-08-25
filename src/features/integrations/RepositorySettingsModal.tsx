@@ -26,8 +26,8 @@ export function RepositorySettingsModal({
   const [deploymentWorkflowNamePatterns, setDeploymentWorkflowNamePatterns] = useState<string>(
     (current?.deploymentWorkflowNamePatterns ?? ["*deploy*", "*production*", "*release*"]).join(", ")
   );
-  const [incidentSource, setIncidentSource] = useState<"JIRA" | "MANUAL" | "BOTH">(
-    current?.incidentSource ?? "BOTH"
+  const [incidentSource, setIncidentSource] = useState<"GITHUB" | "JIRA" | "MANUAL" | "BOTH">(
+    current?.incidentSource ?? "GITHUB"
   );
   const [defaultMetricGranularity, setDefaultMetricGranularity] = useState<MetricGranularity>(
     current?.defaultMetricGranularity ?? "WEEK"
@@ -234,7 +234,7 @@ export function RepositorySettingsModal({
               </label>
               <select
                 value={incidentSource}
-                onChange={(e) => setIncidentSource(e.target.value as "JIRA" | "MANUAL" | "BOTH")}
+                onChange={(e) => setIncidentSource(e.target.value as "GITHUB" | "JIRA" | "MANUAL" | "BOTH")}
                 style={{
                   width: "100%",
                   padding: "0.5rem",
@@ -244,9 +244,10 @@ export function RepositorySettingsModal({
                   color: "var(--text-primary, #ffffff)",
                 }}
               >
-                <option value="BOTH">Jira & GitHub Issues</option>
-                <option value="JIRA">Jira Incidents Only</option>
-                <option value="MANUAL">Manual / GitHub Issues</option>
+                <option value="GITHUB">GitHub deployment outcomes</option>
+                <option value="BOTH" disabled>GitHub & Jira (Phase 9)</option>
+                <option value="JIRA" disabled>Jira incidents (Phase 9)</option>
+                <option value="MANUAL" disabled>Manual incidents (Phase 9)</option>
               </select>
             </div>
 

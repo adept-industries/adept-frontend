@@ -288,6 +288,294 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/integrations/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getIntegration_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/github/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["handleCallback_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/github/connect-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createConnectUrl_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/github/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["disconnect_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/github/{integrationId}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["syncRepositories"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/jira": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getIntegration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/jira/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["handleCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/jira/connect-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createConnectUrl"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/jira/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["disconnect"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/jira/{integrationId}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["syncProjects"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invitations/{invitationId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jira/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listProjects_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jira/projects/{projectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateProjectTracking"];
+        trace?: never;
+    };
+    "/api/v1/metrics/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSeries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects": {
         parameters: {
             query?: never;
@@ -351,6 +639,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/repositories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update"];
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}/jira-projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMappedJiraProjects"];
+        put?: never;
+        post: operations["mapJiraProjects"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/repositories/{repositoryId}/lead-assignments": {
         parameters: {
             query?: never;
@@ -362,6 +698,70 @@ export interface paths {
         put?: never;
         /** Create or reuse a pending Lead invitation */
         post: operations["createPendingRepositoryLeadInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}/lead-assignments/{assignmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteLeadAssignment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}/lead-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLeadCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["receiveGithubWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/jira/{integrationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["receiveJiraWebhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -428,10 +828,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces/current/members/{membershipId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AcceptInvitationRequest: {
+            displayName?: string;
+            password?: string;
+            token: string;
+        };
         ActionTokenRequest: {
             token: string;
         };
@@ -486,6 +907,51 @@ export interface components {
         DeleteWorkspaceRequest: {
             confirmationSlug: string;
         };
+        DoraMetricsSeriesResponse: {
+            /** Format: date-time */
+            calculatedAt?: string;
+            calculationVersion?: string;
+            /** @enum {string} */
+            granularity?: "DAY" | "WEEK" | "MONTH";
+            /** Format: date-time */
+            periodEnd?: string;
+            /** Format: date-time */
+            periodStart?: string;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            series?: components["schemas"]["MetricSeriesItemDto"][];
+            stale?: boolean;
+            timezone?: string;
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        DoraMetricsSummaryResponse: {
+            /** Format: date-time */
+            calculatedAt?: string;
+            calculationVersion?: string;
+            changeFailureRate?: components["schemas"]["MetricSummaryDto"];
+            changeLeadTime?: components["schemas"]["MetricSummaryDto"];
+            deploymentFrequency?: components["schemas"]["MetricSummaryDto"];
+            /** Format: date-time */
+            periodEnd?: string;
+            /** Format: date-time */
+            periodStart?: string;
+            /** Format: uuid */
+            projectId?: string;
+            recoveryTime?: components["schemas"]["MetricSummaryDto"];
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            stale?: boolean;
+            timezone?: string;
+            /** Format: uuid */
+            workspaceId?: string;
+        };
         EmailRequest: {
             /** Format: email */
             email: string;
@@ -494,12 +960,89 @@ export interface components {
             field: string;
             message: string;
         };
+        GithubConnectUrlResponse: {
+            state?: string;
+            url?: string;
+        };
+        GithubIntegrationResponse: {
+            accountLogin?: string;
+            /** @enum {string} */
+            accountType?: "ORGANIZATION" | "USER";
+            /** Format: uuid */
+            id?: string;
+            /** Format: int64 */
+            installationId?: number;
+            /** Format: date-time */
+            installedAt?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** @enum {string} */
+            repositorySelection?: "ALL" | "SELECTED";
+            /** @enum {string} */
+            status?: "ACTIVE" | "SUSPENDED" | "REVOKED" | "ERROR";
+            /** Format: uuid */
+            workspaceId?: string;
+        };
         GoogleOnboardingRequest: {
             timezone: string;
             workspaceName: string;
         };
         GoogleReauthenticationStartResponse: {
             authorizationUrl: string;
+        };
+        InvitationPreviewResponse: {
+            email?: string;
+            existingAccount?: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            hasPassword?: boolean;
+            repositories?: string[];
+            /** @enum {string} */
+            role?: "MANAGER" | "LEAD";
+            workspaceName?: string;
+        };
+        JiraConnectUrlResponse: {
+            state?: string;
+            url?: string;
+        };
+        JiraIntegrationResponse: {
+            cloudId?: string;
+            displayName?: string;
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            /** Format: int32 */
+            projectCount?: number;
+            siteUrl?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "SUSPENDED" | "REVOKED" | "ERROR";
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        JiraProjectResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            jiraIntegrationId?: string;
+            jiraProjectId?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            projectKey?: string;
+            projectName?: string;
+            projectType?: string;
+            trackingEnabled?: boolean;
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        LeadCandidateResponse: {
+            avatarUrl?: string;
+            githubUserId?: string;
+            login?: string;
+            permission?: string;
+            publicEmail?: string;
         };
         LoginRequest: {
             email: string;
@@ -508,6 +1051,9 @@ export interface components {
         LookupWorkspaceMemberRequest: {
             /** Format: email */
             email: string;
+        };
+        MapRepositoryJiraProjectsRequest: {
+            jiraProjectIds: string[];
         };
         MeResponse: {
             currentMembership: components["schemas"]["MembershipSummary"];
@@ -524,6 +1070,32 @@ export interface components {
             workspaceId: string;
             workspaceName: string;
             workspaceSlug: string;
+        };
+        MetricSeriesItemDto: {
+            dimensions?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+            /** Format: date-time */
+            periodEnd?: string;
+            /** Format: date-time */
+            periodStart?: string;
+            /** Format: int32 */
+            sampleSize?: number;
+            unit?: string;
+            value?: number;
+        };
+        MetricSummaryDto: {
+            dimensions?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            rating?: "ELITE" | "HIGH" | "MEDIUM" | "LOW" | "UNKNOWN";
+            /** Format: int32 */
+            sampleSize?: number;
+            unit?: string;
+            value?: number;
         };
         PasswordReauthenticationRequest: {
             password: string;
@@ -580,6 +1152,39 @@ export interface components {
         ReplaceProjectRepositoriesRequest: {
             repositoryIds: string[];
         };
+        RepositoryResponse: {
+            archived?: boolean;
+            defaultBranch?: string;
+            fullName?: string;
+            /** Format: uuid */
+            githubIntegrationId?: string;
+            /** Format: int64 */
+            githubRepoId?: number;
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            lastSyncedAt?: string;
+            name?: string;
+            ownerLogin?: string;
+            settings?: components["schemas"]["RepositorySettingsDto"];
+            trackingEnabled?: boolean;
+            /** @enum {string} */
+            visibility?: "PUBLIC" | "PRIVATE" | "INTERNAL";
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        RepositorySettingsDto: {
+            /** Format: int32 */
+            backfillDays?: number;
+            /** @enum {string} */
+            defaultMetricGranularity?: "DAY" | "WEEK" | "MONTH";
+            deploymentSignal?: string;
+            deploymentWorkflowNamePatterns?: string[];
+            doraExclusions?: string[];
+            incidentSource?: string;
+            productionBranchPatterns?: string[];
+            productionEnvironmentPatterns?: string[];
+        };
         ResetPasswordRequest: {
             newPassword: string;
             token: string;
@@ -597,9 +1202,16 @@ export interface components {
             user: components["schemas"]["UserSummary"];
             workspace: components["schemas"]["WorkspaceSummaryResponse"];
         };
+        UpdateJiraProjectRequest: {
+            trackingEnabled: boolean;
+        };
         UpdateProjectRequest: {
             description?: string;
             name?: string;
+        };
+        UpdateRepositoryRequest: {
+            settings?: components["schemas"]["RepositorySettingsDto"];
+            trackingEnabled?: boolean;
         };
         /** @description Presence-aware patch. At least one of name or timezone is required; explicit null is invalid. */
         UpdateWorkspaceRequest: {
@@ -657,7 +1269,7 @@ export interface operations {
             /** @description CSRF cookie issued */
             204: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets the readable XSRF-TOKEN cookie. */
                     "Set-Cookie"?: string;
@@ -683,7 +1295,7 @@ export interface operations {
             /** @description Request accepted */
             202: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -692,7 +1304,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -703,7 +1315,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -714,7 +1326,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -725,7 +1337,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -736,7 +1348,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -764,7 +1376,7 @@ export interface operations {
             /** @description Adept account and session created */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -777,7 +1389,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -790,7 +1402,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -803,7 +1415,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -816,7 +1428,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -829,7 +1441,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -842,7 +1454,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Successful onboarding clears adept_oauth, sets adept_refresh, and expires XSRF-TOKEN. */
                     "Set-Cookie"?: string;
@@ -855,7 +1467,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -881,7 +1493,7 @@ export interface operations {
             /** @description Google authorization URL returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
@@ -894,7 +1506,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
@@ -907,7 +1519,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
@@ -920,7 +1532,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
@@ -933,7 +1545,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -959,7 +1571,7 @@ export interface operations {
             /** @description Redirect to Google */
             302: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Internal authorization endpoint that then redirects to Google. */
                     Location?: string;
@@ -972,7 +1584,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description A successful start sets the short-lived HttpOnly adept_oauth cookie. */
                     "Set-Cookie"?: string;
@@ -985,7 +1597,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1015,7 +1627,7 @@ export interface operations {
             /** @description Session created */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1028,7 +1640,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1041,7 +1653,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1054,7 +1666,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1067,7 +1679,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1080,7 +1692,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1093,7 +1705,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1119,7 +1731,7 @@ export interface operations {
             /** @description Session cookies cleared */
             204: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1130,7 +1742,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1143,7 +1755,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1169,7 +1781,7 @@ export interface operations {
             /** @description Current identity returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1180,7 +1792,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1191,7 +1803,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1217,7 +1829,7 @@ export interface operations {
             /** @description Identity verified and a recent session issued */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1230,7 +1842,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1243,7 +1855,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1256,7 +1868,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1269,7 +1881,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1282,7 +1894,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1295,7 +1907,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1325,7 +1937,7 @@ export interface operations {
             /** @description Session refreshed */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1338,7 +1950,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1351,7 +1963,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1364,7 +1976,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1377,7 +1989,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1390,7 +2002,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Rotates or clears the HttpOnly adept_refresh cookie. */
                     "Set-Cookie"?: string;
@@ -1403,7 +2015,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1433,7 +2045,7 @@ export interface operations {
             /** @description Request accepted */
             202: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1442,7 +2054,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1453,7 +2065,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1464,7 +2076,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1475,7 +2087,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1486,7 +2098,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1514,7 +2126,7 @@ export interface operations {
             /** @description Password reset and session cookies cleared */
             204: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1525,7 +2137,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1538,7 +2150,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1551,7 +2163,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1564,7 +2176,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Sets or clears adept_refresh and rotates or expires XSRF-TOKEN as described by the operation. */
                     "Set-Cookie"?: string;
@@ -1577,7 +2189,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1607,7 +2219,7 @@ export interface operations {
             /** @description Account created */
             201: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1618,7 +2230,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1629,7 +2241,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1640,7 +2252,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1651,7 +2263,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1662,7 +2274,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1673,7 +2285,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1699,7 +2311,7 @@ export interface operations {
             /** @description Workspace selected */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1710,7 +2322,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1721,7 +2333,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description May clear the adept_refresh cookie after invalid session state. */
                     "Set-Cookie"?: string;
@@ -1734,7 +2346,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1745,7 +2357,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1756,7 +2368,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1784,7 +2396,7 @@ export interface operations {
             /** @description Email verified */
             204: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1793,7 +2405,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1804,7 +2416,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1815,7 +2427,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1826,7 +2438,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1837,7 +2449,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1865,7 +2477,7 @@ export interface operations {
             /** @description Workspace and authenticated session created */
             201: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1876,7 +2488,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1887,7 +2499,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description May clear the adept_refresh cookie after invalid session state. */
                     "Set-Cookie"?: string;
@@ -1900,7 +2512,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1911,7 +2523,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1922,7 +2534,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1933,7 +2545,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1944,7 +2556,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -1952,6 +2564,392 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    getIntegration_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GithubIntegrationResponse"];
+                };
+            };
+        };
+    };
+    handleCallback_1: {
+        parameters: {
+            query: {
+                installation_id: number;
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createConnectUrl_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GithubConnectUrlResponse"];
+                };
+            };
+        };
+    };
+    disconnect_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncRepositories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getIntegration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JiraIntegrationResponse"];
+                };
+            };
+        };
+    };
+    handleCallback: {
+        parameters: {
+            query: {
+                code: string;
+                state: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createConnectUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JiraConnectUrlResponse"];
+                };
+            };
+        };
+    };
+    disconnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    syncProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AuthSessionResponse"];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InvitationPreviewResponse"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    resend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listProjects_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JiraProjectResponse"][];
+                };
+            };
+        };
+    };
+    updateProjectTracking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateJiraProjectRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JiraProjectResponse"];
+                };
+            };
+        };
+    };
+    getSeries: {
+        parameters: {
+            query?: {
+                projectId?: string;
+                repositoryId?: string;
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+                granularity?: "DAY" | "WEEK" | "MONTH";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DoraMetricsSeriesResponse"];
+                };
+            };
+        };
+    };
+    getSummary: {
+        parameters: {
+            query?: {
+                projectId?: string;
+                repositoryId?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DoraMetricsSummaryResponse"];
                 };
             };
         };
@@ -1968,7 +2966,7 @@ export interface operations {
             /** @description Projects returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1979,7 +2977,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -1990,7 +2988,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2016,7 +3014,7 @@ export interface operations {
             /** @description Project created */
             201: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2027,7 +3025,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2038,7 +3036,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2049,7 +3047,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2060,7 +3058,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2071,7 +3069,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2082,7 +3080,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2106,7 +3104,7 @@ export interface operations {
             /** @description Project returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2117,7 +3115,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2128,7 +3126,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2139,7 +3137,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2163,7 +3161,7 @@ export interface operations {
             /** @description Project deleted */
             204: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2172,7 +3170,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2183,7 +3181,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2194,7 +3192,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2222,7 +3220,7 @@ export interface operations {
             /** @description Project updated */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2233,7 +3231,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2244,7 +3242,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2255,7 +3253,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2266,7 +3264,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2277,7 +3275,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2288,7 +3286,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2299,7 +3297,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2327,7 +3325,7 @@ export interface operations {
             /** @description Project repositories replaced */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2338,7 +3336,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2349,7 +3347,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2360,7 +3358,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2371,7 +3369,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2382,7 +3380,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2393,13 +3391,129 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: {
+                trackingOnly?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RepositoryResponse"][];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RepositoryResponse"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRepositoryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RepositoryResponse"];
+                };
+            };
+        };
+    };
+    getMappedJiraProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JiraProjectResponse"][];
+                };
+            };
+        };
+    };
+    mapJiraProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MapRepositoryJiraProjectsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2443,7 +3557,7 @@ export interface operations {
             /** @description Pending invitation assignment returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2454,7 +3568,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2465,7 +3579,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2476,7 +3590,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2487,7 +3601,7 @@ export interface operations {
             /** @description The scoped resource was not found */
             404: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2498,7 +3612,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2509,7 +3623,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2520,13 +3634,96 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
+            };
+        };
+    };
+    deleteLeadAssignment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+                assignmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getLeadCandidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LeadCandidateResponse"][];
+                };
+            };
+        };
+    };
+    receiveGithubWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    receiveJiraWebhook: {
+        parameters: {
+            query?: {
+                token?: string;
+            };
+            header?: never;
+            path: {
+                integrationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2542,7 +3739,7 @@ export interface operations {
             /** @description Accessible workspaces returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2553,7 +3750,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2564,7 +3761,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2590,7 +3787,7 @@ export interface operations {
             /** @description Workspace created */
             201: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2601,7 +3798,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2612,7 +3809,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2623,7 +3820,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2634,7 +3831,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2645,7 +3842,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2656,7 +3853,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2678,7 +3875,7 @@ export interface operations {
             /** @description Current workspace returned */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2689,7 +3886,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2700,7 +3897,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2726,7 +3923,7 @@ export interface operations {
             /** @description Deletion requested */
             202: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2737,7 +3934,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2748,7 +3945,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2759,7 +3956,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2770,7 +3967,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2781,7 +3978,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2792,7 +3989,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2803,7 +4000,7 @@ export interface operations {
             /** @description A request rate limit was exceeded */
             429: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     /** @description Seconds until the request may be retried. */
                     "Retry-After"?: number;
@@ -2831,7 +4028,7 @@ export interface operations {
             /** @description Workspace updated */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2842,7 +4039,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2853,7 +4050,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2864,7 +4061,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2875,7 +4072,7 @@ export interface operations {
             /** @description The requested state conflicts with current state */
             409: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2886,7 +4083,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2897,7 +4094,7 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2923,7 +4120,7 @@ export interface operations {
             /** @description Lookup completed */
             200: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2934,7 +4131,7 @@ export interface operations {
             /** @description Validation failed or the request was malformed */
             400: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2945,7 +4142,7 @@ export interface operations {
             /** @description Authentication or session validation failed */
             401: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2956,7 +4153,7 @@ export interface operations {
             /** @description CSRF, origin, membership, or role authorization failed */
             403: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2967,7 +4164,7 @@ export interface operations {
             /** @description The request body exceeded the 16 KiB limit */
             413: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
@@ -2978,13 +4175,33 @@ export interface operations {
             /** @description The request body used an unsupported media type */
             415: {
                 headers: {
-                    /** @description Sensitive Phase 2 responses are not cached. */
+                    /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
                     [name: string]: unknown;
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
+            };
+        };
+    };
+    removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membershipId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
