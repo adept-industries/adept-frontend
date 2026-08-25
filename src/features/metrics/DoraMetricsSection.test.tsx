@@ -55,6 +55,8 @@ const SUMMARY_FIXTURE = {
   repositoryCount: 2,
   periodStart: "2026-07-24T00:00:00Z",
   periodEnd: "2026-08-23T00:00:00Z",
+  timezone: "UTC",
+  calculationVersion: "dora-v2",
   deploymentFrequency: {
     value: 4.5,
     unit: "deployments/week",
@@ -84,6 +86,7 @@ const SUMMARY_FIXTURE = {
     dimensions: { total_deployments: 19, failed_deployments: 1 },
   },
   calculatedAt: "2026-08-23T12:00:00Z",
+  stale: false,
 };
 
 const EMPTY_SUMMARY_FIXTURE = {
@@ -126,6 +129,22 @@ describe("DoraMetricsSection", () => {
     // Change Failure Rate
     expect(screen.getByText("Change Failure Rate")).toBeInTheDocument();
     expect(screen.getByText("5.3%")).toBeInTheDocument();
+    expect(screen.getByLabelText("Metric calculation status")).toHaveTextContent("dora-v2");
+  });
+
+  it("renders an API failure separately from an empty dataset", async () => {
+    server.use(
+      http.get(`${API}/metrics/summary`, () => HttpResponse.json({}, { status: 503 })),
+      http.get(`${API}/metrics/series`, () => HttpResponse.json({}, { status: 503 })),
+    );
+
+    renderSection();
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent("DORA metrics could not be loaded"),
+    );
+    expect(screen.queryByText("No deployments recorded in this period")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });
 
   it("renders correct rating badges", async () => {
@@ -226,5 +245,26 @@ describe("DoraMetricsSection", () => {
     await waitFor(() => expect(capturedUrls.length).toBeGreaterThan(0));
     const url = new URL(capturedUrls[capturedUrls.length - 1]);
     expect(url.searchParams.get("projectId")).toBe("proj-123");
+  });
+
+  it("filters metrics to a selected repository", async () => {
+    const capturedUrls: string[] = [];
+    server.use(
+      http.get(`${API}/metrics/summary`, ({ request }) => {
+        capturedUrls.push(request.url);
+        return HttpResponse.json(SUMMARY_FIXTURE);
+      }),
+    );
+    renderSection();
+    const user = userEvent.setup();
+
+    const repositorySelect = await screen.findByRole("combobox", { name: "Repository" });
+    await waitFor(() => expect(screen.getByRole("option", { name: "acme/backend" })).toBeInTheDocument());
+    await user.selectOptions(repositorySelect, "repo-1");
+
+    await waitFor(() => {
+      const latest = new URL(capturedUrls[capturedUrls.length - 1]);
+      expect(latest.searchParams.get("repositoryId")).toBe("repo-1");
+    });
   });
 });

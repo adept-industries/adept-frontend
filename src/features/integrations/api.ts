@@ -9,7 +9,7 @@ export interface RepositorySettings {
   productionBranchPatterns: string[];
   productionEnvironmentPatterns: string[];
   deploymentWorkflowNamePatterns: string[];
-  incidentSource: "JIRA" | "MANUAL" | "BOTH";
+  incidentSource: "GITHUB" | "JIRA" | "MANUAL" | "BOTH";
   doraExclusions: string[];
   defaultMetricGranularity: MetricGranularity;
   backfillDays: number;

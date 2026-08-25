@@ -1,6 +1,6 @@
 # Adept Frontend
 
-React 19, TypeScript, and Vite browser application for Adept. Phase 2 includes account lifecycle, refresh-backed authentication, workspace selection/switching and creation, project selection, Manager settings, and browser acceptance tests.
+React 19, TypeScript, and Vite browser application for Adept. The implementation through Phase 6 includes account lifecycle, refresh-backed authentication, workspace and project selection, Manager settings, repository/project-scoped DORA metrics, and browser acceptance tests.
 
 ## Routes
 
@@ -52,8 +52,8 @@ npm run lint
 npm run typecheck
 npm run test:run
 npm run build
-docker build --tag adept-frontend:phase2 .
-npm run nginx:verify -- adept-frontend:phase2
+docker build --tag adept-frontend:phase6 .
+npm run nginx:verify -- adept-frontend:phase6
 ```
 
 After the complete `CI` workflow succeeds for a push to `main`, the publish
@@ -75,4 +75,4 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run e2e
 
 Playwright uses Chromium, one worker, no retries, and no trace/video/screenshot artifacts because account links and cookies are sensitive. The stateful backend journeys include short spacing so one CI client IP stays inside the production proxy's auth rate limit.
 
-`e2e/google-auth.spec.ts` covers the Adept-side Google return, first-time onboarding, and recovery paths with deterministic route mocks. It intentionally does not automate `accounts.google.com`; use a manual local smoke test with a Google test account to verify the provider consent screen and configured redirect URI.
+`e2e/google-auth.spec.ts` covers the Adept-side Google return, first-time onboarding, and recovery paths with deterministic route mocks. `e2e/dora-metrics.spec.ts` verifies dashboard metric values, calculation metadata, and repository scoping against contract-shaped fixtures. The Google test intentionally does not automate `accounts.google.com`; use a manual local smoke test with a Google test account to verify the provider consent screen and configured redirect URI.

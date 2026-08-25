@@ -3,7 +3,7 @@ import { http, HttpResponse } from "msw";
 const API = "/api/v1";
 
 /**
- * Default MSW handlers for all Phase 2 API routes.
+ * Default MSW handlers for application API routes.
  * Tests override specific handlers with server.use(...).
  */
 export const handlers = [
@@ -275,6 +275,25 @@ export const handlers = [
     ),
   ),
 
+  http.get(`${API}/repositories`, () =>
+    HttpResponse.json([
+      {
+        id: "repo-1",
+        workspaceId: "ws-1",
+        githubIntegrationId: "github-1",
+        githubRepoId: 101,
+        ownerLogin: "acme",
+        name: "backend",
+        fullName: "acme/backend",
+        defaultBranch: "main",
+        visibility: "PRIVATE",
+        archived: false,
+        trackingEnabled: true,
+        settings: null,
+      },
+    ]),
+  ),
+
   // DORA metrics — summary
   http.get(`${API}/metrics/summary`, () =>
     HttpResponse.json({
@@ -284,6 +303,8 @@ export const handlers = [
       repositoryCount: 2,
       periodStart: "2026-07-24T00:00:00Z",
       periodEnd:   "2026-08-23T00:00:00Z",
+      timezone: "UTC",
+      calculationVersion: "dora-v2",
       deploymentFrequency: {
         value: 4.5,
         unit: "deployments/week",
@@ -313,6 +334,7 @@ export const handlers = [
         dimensions: { total_deployments: 19, failed_deployments: 1 },
       },
       calculatedAt: "2026-08-23T12:00:00Z",
+      stale: false,
     }),
   ),
 
@@ -323,7 +345,13 @@ export const handlers = [
       projectId: null,
       repositoryId: null,
       repositoryCount: 2,
+      periodStart: "2026-07-24T00:00:00Z",
+      periodEnd: "2026-08-23T00:00:00Z",
+      timezone: "UTC",
       granularity: "DAY",
+      calculationVersion: "dora-v2",
+      calculatedAt: "2026-08-23T12:00:00Z",
+      stale: false,
       series: [
         {
           metricType: "DEPLOYMENT_FREQUENCY",
@@ -395,4 +423,3 @@ export const handlers = [
   // Projects (default empty — tests override as needed)
   http.get(`${API}/projects`, () => HttpResponse.json([])),
 ];
-

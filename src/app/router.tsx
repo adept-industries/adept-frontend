@@ -29,7 +29,7 @@ import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import { ProjectSelector } from "../features/projects/ProjectSelector";
 
 /**
- * Dashboard — Phase 2 content with stats cards and project grid.
+ * Dashboard with scoped DORA metrics and project context.
  * Wrapped in AppShell which provides the floating sidebar navigation.
  */
 function Dashboard() {
