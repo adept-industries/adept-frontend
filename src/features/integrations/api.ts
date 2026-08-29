@@ -1,6 +1,6 @@
 import { apiRequest } from "../../api/client.js";
 
-export type IntegrationStatus = "ACTIVE" | "REVOKED" | "SUSPENDED";
+export type IntegrationStatus = "ACTIVE" | "REVOKED" | "SUSPENDED" | "ERROR";
 export type DeploymentSignal = "WORKFLOW_RUN" | "DEPLOYMENT";
 export type MetricGranularity = "DAY" | "WEEK" | "MONTH";
 
@@ -188,6 +188,14 @@ export function disconnectJiraIntegration(integrationId: string): Promise<void> 
   return apiRequest<void>({
     method: "DELETE",
     path: `/integrations/jira/${integrationId}`,
+    auth: "bearer",
+  });
+}
+
+export function syncJiraProjects(integrationId: string): Promise<void> {
+  return apiRequest<void>({
+    method: "POST",
+    path: `/integrations/jira/${integrationId}/sync`,
     auth: "bearer",
   });
 }
