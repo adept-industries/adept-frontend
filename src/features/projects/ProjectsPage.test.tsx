@@ -62,6 +62,29 @@ describe("ProjectsPage with Lead Assignments", () => {
     document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
   });
 
+  it("keeps the project creation form collapsed until requested", async () => {
+    server.use(
+      http.get("/api/v1/repositories", () => HttpResponse.json([])),
+    );
+
+    renderProjectsPage();
+
+    expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    const createButton = screen.getByRole("button", { name: "Create project" });
+    expect(createButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(createButton);
+
+    expect(screen.getByRole("textbox", { name: "Project name" })).toBeVisible();
+    const collapseButton = screen.getByRole("button", { name: "Collapse project" });
+    expect(collapseButton).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(collapseButton);
+
+    expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
+  });
+
   it("renders projects with attached repositories and assigned leads", async () => {
     const mockProjects = [
       {
@@ -75,6 +98,7 @@ describe("ProjectsPage with Lead Assignments", () => {
             fullName: "acme/api-core",
             trackingEnabled: true,
             archived: false,
+            jiraProjects: [],
           },
         ],
         createdAt: new Date().toISOString(),
@@ -134,6 +158,7 @@ describe("ProjectsPage with Lead Assignments", () => {
             fullName: "acme/mobile-app",
             trackingEnabled: true,
             archived: false,
+            jiraProjects: [],
           },
         ],
         createdAt: new Date().toISOString(),
@@ -204,6 +229,7 @@ describe("ProjectsPage with Lead Assignments", () => {
             fullName: "acme/web-portal",
             trackingEnabled: true,
             archived: false,
+            jiraProjects: [],
           },
         ],
         createdAt: new Date().toISOString(),

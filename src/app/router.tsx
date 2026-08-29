@@ -196,13 +196,13 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // ── Settings — MANAGER only ─────────────────────────────────────────────────
+  // ── Workspaces — role-aware settings ────────────────────────────────────────
   {
     path: "/dashboard/settings",
     element: (
       <ProtectedRoute>
         <WorkspaceRoute>
-          <RoleRoute allowedRoles={["MANAGER"]}>
+          <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
             <WorkspaceSettingsPage />
           </RoleRoute>
         </WorkspaceRoute>
