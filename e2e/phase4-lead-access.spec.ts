@@ -15,11 +15,13 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
     await expect(page.locator("#sidebar-nav-integrations")).toBeVisible();
     await expect(page.locator("#sidebar-nav-settings")).toBeVisible();
 
-    // 2. Navigate to Project Settings page via settings dropdown
+    // 2. Navigate to Project Settings from the sidebar
     await page.locator("#sidebar-nav-projects").click();
     await expect(page).toHaveURL(/dashboard\/projects/);
     await expect(page.getByRole("heading", { name: /Project Settings/i })).toBeVisible();
-    await expect(page.getByText(/Create projects, attach tracked repositories, and assign repository Leads/i)).toBeVisible();
+    await expect(page.getByText(
+      /Create projects, attach tracked repositories, map Jira projects, and assign repository Leads/i,
+    )).toBeVisible();
 
     // 3. Create a project
     const projectName = `Platform Project ${Date.now()}`;
