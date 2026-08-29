@@ -1,41 +1,43 @@
 import type { JiraProjectResponse } from "../../integrations/api.js";
 
-interface RepositoryJiraSelectorProps {
-  repositoryName: string;
+interface ProjectJiraSelectorProps {
   projects: JiraProjectResponse[];
   selectedIds: string[];
   onToggle: (jiraProjectId: string) => void;
 }
 
-export function RepositoryJiraSelector({
-  repositoryName,
+export function ProjectJiraSelector({
   projects,
   selectedIds,
   onToggle,
-}: RepositoryJiraSelectorProps) {
+}: ProjectJiraSelectorProps) {
   return (
     <div
       role="group"
-      aria-label={`Jira project mappings for ${repositoryName}`}
+      aria-label="Jira projects for this project"
       style={{
         display: "grid",
         gap: "0.5rem",
-        padding: "0.75rem",
-        borderRadius: "6px",
+        padding: "0.85rem",
+        borderRadius: "8px",
         backgroundColor: "var(--input-bg, #141420)",
         border: "1px solid var(--border-color, #2d2d42)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
-        <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Jira projects</span>
+        <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>Jira projects</span>
         <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
           {selectedIds.length} mapped
         </span>
       </div>
 
+      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
+        These Jira projects apply to the whole Adept project and all of its attached repositories.
+      </p>
+
       {projects.length === 0 ? (
         <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
-          No Jira projects are available. Connect and sync Jira from Integrations first.
+          No tracked Jira projects are available. Track a Jira project from Integrations first.
         </p>
       ) : (
         <div style={{ display: "grid", gap: "0.4rem" }}>
@@ -58,19 +60,10 @@ export function RepositoryJiraSelector({
                   type="checkbox"
                   checked={checked}
                   onChange={() => onToggle(project.id)}
-                  aria-label={`Map [${project.projectKey}] ${project.projectName} to ${repositoryName}`}
+                  aria-label={`Map [${project.projectKey}] ${project.projectName} to this project`}
                 />
                 <span style={{ fontSize: "0.82rem" }}>
                   [{project.projectKey}] {project.projectName}
-                </span>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: "0.7rem",
-                    color: project.trackingEnabled ? "#4ade80" : "var(--text-secondary, #94a3b8)",
-                  }}
-                >
-                  {project.trackingEnabled ? "Tracked" : "Not tracked"}
                 </span>
               </label>
             );

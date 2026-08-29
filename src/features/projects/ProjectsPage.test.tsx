@@ -91,7 +91,7 @@ describe("ProjectsPage with Lead Assignments", () => {
     expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
   });
 
-  it("creates a project with tracked repositories and Jira mappings in one request", async () => {
+  it("creates a project with repository-independent Jira mappings in one request", async () => {
     const user = userEvent.setup();
     let createBody: unknown;
     let trackingOnly: string | null = null;
@@ -164,22 +164,23 @@ describe("ProjectsPage with Lead Assignments", () => {
     await user.click(await screen.findByRole("checkbox", { name: /acme\/api/i }));
     expect(screen.queryByText("acme/legacy")).not.toBeInTheDocument();
     await user.click(await screen.findByRole("checkbox", {
-      name: "Map [CORE] Core Project to acme/api",
+      name: "Map [CORE] Core Project to this project",
     }));
     expect(screen.queryByRole("checkbox", {
-      name: "Map [LEGACY] Legacy Project to acme/api",
+      name: "Map [LEGACY] Legacy Project to this project",
     })).not.toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "Project name" }), "Delivery");
     await user.click(screen.getByRole("button", { name: "Create Project" }));
 
     await waitFor(() => expect(createBody).toEqual({
       name: "Delivery",
-      repositories: [{ repositoryId: "repo-1", jiraProjectIds: ["jira-core"] }],
+      repositories: [{ repositoryId: "repo-1", jiraProjectIds: [] }],
+      jiraProjectIds: ["jira-core"],
     }));
     expect(trackingOnly).toBe("true");
   });
 
-  it("preserves and updates repository Jira mappings while editing a project", async () => {
+  it("preserves and updates project Jira mappings while editing a project", async () => {
     const user = userEvent.setup();
     let configurationBody: unknown;
     const project: ProjectResponse = {
@@ -187,6 +188,20 @@ describe("ProjectsPage with Lead Assignments", () => {
       workspaceId: "ws-1",
       name: "Delivery",
       description: "Core delivery",
+      jiraProjects: [
+        {
+          id: "jira-core",
+          projectKey: "CORE",
+          projectName: "Core Project",
+          trackingEnabled: true,
+        },
+        {
+          id: "jira-disabled",
+          projectKey: "DISABLED",
+          projectName: "Disabled Project",
+          trackingEnabled: false,
+        },
+      ],
       repositories: [{
         id: "repo-1",
         fullName: "acme/api",
@@ -252,22 +267,23 @@ describe("ProjectsPage with Lead Assignments", () => {
 
     await user.click(screen.getByRole("button", { name: "Edit project" }));
     const coreMapping = await screen.findByRole("checkbox", {
-      name: "Map [CORE] Core Project to acme/api",
+      name: "Map [CORE] Core Project to this project",
     });
     expect(coreMapping).toBeChecked();
     expect(screen.queryByRole("checkbox", {
-      name: "Map [DISABLED] Disabled Project to acme/api",
+      name: "Map [DISABLED] Disabled Project to this project",
     })).not.toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", {
-      name: "Map [OPS] Operations to acme/api",
+      name: "Map [OPS] Operations to this project",
     }));
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => expect(configurationBody).toEqual({
       repositories: [{
         repositoryId: "repo-1",
-        jiraProjectIds: ["jira-core", "jira-ops"],
+        jiraProjectIds: [],
       }],
+      jiraProjectIds: ["jira-core", "jira-ops"],
     }));
   });
 
@@ -278,18 +294,19 @@ describe("ProjectsPage with Lead Assignments", () => {
         workspaceId: "ws-1",
         name: "API Delivery",
         description: "Lead-scoped delivery project",
+        jiraProjects: [{
+          id: "jira-api",
+          projectKey: "API",
+          projectName: "API Delivery",
+          trackingEnabled: true,
+        }],
         repositories: [
           {
             id: "repo-api",
             fullName: "acme/api",
             trackingEnabled: true,
             archived: false,
-            jiraProjects: [{
-              id: "jira-api",
-              projectKey: "API",
-              projectName: "API Delivery",
-              trackingEnabled: true,
-            }],
+            jiraProjects: [],
           },
         ],
         createdAt: new Date().toISOString(),
@@ -319,6 +336,20 @@ describe("ProjectsPage with Lead Assignments", () => {
     )).toBeVisible();
   });
 
+  it("does not crash when a rolling-deployment response omits project Jira mappings", () => {
+    const legacyProject = {
+      id: "project-legacy",
+      workspaceId: "ws-1",
+      name: "Legacy Response",
+      repositories: [],
+    } as unknown as ProjectResponse;
+
+    renderProjectsPage([legacyProject]);
+
+    expect(screen.getByRole("heading", { name: "Legacy Response" })).toBeVisible();
+    expect(screen.getByText("No Jira projects mapped")).toBeVisible();
+  });
+
   it("renders projects with attached repositories and assigned leads", async () => {
     const mockProjects = [
       {
@@ -326,6 +357,7 @@ describe("ProjectsPage with Lead Assignments", () => {
         workspaceId: "ws-1",
         name: "Backend Core",
         description: "Core services and APIs",
+        jiraProjects: [],
         repositories: [
           {
             id: "repo-1",
@@ -386,6 +418,7 @@ describe("ProjectsPage with Lead Assignments", () => {
         workspaceId: "ws-1",
         name: "Mobile App",
         description: "",
+        jiraProjects: [],
         repositories: [
           {
             id: "repo-1",
@@ -457,6 +490,7 @@ describe("ProjectsPage with Lead Assignments", () => {
         workspaceId: "ws-1",
         name: "Web Portal",
         description: "",
+        jiraProjects: [],
         repositories: [
           {
             id: "repo-1",
