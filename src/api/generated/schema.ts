@@ -589,7 +589,10 @@ export interface paths {
          */
         get: operations["listProjects"];
         put?: never;
-        /** Create a project in the current workspace */
+        /**
+         * Create a project in the current workspace
+         * @description Optionally attaches tracked, non-archived repositories and replaces their repository-level Jira mappings atomically.
+         */
         post: operations["createProject"];
         delete?: never;
         options?: never;
@@ -619,6 +622,26 @@ export interface paths {
         patch: operations["updateProject"];
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace project repositories and their Jira mappings
+         * @description The project repository set and mappings for included repositories are replaced in one transaction. Mappings for repositories removed from the project remain unchanged because they are repository-level settings.
+         */
+        put: operations["replaceProjectConfiguration"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/repositories": {
         parameters: {
             query?: never;
@@ -629,7 +652,7 @@ export interface paths {
         get?: never;
         /**
          * Replace a project's repository set
-         * @description Every supplied repository must belong to the current workspace.
+         * @description Every supplied repository must be tracked, non-archived, and belong to the current workspace. Jira mappings are unchanged.
          */
         put: operations["replaceProjectRepositories"];
         post?: never;
@@ -800,7 +823,7 @@ export interface paths {
         put?: never;
         /**
          * Create another workspace
-         * @description Creates a new tenant and an active Manager membership for the authenticated Manager.
+         * @description Creates a new tenant and an active Manager membership for the authenticated user.
          */
         post: operations["createWorkspace"];
         delete?: never;
@@ -892,6 +915,7 @@ export interface components {
         CreateProjectRequest: {
             description?: string;
             name: string;
+            repositories?: components["schemas"]["ProjectRepositoryConfigurationRequest"][];
         };
         CreateRepositoryLeadInvitationRequest: {
             /** Format: email */
@@ -1149,11 +1173,24 @@ export interface components {
             /** Format: uri */
             type: string;
         };
+        ProjectJiraProjectResponse: {
+            /** Format: uuid */
+            id: string;
+            projectKey: string;
+            projectName: string;
+            trackingEnabled: boolean;
+        };
+        ProjectRepositoryConfigurationRequest: {
+            jiraProjectIds: string[];
+            /** Format: uuid */
+            repositoryId: string;
+        };
         ProjectRepositoryResponse: {
             archived: boolean;
             fullName: string;
             /** Format: uuid */
             id: string;
+            jiraProjects: components["schemas"]["ProjectJiraProjectResponse"][];
             trackingEnabled: boolean;
         };
         ProjectResponse: {
@@ -1168,6 +1205,9 @@ export interface components {
         RefreshRequest: {
             /** Format: uuid */
             workspaceId?: string;
+        };
+        ReplaceProjectConfigurationRequest: {
+            repositories: components["schemas"]["ProjectRepositoryConfigurationRequest"][];
         };
         ReplaceProjectRepositoriesRequest: {
             repositoryIds: string[];
@@ -3294,6 +3334,100 @@ export interface operations {
             };
             /** @description The requested state conflicts with current state */
             409: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    replaceProjectConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplaceProjectConfigurationRequest"];
+            };
+        };
+        responses: {
+            /** @description Project configuration replaced */
+            200: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
                 headers: {
                     /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
