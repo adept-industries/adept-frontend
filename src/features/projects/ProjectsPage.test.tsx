@@ -120,17 +120,30 @@ describe("ProjectsPage with Lead Assignments", () => {
           },
         ]);
       }),
-      http.get("/api/v1/jira/projects", () => HttpResponse.json([{
-        id: "jira-core",
-        workspaceId: "ws-1",
-        jiraIntegrationId: "jira-1",
-        jiraProjectId: "10001",
-        projectKey: "CORE",
-        projectName: "Core Project",
-        projectType: "software",
-        trackingEnabled: true,
-        lastSyncedAt: "2026-08-29T00:00:00Z",
-      }])),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([
+        {
+          id: "jira-core",
+          workspaceId: "ws-1",
+          jiraIntegrationId: "jira-1",
+          jiraProjectId: "10001",
+          projectKey: "CORE",
+          projectName: "Core Project",
+          projectType: "software",
+          trackingEnabled: true,
+          lastSyncedAt: "2026-08-29T00:00:00Z",
+        },
+        {
+          id: "jira-legacy",
+          workspaceId: "ws-1",
+          jiraIntegrationId: "jira-1",
+          jiraProjectId: "10002",
+          projectKey: "LEGACY",
+          projectName: "Legacy Project",
+          projectType: "software",
+          trackingEnabled: false,
+          lastSyncedAt: "2026-08-29T00:00:00Z",
+        },
+      ])),
       http.get("/api/v1/repositories/repo-1/lead-assignments", () => HttpResponse.json([])),
       http.get("/api/v1/repositories/repo-1/lead-candidates", () => HttpResponse.json([])),
       http.post("/api/v1/projects", async ({ request }) => {
@@ -153,6 +166,9 @@ describe("ProjectsPage with Lead Assignments", () => {
     await user.click(await screen.findByRole("checkbox", {
       name: "Map [CORE] Core Project to acme/api",
     }));
+    expect(screen.queryByRole("checkbox", {
+      name: "Map [LEGACY] Legacy Project to acme/api",
+    })).not.toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "Project name" }), "Delivery");
     await user.click(screen.getByRole("button", { name: "Create Project" }));
 
@@ -176,12 +192,20 @@ describe("ProjectsPage with Lead Assignments", () => {
         fullName: "acme/api",
         trackingEnabled: true,
         archived: false,
-        jiraProjects: [{
-          id: "jira-core",
-          projectKey: "CORE",
-          projectName: "Core Project",
-          trackingEnabled: true,
-        }],
+        jiraProjects: [
+          {
+            id: "jira-core",
+            projectKey: "CORE",
+            projectName: "Core Project",
+            trackingEnabled: true,
+          },
+          {
+            id: "jira-disabled",
+            projectKey: "DISABLED",
+            projectName: "Disabled Project",
+            trackingEnabled: false,
+          },
+        ],
       }],
     };
 
@@ -208,6 +232,12 @@ describe("ProjectsPage with Lead Assignments", () => {
           projectName: "Operations",
           trackingEnabled: true,
         },
+        {
+          id: "jira-disabled",
+          projectKey: "DISABLED",
+          projectName: "Disabled Project",
+          trackingEnabled: false,
+        },
       ])),
       http.get("/api/v1/repositories/repo-1/lead-assignments", () => HttpResponse.json([])),
       http.get("/api/v1/repositories/repo-1/lead-candidates", () => HttpResponse.json([])),
@@ -225,6 +255,9 @@ describe("ProjectsPage with Lead Assignments", () => {
       name: "Map [CORE] Core Project to acme/api",
     });
     expect(coreMapping).toBeChecked();
+    expect(screen.queryByRole("checkbox", {
+      name: "Map [DISABLED] Disabled Project to acme/api",
+    })).not.toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", {
       name: "Map [OPS] Operations to acme/api",
     }));
