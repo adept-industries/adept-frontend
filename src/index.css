@@ -728,31 +728,6 @@ p {
   padding: 0 0.5rem;
 }
 
-.sidebar-nav-section-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  padding: 0.5rem 0.5rem 0.25rem;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  overflow: hidden;
-}
-
-.floating-sidebar:hover .sidebar-nav-section-label,
-.floating-sidebar.expanded .sidebar-nav-section-label {
-  opacity: 1;
-}
-
-.sidebar-nav-divider {
-  height: 1px;
-  background: var(--sidebar-border);
-  margin: 0.5rem 0.5rem;
-  flex-shrink: 0;
-}
-
 .sidebar-nav-item {
   display: flex;
   align-items: center;
@@ -1217,8 +1192,7 @@ p {
 
   .sidebar-nav-label,
   .sidebar-brand-name,
-  .sidebar-user-info,
-  .sidebar-nav-section-label {
+  .sidebar-user-info {
     opacity: 1 !important;
     transform: translateX(0) !important;
   }
@@ -1725,4 +1699,3 @@ p {
     grid-template-columns: 1fr !important;
   }
 }
-
