@@ -199,45 +199,17 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
               label="Dashboard"
               active={path === "/dashboard"}
             />
-          </div>
-
-          {isAuthenticated && (
-            <>
-              <div className="sidebar-nav-divider" />
-              <div className="sidebar-nav-section">
-                <span className="sidebar-nav-section-label">Workspace</span>
-                <SidebarNavItem
-                  to="/dashboard/settings"
-                  id="sidebar-nav-settings"
-                  icon={<SettingsIcon />}
-                  label="Workspaces"
-                  active={path.startsWith("/dashboard/settings")}
-                />
-                {!isManager && (
-                  <SidebarNavItem
-                    to="/dashboard/projects"
-                    id="sidebar-nav-projects"
-                    icon={<ProjectFolderIcon />}
-                    label="Projects"
-                    active={path.startsWith("/dashboard/projects")}
-                  />
-                )}
-              </div>
-            </>
-          )}
-
-          {isManager && (
-            <>
-              <div className="sidebar-nav-divider" />
-              <div className="sidebar-nav-section">
-                <span className="sidebar-nav-section-label">Manage</span>
-                <SidebarNavItem
-                  to="/dashboard/integrations"
-                  id="sidebar-nav-integrations"
-                  icon={<IntegrationsIcon />}
-                  label="Integrations"
-                  active={path.startsWith("/dashboard/integrations")}
-                />
+            {isManager && (
+              <SidebarNavItem
+                to="/dashboard/integrations"
+                id="sidebar-nav-integrations"
+                icon={<IntegrationsIcon />}
+                label="Integrations"
+                active={path.startsWith("/dashboard/integrations")}
+              />
+            )}
+            {isAuthenticated && (
+              <>
                 <SidebarNavItem
                   to="/dashboard/projects"
                   id="sidebar-nav-projects"
@@ -245,9 +217,16 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
                   label="Projects"
                   active={path.startsWith("/dashboard/projects")}
                 />
-              </div>
-            </>
-          )}
+                <SidebarNavItem
+                  to="/dashboard/settings"
+                  id="sidebar-nav-settings"
+                  icon={<SettingsIcon />}
+                  label="Workspaces"
+                  active={path.startsWith("/dashboard/settings")}
+                />
+              </>
+            )}
+          </div>
         </nav>
 
         {/* Bottom rail */}

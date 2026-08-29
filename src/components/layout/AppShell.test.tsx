@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext";
@@ -82,7 +82,21 @@ describe("AppShell theme", () => {
     expect(avatar).toHaveTextContent("MA");
   });
 
-  it("shows read-only project navigation to Leads without exposing Integrations", () => {
+  it("shows Manager navigation as one flat ordered list", () => {
+    const { container } = renderShell();
+    const navigation = screen.getByRole("navigation");
+
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
+      "Dashboard",
+      "Integrations",
+      "Projects",
+      "Workspaces",
+    ]);
+    expect(container.querySelector(".sidebar-nav-divider")).not.toBeInTheDocument();
+    expect(container.querySelector(".sidebar-nav-section-label")).not.toBeInTheDocument();
+  });
+
+  it("shows flat ordered Lead navigation without exposing Integrations", () => {
     const leadValue: AuthContextValue = {
       ...authValue,
       state: authValue.state.status === "authenticated"
@@ -100,10 +114,16 @@ describe("AppShell theme", () => {
         : authValue.state,
     };
 
-    renderShell(leadValue);
+    const { container } = renderShell(leadValue);
+    const navigation = screen.getByRole("navigation");
 
-    expect(screen.getByRole("link", { name: "Workspaces" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Projects" })).toBeVisible();
+    expect(within(navigation).getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
+      "Dashboard",
+      "Projects",
+      "Workspaces",
+    ]);
     expect(screen.queryByRole("link", { name: "Integrations" })).not.toBeInTheDocument();
+    expect(container.querySelector(".sidebar-nav-divider")).not.toBeInTheDocument();
+    expect(container.querySelector(".sidebar-nav-section-label")).not.toBeInTheDocument();
   });
 });
