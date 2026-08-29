@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -63,6 +63,9 @@ function renderProjectsPage(
 describe("ProjectsPage with Lead Assignments", () => {
   beforeEach(() => {
     document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
+    server.use(
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+    );
   });
 
   it("keeps the project creation form collapsed until requested", async () => {
@@ -88,6 +91,153 @@ describe("ProjectsPage with Lead Assignments", () => {
     expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
   });
 
+  it("creates a project with tracked repositories and Jira mappings in one request", async () => {
+    const user = userEvent.setup();
+    let createBody: unknown;
+    let trackingOnly: string | null = null;
+
+    server.use(
+      http.get("/api/v1/repositories", ({ request }) => {
+        trackingOnly = new URL(request.url).searchParams.get("trackingOnly");
+        return HttpResponse.json([
+          {
+            id: "repo-1",
+            workspaceId: "ws-1",
+            name: "api",
+            fullName: "acme/api",
+            trackingEnabled: true,
+            archived: false,
+            visibility: "PRIVATE",
+          },
+          {
+            id: "repo-untracked",
+            workspaceId: "ws-1",
+            name: "legacy",
+            fullName: "acme/legacy",
+            trackingEnabled: false,
+            archived: false,
+            visibility: "PRIVATE",
+          },
+        ]);
+      }),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([{
+        id: "jira-core",
+        workspaceId: "ws-1",
+        jiraIntegrationId: "jira-1",
+        jiraProjectId: "10001",
+        projectKey: "CORE",
+        projectName: "Core Project",
+        projectType: "software",
+        trackingEnabled: true,
+        lastSyncedAt: "2026-08-29T00:00:00Z",
+      }])),
+      http.get("/api/v1/repositories/repo-1/lead-assignments", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories/repo-1/lead-candidates", () => HttpResponse.json([])),
+      http.post("/api/v1/projects", async ({ request }) => {
+        createBody = await request.json();
+        return HttpResponse.json({
+          id: "project-new",
+          workspaceId: "ws-1",
+          name: "Delivery",
+          description: "",
+          repositories: [],
+        }, { status: 201 });
+      }),
+    );
+
+    renderProjectsPage();
+
+    await user.click(screen.getByRole("button", { name: "Create project" }));
+    await user.click(await screen.findByRole("checkbox", { name: /acme\/api/i }));
+    expect(screen.queryByText("acme/legacy")).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("checkbox", {
+      name: "Map [CORE] Core Project to acme/api",
+    }));
+    await user.type(screen.getByRole("textbox", { name: "Project name" }), "Delivery");
+    await user.click(screen.getByRole("button", { name: "Create Project" }));
+
+    await waitFor(() => expect(createBody).toEqual({
+      name: "Delivery",
+      repositories: [{ repositoryId: "repo-1", jiraProjectIds: ["jira-core"] }],
+    }));
+    expect(trackingOnly).toBe("true");
+  });
+
+  it("preserves and updates repository Jira mappings while editing a project", async () => {
+    const user = userEvent.setup();
+    let configurationBody: unknown;
+    const project: ProjectResponse = {
+      id: "project-1",
+      workspaceId: "ws-1",
+      name: "Delivery",
+      description: "Core delivery",
+      repositories: [{
+        id: "repo-1",
+        fullName: "acme/api",
+        trackingEnabled: true,
+        archived: false,
+        jiraProjects: [{
+          id: "jira-core",
+          projectKey: "CORE",
+          projectName: "Core Project",
+          trackingEnabled: true,
+        }],
+      }],
+    };
+
+    server.use(
+      http.get("/api/v1/repositories", () => HttpResponse.json([{
+        id: "repo-1",
+        workspaceId: "ws-1",
+        name: "api",
+        fullName: "acme/api",
+        trackingEnabled: true,
+        archived: false,
+        visibility: "PRIVATE",
+      }])),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([
+        {
+          id: "jira-core",
+          projectKey: "CORE",
+          projectName: "Core Project",
+          trackingEnabled: true,
+        },
+        {
+          id: "jira-ops",
+          projectKey: "OPS",
+          projectName: "Operations",
+          trackingEnabled: true,
+        },
+      ])),
+      http.get("/api/v1/repositories/repo-1/lead-assignments", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories/repo-1/lead-candidates", () => HttpResponse.json([])),
+      http.patch("/api/v1/projects/project-1", () => HttpResponse.json(project)),
+      http.put("/api/v1/projects/project-1/configuration", async ({ request }) => {
+        configurationBody = await request.json();
+        return HttpResponse.json(project);
+      }),
+    );
+
+    renderProjectsPage([project]);
+
+    await user.click(screen.getByRole("button", { name: "Edit project" }));
+    const coreMapping = await screen.findByRole("checkbox", {
+      name: "Map [CORE] Core Project to acme/api",
+    });
+    expect(coreMapping).toBeChecked();
+    await user.click(screen.getByRole("checkbox", {
+      name: "Map [OPS] Operations to acme/api",
+    }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(configurationBody).toEqual({
+      repositories: [{
+        repositoryId: "repo-1",
+        jiraProjectIds: ["jira-core", "jira-ops"],
+      }],
+    }));
+  });
+
   it("shows a Lead only their scoped project content without Manager controls", () => {
     const scopedProjects = [
       {
@@ -101,7 +251,12 @@ describe("ProjectsPage with Lead Assignments", () => {
             fullName: "acme/api",
             trackingEnabled: true,
             archived: false,
-            jiraProjects: [],
+            jiraProjects: [{
+              id: "jira-api",
+              projectKey: "API",
+              projectName: "API Delivery",
+              trackingEnabled: true,
+            }],
           },
         ],
         createdAt: new Date().toISOString(),
@@ -115,6 +270,7 @@ describe("ProjectsPage with Lead Assignments", () => {
     expect(screen.getByText("View projects containing repositories assigned to you.")).toBeVisible();
     expect(screen.getByRole("heading", { name: "API Delivery" })).toBeVisible();
     expect(screen.getByText("acme/api")).toBeVisible();
+    expect(screen.getByText("[API] API Delivery")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "Create Project" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Create project" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Edit project" })).not.toBeInTheDocument();

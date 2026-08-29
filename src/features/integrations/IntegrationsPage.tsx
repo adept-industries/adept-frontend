@@ -24,7 +24,6 @@ import {
   type RepositorySettings,
 } from "./api.js";
 import { RepositorySettingsModal } from "./RepositorySettingsModal.js";
-import { RepositoryJiraModal } from "./RepositoryJiraModal.js";
 
 const JIRA_SYNC_POLL_INTERVAL_MS = 1_000;
 const JIRA_SYNC_TIMEOUT_MS = 30_000;
@@ -77,7 +76,6 @@ export function IntegrationsPage() {
   const [trackingFilter, setTrackingFilter] = useState<"ALL" | "TRACKED">("ALL");
 
   const [selectedRepoForSettings, setSelectedRepoForSettings] = useState<RepositoryResponse | null>(null);
-  const [selectedRepoForJira, setSelectedRepoForJira] = useState<RepositoryResponse | null>(null);
 
   const [isPending, startTransition] = useTransition();
   const [syncingGithub, setSyncingGithub] = useState(false);
@@ -680,24 +678,14 @@ export function IntegrationsPage() {
                         </span>
                       </td>
                       <td style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>
-                        <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                          <button
-                            type="button"
-                            className="button-link"
-                            onClick={() => setSelectedRepoForSettings(repo)}
-                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
-                          >
-                            Settings
-                          </button>
-                          <button
-                            type="button"
-                            className="button-link"
-                            onClick={() => setSelectedRepoForJira(repo)}
-                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
-                          >
-                            Map Jira
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          className="button-link"
+                          onClick={() => setSelectedRepoForSettings(repo)}
+                          style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                        >
+                          Settings
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -765,14 +753,6 @@ export function IntegrationsPage() {
             onClose={() => setSelectedRepoForSettings(null)}
             onSave={handleSaveRepoSettings}
             onRebuild={handleRebuildRepoData}
-          />
-        )}
-
-        {selectedRepoForJira && (
-          <RepositoryJiraModal
-            repository={selectedRepoForJira}
-            onClose={() => setSelectedRepoForJira(null)}
-            onSaved={loadData}
           />
         )}
       </div>

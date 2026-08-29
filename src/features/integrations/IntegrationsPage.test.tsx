@@ -196,6 +196,7 @@ describe("IntegrationsPage", () => {
     expect(await screen.findByText("Acme Jira")).toBeInTheDocument();
     expect(await screen.findByText("acme-org/core-service")).toBeInTheDocument();
     expect(await screen.findByText("[ACME] Core Project")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Map Jira" })).not.toBeInTheDocument();
   });
 
   it("shows success feedback and refreshes repositories after GitHub sync", async () => {
