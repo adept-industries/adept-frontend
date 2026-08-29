@@ -215,7 +215,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <WorkspaceRoute>
-          <RoleRoute allowedRoles={["MANAGER"]}>
+          <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
             <ProjectsPage />
           </RoleRoute>
         </WorkspaceRoute>

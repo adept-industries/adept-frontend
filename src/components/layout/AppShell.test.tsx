@@ -82,7 +82,7 @@ describe("AppShell theme", () => {
     expect(avatar).toHaveTextContent("MA");
   });
 
-  it("shows workspace navigation to Leads without exposing Manager navigation", () => {
+  it("shows read-only project navigation to Leads without exposing Integrations", () => {
     const leadValue: AuthContextValue = {
       ...authValue,
       state: authValue.state.status === "authenticated"
@@ -103,7 +103,7 @@ describe("AppShell theme", () => {
     renderShell(leadValue);
 
     expect(screen.getByRole("link", { name: "Workspaces" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Projects" })).toBeVisible();
     expect(screen.queryByRole("link", { name: "Integrations" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Projects" })).not.toBeInTheDocument();
   });
 });
