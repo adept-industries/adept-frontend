@@ -82,7 +82,7 @@ export function IntegrationsPage() {
   const [isPending, startTransition] = useTransition();
   const [syncingGithub, setSyncingGithub] = useState(false);
   const [syncingJira, setSyncingJira] = useState(false);
-  const [jiraSyncMessage, setJiraSyncMessage] = useState<string | null>(null);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -121,9 +121,12 @@ export function IntegrationsPage() {
   const handleSyncGithub = async () => {
     if (!github) return;
     setSyncingGithub(true);
+    setError(null);
+    setSyncMessage(null);
     try {
       await syncGithubRepositories(github.id);
       await loadData();
+      setSyncMessage("GitHub repositories synchronized successfully.");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sync GitHub repositories");
     } finally {
@@ -169,7 +172,7 @@ export function IntegrationsPage() {
     if (!jira) return;
     setSyncingJira(true);
     setError(null);
-    setJiraSyncMessage(null);
+    setSyncMessage(null);
     try {
       const previousLastSyncedAt = jira.lastSyncedAt;
       await syncJiraProjects(jira.id);
@@ -177,10 +180,10 @@ export function IntegrationsPage() {
       if (completed) {
         setJira(completed.integration);
         setJiraProjects(completed.projects);
-        setJiraSyncMessage("Jira projects synchronized successfully.");
+        setSyncMessage("Jira projects synchronized successfully.");
       } else {
         await loadData();
-        setJiraSyncMessage("Jira project sync is still processing. The catalog will update on your next visit.");
+        setSyncMessage("Jira project sync is still processing. The catalog will update on your next visit.");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to sync Jira projects");
@@ -290,7 +293,7 @@ export function IntegrationsPage() {
           </div>
         )}
 
-        {jiraSyncMessage && (
+        {syncMessage && (
           <div
             role="status"
             aria-live="polite"
@@ -303,7 +306,7 @@ export function IntegrationsPage() {
               fontSize: "0.9rem",
             }}
           >
-            {jiraSyncMessage}
+            {syncMessage}
           </div>
         )}
 

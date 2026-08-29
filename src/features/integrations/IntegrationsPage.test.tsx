@@ -83,6 +83,34 @@ function jiraProject(id: string, projectKey: string, projectName: string) {
   };
 }
 
+function repository(id: string, name: string) {
+  return {
+    id,
+    workspaceId: "ws-1",
+    githubIntegrationId: "gh-1",
+    githubRepoId: id === "repo-1" ? 999 : 1_000,
+    ownerLogin: "acme-org",
+    name,
+    fullName: `acme-org/${name}`,
+    defaultBranch: "main",
+    visibility: "PRIVATE",
+    archived: false,
+    trackingEnabled: false,
+    settings: {
+      deploymentSignal: "WORKFLOW_RUN",
+      productionBranchPatterns: ["main"],
+      productionEnvironmentPatterns: ["production"],
+      deploymentWorkflowNamePatterns: ["*deploy*"],
+      releaseTagPatterns: ["v*"],
+      incidentSource: "BOTH",
+      doraExclusions: [],
+      defaultMetricGranularity: "WEEK",
+      backfillDays: 90,
+    },
+    lastSyncedAt: "2026-08-29T00:00:00Z",
+  };
+}
+
 describe("IntegrationsPage", () => {
   beforeEach(() => {
     document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
@@ -168,6 +196,50 @@ describe("IntegrationsPage", () => {
     expect(await screen.findByText("Acme Jira")).toBeInTheDocument();
     expect(await screen.findByText("acme-org/core-service")).toBeInTheDocument();
     expect(await screen.findByText("[ACME] Core Project")).toBeInTheDocument();
+  });
+
+  it("shows success feedback and refreshes repositories after GitHub sync", async () => {
+    const user = userEvent.setup();
+    const beforeSync = "2026-08-29T00:00:00Z";
+    const afterSync = "2026-08-29T00:01:00Z";
+    let syncRequested = false;
+    let syncRequests = 0;
+
+    server.use(
+      http.get("/api/v1/integrations/github", () => HttpResponse.json({
+        id: "gh-1",
+        workspaceId: "ws-1",
+        installationId: 12345,
+        accountLogin: "acme-org",
+        accountType: "ORGANIZATION",
+        repositorySelection: "ALL",
+        status: "ACTIVE",
+        lastSyncedAt: syncRequested ? afterSync : beforeSync,
+        repositoryCount: syncRequested ? 2 : 1,
+      })),
+      http.get("/api/v1/repositories", () => HttpResponse.json(
+        syncRequested
+          ? [repository("repo-1", "core-service"), repository("repo-2", "web-app")]
+          : [repository("repo-1", "core-service")],
+      )),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+      http.post("/api/v1/integrations/github/gh-1/sync", () => {
+        syncRequests += 1;
+        syncRequested = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("acme-org/core-service")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Sync Repositories" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent("GitHub repositories synchronized successfully.");
+    expect(screen.getByText("acme-org/web-app")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Sync Repositories" })).toBeEnabled();
+    expect(syncRequests).toBe(1);
   });
 
   it("syncs Jira projects and refreshes the catalog after engine completion", async () => {
