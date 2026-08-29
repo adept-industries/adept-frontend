@@ -914,6 +914,7 @@ export interface components {
         };
         CreateProjectRequest: {
             description?: string;
+            jiraProjectIds?: string[];
             name: string;
             repositories?: components["schemas"]["ProjectRepositoryConfigurationRequest"][];
         };
@@ -1197,6 +1198,7 @@ export interface components {
             description?: string;
             /** Format: uuid */
             id: string;
+            jiraProjects: components["schemas"]["ProjectJiraProjectResponse"][];
             name: string;
             repositories: components["schemas"]["ProjectRepositoryResponse"][];
             /** Format: uuid */
@@ -1207,6 +1209,7 @@ export interface components {
             workspaceId?: string;
         };
         ReplaceProjectConfigurationRequest: {
+            jiraProjectIds?: string[];
             repositories: components["schemas"]["ProjectRepositoryConfigurationRequest"][];
         };
         ReplaceProjectRepositoriesRequest: {

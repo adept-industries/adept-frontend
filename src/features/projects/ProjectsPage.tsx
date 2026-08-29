@@ -19,22 +19,15 @@ import {
 } from "./api.js";
 import { useProjects } from "./useProjects.js";
 import { RepoLeadManager } from "./components/RepoLeadManager.js";
-import { RepositoryJiraSelector } from "./components/RepositoryJiraSelector.js";
-
-type JiraSelectionsByRepository = Record<string, string[]>;
+import { ProjectJiraSelector } from "./components/ProjectJiraSelector.js";
 
 function toggleJiraSelection(
-  current: JiraSelectionsByRepository,
-  repositoryId: string,
+  current: string[],
   jiraProjectId: string,
-): JiraSelectionsByRepository {
-  const selected = current[repositoryId] ?? [];
-  return {
-    ...current,
-    [repositoryId]: selected.includes(jiraProjectId)
-      ? selected.filter((id) => id !== jiraProjectId)
-      : [...selected, jiraProjectId],
-  };
+): string[] {
+  return current.includes(jiraProjectId)
+    ? current.filter((id) => id !== jiraProjectId)
+    : [...current, jiraProjectId];
 }
 
 export function ProjectsPage() {
@@ -47,7 +40,7 @@ export function ProjectsPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [createRepoIds, setCreateRepoIds] = useState<string[]>([]);
-  const [createJiraSelections, setCreateJiraSelections] = useState<JiraSelectionsByRepository>({});
+  const [createJiraProjectIds, setCreateJiraProjectIds] = useState<string[]>([]);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showCreateProjectForm, setShowCreateProjectForm] = useState(false);
@@ -56,7 +49,7 @@ export function ProjectsPage() {
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editRepoIds, setEditRepoIds] = useState<string[]>([]);
-  const [editJiraSelections, setEditJiraSelections] = useState<JiraSelectionsByRepository>({});
+  const [editJiraProjectIds, setEditJiraProjectIds] = useState<string[]>([]);
 
   const fetchCatalog = useCallback(async () => {
     const [repos, projects] = await Promise.all([
@@ -90,13 +83,14 @@ export function ProjectsPage() {
         description: description.trim() || undefined,
         repositories: createRepoIds.map((repositoryId) => ({
           repositoryId,
-          jiraProjectIds: createJiraSelections[repositoryId] ?? [],
+          jiraProjectIds: [],
         })),
+        jiraProjectIds: createJiraProjectIds,
       });
       setName("");
       setDescription("");
       setCreateRepoIds([]);
-      setCreateJiraSelections({});
+      setCreateJiraProjectIds([]);
       setShowCreateProjectForm(false);
       await reload();
     } catch (err: unknown) {
@@ -122,14 +116,10 @@ export function ProjectsPage() {
     setEditName(project.name);
     setEditDescription(project.description ?? "");
     setEditRepoIds(project.repositories.map((repo) => repo.id));
-    setEditJiraSelections(Object.fromEntries(
-      project.repositories.map((repo) => [
-        repo.id,
-        repo.jiraProjects
-          .filter((jiraProject) => jiraProject.trackingEnabled)
-          .map((jiraProject) => jiraProject.id),
-      ]),
-    ));
+    setEditJiraProjectIds((project.jiraProjects ?? [])
+      .filter((jiraProject) => jiraProject.trackingEnabled)
+      .map((jiraProject) => jiraProject.id));
+    setShowCreateProjectForm(false);
     setMutationError(null);
     void fetchCatalog();
   };
@@ -149,8 +139,9 @@ export function ProjectsPage() {
       await replaceProjectConfiguration(editingId, {
         repositories: editRepoIds.map((repositoryId) => ({
           repositoryId,
-          jiraProjectIds: editJiraSelections[repositoryId] ?? [],
+          jiraProjectIds: [],
         })),
+        jiraProjectIds: editJiraProjectIds,
       });
       setEditingId(null);
       await reload();
@@ -173,12 +164,12 @@ export function ProjectsPage() {
     );
   };
 
-  const toggleCreateJiraProject = (repositoryId: string, jiraProjectId: string) => {
-    setCreateJiraSelections((current) => toggleJiraSelection(current, repositoryId, jiraProjectId));
+  const toggleCreateJiraProject = (jiraProjectId: string) => {
+    setCreateJiraProjectIds((current) => toggleJiraSelection(current, jiraProjectId));
   };
 
-  const toggleEditJiraProject = (repositoryId: string, jiraProjectId: string) => {
-    setEditJiraSelections((current) => toggleJiraSelection(current, repositoryId, jiraProjectId));
+  const toggleEditJiraProject = (jiraProjectId: string) => {
+    setEditJiraProjectIds((current) => toggleJiraSelection(current, jiraProjectId));
   };
 
   return (
@@ -245,7 +236,10 @@ export function ProjectsPage() {
               aria-expanded={showCreateProjectForm}
               aria-controls="create-project-panel"
               aria-label={`${showCreateProjectForm ? "Collapse" : "Create"} project`}
-              onClick={() => setShowCreateProjectForm((visible) => !visible)}
+              onClick={() => setShowCreateProjectForm((visible) => {
+                if (!visible) setEditingId(null);
+                return !visible;
+              })}
             >
               {showCreateProjectForm ? "Collapse" : "Create"}
             </button>
@@ -269,10 +263,16 @@ export function ProjectsPage() {
               onChange={(event) => setDescription(event.target.value)}
             />
 
+            <ProjectJiraSelector
+              projects={jiraProjects}
+              selectedIds={createJiraProjectIds}
+              onToggle={toggleCreateJiraProject}
+            />
+
             {/* Repository Multi-select for Creation */}
             <div>
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 500, marginBottom: "0.5rem" }}>
-                Attach Repositories, Map Jira & Assign Leads ({createRepoIds.length} selected)
+                Attach Repositories & Assign Leads ({createRepoIds.length} selected)
               </label>
               {availableRepos.length === 0 ? (
                 <p style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", margin: 0 }}>
@@ -334,15 +334,9 @@ export function ProjectsPage() {
                           </span>
                         </label>
 
-                        {/* Inline Jira mapping and Lead assignment for selected repo */}
+                        {/* Lead assignment remains repository-specific. */}
                         {isSelected && (
                           <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem" }}>
-                            <RepositoryJiraSelector
-                              repositoryName={repo.fullName ?? repo.name ?? repo.id}
-                              projects={jiraProjects}
-                              selectedIds={createJiraSelections[repo.id] ?? []}
-                              onToggle={(jiraProjectId) => toggleCreateJiraProject(repo.id, jiraProjectId)}
-                            />
                             <RepoLeadManager
                               repositoryId={repo.id}
                               repositoryName={repo.fullName}
@@ -377,18 +371,20 @@ export function ProjectsPage() {
                 : "No assigned projects yet. Projects appear here when a Manager assigns you to a tracked repository."}
             </p>
           )}
-          {projects.map((project) => (
-            <section
-              key={project.id}
-              className="card"
-              style={{
-                width: "100%",
-                padding: "1.75rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1.25rem",
-              }}
-            >
+          {projects.map((project) => {
+            const mappedJiraProjects = project.jiraProjects ?? [];
+            return (
+              <section
+                key={project.id}
+                className="card"
+                style={{
+                  width: "100%",
+                  padding: "1.75rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1.25rem",
+                }}
+              >
               {isManager && editingId === project.id ? (
                 <form onSubmit={(event) => void handleUpdate(event)} style={{ display: "grid", gap: "1.25rem" }}>
                   <FormField
@@ -407,10 +403,16 @@ export function ProjectsPage() {
                     onChange={(event) => setEditDescription(event.target.value)}
                   />
 
+                  <ProjectJiraSelector
+                    projects={jiraProjects}
+                    selectedIds={editJiraProjectIds}
+                    onToggle={toggleEditJiraProject}
+                  />
+
                   {/* Edit Repositories Multi-select */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 500, marginBottom: "0.5rem" }}>
-                      Manage Repositories, Jira Mappings & Leads ({editRepoIds.length} attached)
+                      Manage Repositories & Leads ({editRepoIds.length} attached)
                     </label>
                     <div
                       style={{
@@ -463,15 +465,9 @@ export function ProjectsPage() {
                               </span>
                             </label>
 
-                            {/* Inline Jira mapping and Lead assignment for selected repo */}
+                            {/* Lead assignment remains repository-specific. */}
                             {isSelected && (
                               <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem" }}>
-                                <RepositoryJiraSelector
-                                  repositoryName={repo.fullName ?? repo.name ?? repo.id}
-                                  projects={jiraProjects}
-                                  selectedIds={editJiraSelections[repo.id] ?? []}
-                                  onToggle={(jiraProjectId) => toggleEditJiraProject(repo.id, jiraProjectId)}
-                                />
                                 <RepoLeadManager
                                   repositoryId={repo.id}
                                   repositoryName={repo.fullName}
@@ -523,6 +519,35 @@ export function ProjectsPage() {
                         Delete
                       </button>
                     </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary, #94a3b8)", marginBottom: "0.6rem" }}>
+                      Jira Projects
+                    </div>
+                    {mappedJiraProjects.length === 0 ? (
+                      <span style={{ fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
+                        No Jira projects mapped
+                      </span>
+                    ) : (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+                        {mappedJiraProjects.map((jiraProject) => (
+                          <span
+                            key={jiraProject.id}
+                            style={{
+                              padding: "0.2rem 0.45rem",
+                              borderRadius: "4px",
+                              backgroundColor: "rgba(99, 102, 241, 0.12)",
+                              color: "var(--primary-light, #818cf8)",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                            }}
+                          >
+                            [{jiraProject.projectKey}] {jiraProject.projectName}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
 
@@ -582,35 +607,6 @@ export function ProjectsPage() {
                               </span>
                             </div>
 
-                            <div>
-                              <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-secondary, #94a3b8)", marginBottom: "0.35rem" }}>
-                                Jira projects
-                              </div>
-                              {repo.jiraProjects.length === 0 ? (
-                                <span style={{ fontSize: "0.8rem", color: "var(--text-secondary, #94a3b8)" }}>
-                                  No Jira projects mapped
-                                </span>
-                              ) : (
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
-                                  {repo.jiraProjects.map((jiraProject) => (
-                                    <span
-                                      key={jiraProject.id}
-                                      style={{
-                                        padding: "0.2rem 0.45rem",
-                                        borderRadius: "4px",
-                                        backgroundColor: "rgba(99, 102, 241, 0.12)",
-                                        color: "var(--primary-light, #818cf8)",
-                                        fontSize: "0.75rem",
-                                        fontWeight: 600,
-                                      }}
-                                    >
-                                      [{jiraProject.projectKey}] {jiraProject.projectName}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
                             {/* Repository lead management is Manager-only. */}
                             {isManager && (
                               <RepoLeadManager
@@ -626,8 +622,9 @@ export function ProjectsPage() {
                   </div>
                 </div>
               )}
-            </section>
-          ))}
+              </section>
+            );
+          })}
         </div>
       </div>
     </AppShell>
