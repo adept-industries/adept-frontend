@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react";
+import { AuthContext } from "../../auth/AuthContext.js";
 
 export interface PRRiskEventPayload {
   prTitle: string;
@@ -12,6 +13,8 @@ export interface PRRiskNotification extends PRRiskEventPayload {
 }
 
 export function PRRiskPopup() {
+  const auth = useContext(AuthContext);
+  const isAuthenticated = auth ? auth.state.status === "authenticated" : true;
   const [notifications, setNotifications] = useState<PRRiskNotification[]>([]);
 
   const dismissNotification = useCallback((id: string) => {
@@ -19,7 +22,11 @@ export function PRRiskPopup() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.EventSource === "undefined") {
+    if (
+      !isAuthenticated ||
+      typeof window === "undefined" ||
+      typeof window.EventSource === "undefined"
+    ) {
       return;
     }
 
