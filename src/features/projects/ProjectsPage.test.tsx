@@ -10,7 +10,7 @@ import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
 import { ProjectsPage } from "./ProjectsPage.js";
 
-function authenticatedState(): AuthenticatedState {
+function authenticatedState(role: "MANAGER" | "LEAD" = "MANAGER"): AuthenticatedState {
   return {
     status: "authenticated",
     generation: 1,
@@ -27,14 +27,17 @@ function authenticatedState(): AuthenticatedState {
       workspaceName: "Acme",
       workspaceSlug: "acme-abc123",
       timezone: "UTC",
-      role: "MANAGER",
+      role,
     },
-    workspaces: [{ id: "ws-1", name: "Acme", slug: "acme-abc123", timezone: "UTC", role: "MANAGER" }],
+    workspaces: [{ id: "ws-1", name: "Acme", slug: "acme-abc123", timezone: "UTC", role }],
   };
 }
 
-function renderProjectsPage(projects: ProjectResponse[] = []) {
-  const state = authenticatedState();
+function renderProjectsPage(
+  projects: ProjectResponse[] = [],
+  role: "MANAGER" | "LEAD" = "MANAGER",
+) {
+  const state = authenticatedState(role);
   const actions = {
     logout: vi.fn(),
   } as unknown as AuthContextValue["actions"];
@@ -83,6 +86,48 @@ describe("ProjectsPage with Lead Assignments", () => {
     await user.click(collapseButton);
 
     expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
+  });
+
+  it("shows a Lead only their scoped project content without Manager controls", () => {
+    const scopedProjects = [
+      {
+        id: "proj-lead",
+        workspaceId: "ws-1",
+        name: "API Delivery",
+        description: "Lead-scoped delivery project",
+        repositories: [
+          {
+            id: "repo-api",
+            fullName: "acme/api",
+            trackingEnabled: true,
+            archived: false,
+            jiraProjects: [],
+          },
+        ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    renderProjectsPage(scopedProjects, "LEAD");
+
+    expect(screen.getByRole("heading", { name: "Projects" })).toBeVisible();
+    expect(screen.getByText("View projects containing repositories assigned to you.")).toBeVisible();
+    expect(screen.getByRole("heading", { name: "API Delivery" })).toBeVisible();
+    expect(screen.getByText("acme/api")).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Create Project" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create project" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit project" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add \/ Invite Lead/i })).not.toBeInTheDocument();
+  });
+
+  it("explains when a Lead has no assigned projects", () => {
+    renderProjectsPage([], "LEAD");
+
+    expect(screen.getByText(
+      "No assigned projects yet. Projects appear here when a Manager assigns you to a tracked repository.",
+    )).toBeVisible();
   });
 
   it("renders projects with attached repositories and assigned leads", async () => {

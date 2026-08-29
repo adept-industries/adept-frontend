@@ -213,6 +213,15 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
                   label="Workspaces"
                   active={path.startsWith("/dashboard/settings")}
                 />
+                {!isManager && (
+                  <SidebarNavItem
+                    to="/dashboard/projects"
+                    id="sidebar-nav-projects"
+                    icon={<ProjectFolderIcon />}
+                    label="Projects"
+                    active={path.startsWith("/dashboard/projects")}
+                  />
+                )}
               </div>
             </>
           )}

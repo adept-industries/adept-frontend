@@ -1,5 +1,6 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
+import { useAuth } from "../../auth/AuthProvider.js";
 import { AppShell } from "../../components/layout/AppShell.js";
 import { FormField } from "../../components/ui/FormField.js";
 import { InlineAlert } from "../../components/ui/InlineAlert.js";
@@ -9,7 +10,9 @@ import { useProjects } from "./useProjects.js";
 import { RepoLeadManager } from "./components/RepoLeadManager.js";
 
 export function ProjectsPage() {
+  const { state } = useAuth();
   const { projects, loading, error, reload } = useProjects();
+  const isManager = state.status === "authenticated" && state.currentMembership.role === "MANAGER";
   const [availableRepos, setAvailableRepos] = useState<RepositoryResponse[]>([]);
 
   const [name, setName] = useState("");
@@ -24,18 +27,24 @@ export function ProjectsPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editRepoIds, setEditRepoIds] = useState<string[]>([]);
 
-  const fetchCatalog = async () => {
+  const fetchCatalog = useCallback(async () => {
     try {
       const repos = await listRepositories();
       setAvailableRepos(repos ?? []);
     } catch {
       setAvailableRepos([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    if (!isManager) {
+      setAvailableRepos([]);
+      setShowCreateProjectForm(false);
+      setEditingId(null);
+      return;
+    }
     void fetchCatalog();
-  }, []);
+  }, [fetchCatalog, isManager]);
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -145,9 +154,11 @@ export function ProjectsPage() {
         </div>
 
         <header style={{ marginBottom: "0.25rem" }}>
-          <h1 style={{ fontSize: "2rem", margin: 0 }}>Project Settings</h1>
+          <h1 style={{ fontSize: "2rem", margin: 0 }}>{isManager ? "Project Settings" : "Projects"}</h1>
           <p style={{ color: "var(--text-secondary, #94a3b8)", marginTop: "0.35rem", fontSize: "0.95rem" }}>
-            Create projects, attach tracked repositories, and assign repository Leads directly to grant scoped access.
+            {isManager
+              ? "Create projects, attach tracked repositories, and assign repository Leads directly to grant scoped access."
+              : "View projects containing repositories assigned to you."}
           </p>
         </header>
 
@@ -155,6 +166,7 @@ export function ProjectsPage() {
         {error && <InlineAlert message={error} kind="error" />}
 
         {/* Create Project Card */}
+        {isManager && (
         <section className="card" style={{ width: "100%", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           <div
             style={{
@@ -291,13 +303,16 @@ export function ProjectsPage() {
           </form>
           )}
         </section>
+        )}
 
         {/* Existing Projects List */}
         <div style={{ display: "grid", gap: "1.5rem" }}>
           {loading && <p style={{ color: "var(--text-secondary)" }}>Loading projects…</p>}
           {!loading && projects.length === 0 && (
             <p style={{ color: "var(--text-secondary)", fontStyle: "italic" }}>
-              No projects created yet. Create your first project above to group repositories and assign Leads.
+              {isManager
+                ? "No projects created yet. Create your first project above to group repositories and assign Leads."
+                : "No assigned projects yet. Projects appear here when a Manager assigns you to a tracked repository."}
             </p>
           )}
           {projects.map((project) => (
@@ -312,7 +327,7 @@ export function ProjectsPage() {
                 gap: "1.25rem",
               }}
             >
-              {editingId === project.id ? (
+              {isManager && editingId === project.id ? (
                 <form onSubmit={(event) => void handleUpdate(event)} style={{ display: "grid", gap: "1.25rem" }}>
                   <FormField
                     id={`edit-project-name-${project.id}`}
@@ -422,6 +437,7 @@ export function ProjectsPage() {
                         </p>
                       )}
                     </div>
+                    {isManager && (
                     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
                       <button
                         type="button"
@@ -446,6 +462,7 @@ export function ProjectsPage() {
                         Delete
                       </button>
                     </div>
+                    )}
                   </div>
 
                   {/* Attached Repositories & Assigned Leads */}
@@ -455,7 +472,9 @@ export function ProjectsPage() {
                     </div>
                     {project.repositories.length === 0 ? (
                       <p style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", margin: 0, fontStyle: "italic" }}>
-                        No repositories attached yet. Click &ldquo;Edit project&rdquo; to attach repositories and assign Leads.
+                        {isManager
+                          ? <>No repositories attached yet. Click &ldquo;Edit project&rdquo; to attach repositories and assign Leads.</>
+                          : "No assigned repositories are available in this project."}
                       </p>
                     ) : (
                       <div style={{ display: "grid", gap: "0.85rem" }}>
@@ -502,12 +521,14 @@ export function ProjectsPage() {
                               </span>
                             </div>
 
-                            {/* Repo Lead Manager & Assignment View */}
-                            <RepoLeadManager
-                              repositoryId={repo.id}
-                              repositoryName={repo.fullName}
-                              onAssignmentsChange={() => void reload()}
-                            />
+                            {/* Repository lead management is Manager-only. */}
+                            {isManager && (
+                              <RepoLeadManager
+                                repositoryId={repo.id}
+                                repositoryName={repo.fullName}
+                                onAssignmentsChange={() => void reload()}
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
