@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -42,10 +42,11 @@ function authenticatedState(hasPassword: boolean): AuthenticatedState {
   };
 }
 
-function renderPage(hasPassword: boolean) {
-  const state = authenticatedState(hasPassword);
+function renderPage(hasPassword: boolean, suppliedState?: AuthenticatedState) {
+  const state = suppliedState ?? authenticatedState(hasPassword);
   const actions = {
     reauthenticateWithPassword: vi.fn().mockResolvedValue(state),
+    selectWorkspace: vi.fn().mockResolvedValue(state),
     refresh: vi.fn().mockRejectedValue(new Error("no remaining workspace")),
     invalidateSession: vi.fn(),
     updateCurrentWorkspace: vi.fn(),
@@ -67,6 +68,32 @@ function renderPage(hasPassword: boolean) {
     { initialPath: "/dashboard/settings" },
   );
   return actions;
+}
+
+function leadState(): AuthenticatedState {
+  return {
+    status: "authenticated",
+    generation: 1,
+    user: {
+      id: "user-2",
+      email: "lead@example.com",
+      displayName: "Lead",
+      emailVerified: true,
+      hasPassword: true,
+    },
+    currentMembership: {
+      id: "mem-2",
+      workspaceId: "ws-2",
+      workspaceName: "Delivery",
+      workspaceSlug: "delivery-abc123",
+      timezone: "UTC",
+      role: "LEAD",
+    },
+    workspaces: [
+      { id: "ws-1", name: "Personal", slug: "personal-abc123", timezone: "UTC", role: "MANAGER" },
+      { id: "ws-2", name: "Delivery", slug: "delivery-abc123", timezone: "UTC", role: "LEAD" },
+    ],
+  };
 }
 
 async function openAndSubmitDeletion() {
@@ -132,5 +159,68 @@ describe("WorkspaceSettingsPage recent authentication", () => {
 
     expect(await screen.findByRole("button", { name: "Verify with Google" })).toBeVisible();
     expect(screen.queryByLabelText("Your current password")).not.toBeInTheDocument();
+  });
+});
+
+describe("WorkspaceSettingsPage role-aware workspace access", () => {
+  afterEach(cleanup);
+
+  beforeEach(() => {
+    document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
+  });
+
+  it("shows every workspace membership and lets a Manager switch workspace", async () => {
+    const state = authenticatedState(true);
+    state.workspaces = [
+      ...state.workspaces,
+      { id: "ws-2", name: "Delivery", slug: "delivery-abc123", timezone: "UTC", role: "LEAD" },
+    ];
+    server.use(
+      http.get("/api/v1/workspaces/current", () => HttpResponse.json(workspace)),
+    );
+
+    const actions = renderPage(true, state);
+    const memberships = await screen.findByRole("list", { name: "Workspace memberships" });
+
+    expect(within(memberships).getByText("Acme")).toBeVisible();
+    expect(within(memberships).getByText("Manager")).toBeVisible();
+    expect(within(memberships).getByText("Delivery")).toBeVisible();
+    expect(within(memberships).getByText("Lead")).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "General Settings" })).toBeVisible();
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "Switch to Delivery" }));
+    expect(actions.selectWorkspace).toHaveBeenCalledWith("ws-2");
+  });
+
+  it("lets a Lead create a workspace without exposing Manager settings", async () => {
+    const state = leadState();
+    let currentSettingsRequested = false;
+    server.use(
+      http.get("/api/v1/workspaces/current", () => {
+        currentSettingsRequested = true;
+        return HttpResponse.json(workspace);
+      }),
+      http.post("/api/v1/workspaces", () => HttpResponse.json({
+        id: "ws-created",
+        name: "Lead Owned",
+        slug: "lead-owned-abc123",
+        timezone: "UTC",
+        role: "MANAGER",
+      }, { status: 201 })),
+    );
+
+    const actions = renderPage(true, state);
+    const memberships = await screen.findByRole("list", { name: "Workspace memberships" });
+    expect(within(memberships).getByText("Delivery")).toBeVisible();
+    expect(within(memberships).getByText("Lead")).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "General Settings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Danger Zone" })).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByRole("textbox", { name: "Workspace name" }), "Lead Owned");
+    await user.click(screen.getByRole("button", { name: "Create and switch" }));
+
+    await waitFor(() => expect(actions.selectWorkspace).toHaveBeenCalledWith("ws-created"));
+    expect(currentSettingsRequested).toBe(false);
   });
 });

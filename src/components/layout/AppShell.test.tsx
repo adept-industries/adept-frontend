@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext";
@@ -45,9 +45,9 @@ const projectValue: ProjectContextValue = {
   reload: () => Promise.resolve(),
 };
 
-function renderShell() {
+function renderShell(value: AuthContextValue = authValue) {
   return render(
-    <AuthContext.Provider value={authValue}>
+    <AuthContext.Provider value={value}>
       <ProjectContext.Provider value={projectValue}>
         <MemoryRouter>
           <AppShell>Dashboard content</AppShell>
@@ -80,5 +80,30 @@ describe("AppShell theme", () => {
     const avatar = container.querySelector(".sidebar-avatar");
     expect(userName).toHaveTextContent("Manager");
     expect(avatar).toHaveTextContent("MA");
+  });
+
+  it("shows workspace navigation to Leads without exposing Manager navigation", () => {
+    const leadValue: AuthContextValue = {
+      ...authValue,
+      state: authValue.state.status === "authenticated"
+        ? {
+            ...authValue.state,
+            currentMembership: {
+              ...authValue.state.currentMembership,
+              role: "LEAD",
+            },
+            workspaces: authValue.state.workspaces.map((workspace) => ({
+              ...workspace,
+              role: "LEAD" as const,
+            })),
+          }
+        : authValue.state,
+    };
+
+    renderShell(leadValue);
+
+    expect(screen.getByRole("link", { name: "Workspaces" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Integrations" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Projects" })).not.toBeInTheDocument();
   });
 });

@@ -201,6 +201,22 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
             />
           </div>
 
+          {isAuthenticated && (
+            <>
+              <div className="sidebar-nav-divider" />
+              <div className="sidebar-nav-section">
+                <span className="sidebar-nav-section-label">Workspace</span>
+                <SidebarNavItem
+                  to="/dashboard/settings"
+                  id="sidebar-nav-settings"
+                  icon={<SettingsIcon />}
+                  label="Workspaces"
+                  active={path.startsWith("/dashboard/settings")}
+                />
+              </div>
+            </>
+          )}
+
           {isManager && (
             <>
               <div className="sidebar-nav-divider" />
@@ -212,13 +228,6 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
                   icon={<IntegrationsIcon />}
                   label="Integrations"
                   active={path.startsWith("/dashboard/integrations")}
-                />
-                <SidebarNavItem
-                  to="/dashboard/settings"
-                  id="sidebar-nav-settings"
-                  icon={<SettingsIcon />}
-                  label="Workspace"
-                  active={path.startsWith("/dashboard/settings")}
                 />
                 <SidebarNavItem
                   to="/dashboard/projects"
