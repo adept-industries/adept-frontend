@@ -104,7 +104,7 @@ describe("PRRiskPopup", () => {
       });
     });
 
-    let badge = screen.getByTestId("risk-level-badge");
+    const badge = screen.getByTestId("risk-level-badge");
     expect(badge).toHaveTextContent("LOW");
     expect(badge.style.color).toBe("rgb(4, 120, 87)"); // green #047857
 

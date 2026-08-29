@@ -90,7 +90,7 @@ export function PRRiskPopup() {
         eventSource.close();
       }
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Automatically dismiss each notification after 6 seconds (between 5-7s)
   useEffect(() => {
