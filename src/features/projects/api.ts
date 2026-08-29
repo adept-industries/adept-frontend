@@ -7,8 +7,8 @@ export type CreateProjectRequest =
   operations["createProject"]["requestBody"]["content"]["application/json"];
 export type UpdateProjectRequest =
   operations["updateProject"]["requestBody"]["content"]["application/json"];
-export type ReplaceProjectRepositoriesRequest =
-  operations["replaceProjectRepositories"]["requestBody"]["content"]["application/json"];
+export type ReplaceProjectConfigurationRequest =
+  operations["replaceProjectConfiguration"]["requestBody"]["content"]["application/json"];
 
 export function listProjects(signal?: AbortSignal): Promise<ProjectResponse[]> {
   return apiRequest<ProjectResponse[]>({
@@ -40,13 +40,13 @@ export function updateProject(
   });
 }
 
-export function replaceProjectRepositories(
+export function replaceProjectConfiguration(
   projectId: string,
-  body: ReplaceProjectRepositoriesRequest,
+  body: ReplaceProjectConfigurationRequest,
 ): Promise<ProjectResponse> {
-  return apiRequest<ProjectResponse, ReplaceProjectRepositoriesRequest>({
+  return apiRequest<ProjectResponse, ReplaceProjectConfigurationRequest>({
     method: "PUT",
-    path: `/projects/${projectId}/repositories`,
+    path: `/projects/${projectId}/configuration`,
     auth: "bearer",
     body,
   });

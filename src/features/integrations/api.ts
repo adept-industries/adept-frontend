@@ -220,24 +220,3 @@ export function updateJiraProjectTracking(
     body: { trackingEnabled },
   });
 }
-
-export function getMappedJiraProjects(repositoryId: string, signal?: AbortSignal): Promise<JiraProjectResponse[]> {
-  return apiRequest<JiraProjectResponse[]>({
-    method: "GET",
-    path: `/repositories/${repositoryId}/jira-projects`,
-    auth: "bearer",
-    signal,
-  });
-}
-
-export function mapJiraProjectsToRepository(
-  repositoryId: string,
-  jiraProjectIds: string[]
-): Promise<void> {
-  return apiRequest<void, { jiraProjectIds: string[] }>({
-    method: "POST",
-    path: `/repositories/${repositoryId}/jira-projects`,
-    auth: "bearer",
-    body: { jiraProjectIds },
-  });
-}
