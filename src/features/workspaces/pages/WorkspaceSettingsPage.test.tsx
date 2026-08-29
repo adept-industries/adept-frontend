@@ -186,7 +186,16 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(within(memberships).getByText("Manager")).toBeVisible();
     expect(within(memberships).getByText("Delivery")).toBeVisible();
     expect(within(memberships).getByText("Lead")).toBeVisible();
-    expect(await screen.findByRole("heading", { name: "General Settings" })).toBeVisible();
+    const generalSettingsHeading = await screen.findByRole("heading", { name: "General Settings" });
+    const createWorkspaceHeading = screen.getByRole("heading", { name: "Create another workspace" });
+    const workspaceMembershipsHeading = screen.getByRole("heading", { name: "Your workspaces" });
+    expect(createWorkspaceHeading.compareDocumentPosition(workspaceMembershipsHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(workspaceMembershipsHeading.compareDocumentPosition(generalSettingsHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(document.getElementById("settings-theme-toggle-btn")).not.toBeInTheDocument();
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Switch to Delivery" }));
     expect(actions.selectWorkspace).toHaveBeenCalledWith("ws-2");
@@ -215,8 +224,13 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(within(memberships).getByText("Lead")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "General Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Danger Zone" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Workspace name" })).not.toBeInTheDocument();
 
     const user = userEvent.setup();
+    const createButton = screen.getByRole("button", { name: "Create workspace" });
+    expect(createButton).toHaveAttribute("aria-expanded", "false");
+    await user.click(createButton);
+    expect(screen.getByRole("button", { name: "Collapse workspace" })).toHaveAttribute("aria-expanded", "true");
     await user.type(screen.getByRole("textbox", { name: "Workspace name" }), "Lead Owned");
     await user.click(screen.getByRole("button", { name: "Create and switch" }));
 

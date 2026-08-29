@@ -16,23 +16,6 @@ import { accessTokenStore } from "../../../auth/accessTokenStore";
 import { workspacePreference } from "../../../lib/workspacePreference";
 import { queryClient } from "../../../api/queryClient";
 import { listTimezones, formatTimezone } from "../../../lib/timezone";
-import {
-  dashboardThemePreference,
-  type DashboardTheme,
-} from "../../../lib/dashboardThemePreference";
-
-const SunIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41" />
-  </svg>
-);
-
-const MoonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-  </svg>
-);
 
 /**
  * WorkspaceSettingsPage — workspace overview for Managers and Leads.
@@ -67,18 +50,6 @@ export function WorkspaceSettingsPage() {
   const [switchingWorkspaceId, setSwitchingWorkspaceId] = useState<string | null>(null);
   const [switchError, setSwitchError] = useState<string | null>(null);
 
-  // Appearance / Theme state
-  const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
-
-  useEffect(() => {
-    return dashboardThemePreference.subscribe(setTheme);
-  }, []);
-
-  const handleThemeChange = (nextTheme: DashboardTheme) => {
-    setTheme(nextTheme);
-    dashboardThemePreference.set(nextTheme);
-  };
-
   // Edit form state
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState("");
@@ -93,6 +64,7 @@ export function WorkspaceSettingsPage() {
   );
   const [createError, setCreateError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [showCreateWorkspaceForm, setShowCreateWorkspaceForm] = useState(false);
 
   // Deletion form state
   const [showDeleteForm, setShowDeleteForm] = useState(
@@ -303,7 +275,7 @@ export function WorkspaceSettingsPage() {
           </Link>
         </div>
 
-        <header style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "2.5rem", flexWrap: "wrap" }}>
+        <header style={{ marginBottom: "2.5rem" }}>
           <div>
             <h1 id="settings-title" style={{ fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--text-primary)", margin: 0 }}>
               Workspace Settings
@@ -312,27 +284,74 @@ export function WorkspaceSettingsPage() {
               View your workspace memberships and manage the current workspace when you are a Manager.
             </p>
           </div>
-
-          <button
-            type="button"
-            id="settings-theme-toggle-btn"
-            onClick={() => handleThemeChange(theme === "dark" ? "light" : "dark")}
-            className="button-link"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.55rem 0.95rem",
-              fontSize: "0.9rem",
-              flexShrink: 0,
-            }}
-            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-            <span>Appearance</span>
-          </button>
         </header>
+
+        <section className="card" style={{ width: "100%", marginBottom: "2.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ fontSize: "1.2rem", margin: 0 }}>Create another workspace</h2>
+              <p style={{ color: "var(--text-secondary)", margin: "0.5rem 0 0" }}>
+                Create a separate workspace that you manage.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button-link"
+              aria-expanded={showCreateWorkspaceForm}
+              aria-controls="create-workspace-panel"
+              aria-label={`${showCreateWorkspaceForm ? "Collapse" : "Create"} workspace`}
+              onClick={() => setShowCreateWorkspaceForm((visible) => !visible)}
+            >
+              {showCreateWorkspaceForm ? "Collapse" : "Create"}
+            </button>
+          </div>
+
+          {showCreateWorkspaceForm && (
+            <div id="create-workspace-panel" style={{ marginTop: "1.5rem" }}>
+              <p style={{ color: "var(--text-secondary)", marginTop: 0 }}>
+                A workspace is a separate security boundary. You become its Manager and can switch back at any time.
+              </p>
+              <form
+                onSubmit={(event) => void handleCreateWorkspace(event)}
+                style={{ display: "grid", gap: "1rem" }}
+              >
+                <FormField
+                  id="new-workspace-name"
+                  label="Workspace name"
+                  value={newWorkspaceName}
+                  onChange={(event) => setNewWorkspaceName(event.target.value)}
+                  maxLength={160}
+                  required
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  <label htmlFor="new-workspace-timezone">Timezone</label>
+                  <select
+                    id="new-workspace-timezone"
+                    className="form-input"
+                    value={newWorkspaceTimezone}
+                    onChange={(event) => setNewWorkspaceTimezone(event.target.value)}
+                  >
+                    {timezones.current.map((tz) => (
+                      <option key={tz} value={tz}>{formatTimezone(tz)}</option>
+                    ))}
+                  </select>
+                </div>
+                {createError && <InlineAlert kind="error" message={createError} />}
+                <button type="submit" disabled={creating || !newWorkspaceName.trim()}>
+                  {creating ? "Creating…" : "Create and switch"}
+                </button>
+              </form>
+            </div>
+          )}
+        </section>
 
         <section
           aria-labelledby="workspace-memberships-title"
@@ -482,43 +501,6 @@ export function WorkspaceSettingsPage() {
               </form>
           </div>
         )}
-
-        <section className="card" style={{ width: "100%", marginBottom: "2.5rem" }}>
-          <h2 style={{ fontSize: "1.2rem", marginTop: 0 }}>Create another workspace</h2>
-          <p style={{ color: "var(--text-secondary)" }}>
-            A workspace is a separate security boundary. You become its Manager and can switch back at any time.
-          </p>
-          <form
-            onSubmit={(event) => void handleCreateWorkspace(event)}
-            style={{ display: "grid", gap: "1rem" }}
-          >
-            <FormField
-              id="new-workspace-name"
-              label="Workspace name"
-              value={newWorkspaceName}
-              onChange={(event) => setNewWorkspaceName(event.target.value)}
-              maxLength={160}
-              required
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-              <label htmlFor="new-workspace-timezone">Timezone</label>
-              <select
-                id="new-workspace-timezone"
-                className="form-input"
-                value={newWorkspaceTimezone}
-                onChange={(event) => setNewWorkspaceTimezone(event.target.value)}
-              >
-                {timezones.current.map((tz) => (
-                  <option key={tz} value={tz}>{formatTimezone(tz)}</option>
-                ))}
-              </select>
-            </div>
-            {createError && <InlineAlert kind="error" message={createError} />}
-            <button type="submit" disabled={creating || !newWorkspaceName.trim()}>
-              {creating ? "Creating…" : "Create and switch"}
-            </button>
-          </form>
-        </section>
 
         {isManager && workspace && (
           <section
