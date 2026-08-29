@@ -188,9 +188,14 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(within(memberships).getByText("Lead")).toBeVisible();
     const generalSettingsHeading = await screen.findByRole("heading", { name: "General Settings" });
     const createWorkspaceHeading = screen.getByRole("heading", { name: "Create another workspace" });
-    expect(createWorkspaceHeading.compareDocumentPosition(generalSettingsHeading)).toBe(
+    const workspaceMembershipsHeading = screen.getByRole("heading", { name: "Your workspaces" });
+    expect(createWorkspaceHeading.compareDocumentPosition(workspaceMembershipsHeading)).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    expect(workspaceMembershipsHeading.compareDocumentPosition(generalSettingsHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(document.getElementById("settings-theme-toggle-btn")).not.toBeInTheDocument();
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Switch to Delivery" }));
     expect(actions.selectWorkspace).toHaveBeenCalledWith("ws-2");
