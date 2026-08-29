@@ -10,6 +10,7 @@ export interface PRRiskEventPayload {
 
 export interface PRRiskNotification extends PRRiskEventPayload {
   id: string;
+  timestamp?: number;
 }
 
 export function PRRiskPopup() {
@@ -61,9 +62,23 @@ export function PRRiskPopup() {
             riskScore: rawScore,
             riskLevel: level,
             probability: data.probability,
+            timestamp: Date.now(),
           };
 
-          setNotifications((prev) => [...prev, notification]);
+          setNotifications((prev) => {
+            if (
+              prev.some(
+                (n) =>
+                  n.id === notification.id ||
+                  (n.prTitle === notification.prTitle &&
+                    n.riskScore === notification.riskScore &&
+                    Math.abs((n.timestamp || 0) - (notification.timestamp || 0)) < 4000)
+              )
+            ) {
+              return prev;
+            }
+            return [...prev, notification];
+          });
         } catch (err) {
           console.error("Failed to parse incoming PR risk event:", err);
         }
