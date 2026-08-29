@@ -14,6 +14,7 @@ import {
   listRepositories,
   requestRepositoryBackfill,
   syncGithubRepositories,
+  syncJiraProjects,
   updateJiraProjectTracking,
   updateRepository,
   type GithubIntegrationResponse,
@@ -24,6 +25,42 @@ import {
 } from "./api.js";
 import { RepositorySettingsModal } from "./RepositorySettingsModal.js";
 import { RepositoryJiraModal } from "./RepositoryJiraModal.js";
+
+const JIRA_SYNC_POLL_INTERVAL_MS = 1_000;
+const JIRA_SYNC_TIMEOUT_MS = 30_000;
+
+function wait(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+async function waitForJiraProjectSync(
+  integrationId: string,
+  previousLastSyncedAt: string,
+): Promise<{ integration: JiraIntegrationResponse; projects: JiraProjectResponse[] } | null> {
+  const deadline = Date.now() + JIRA_SYNC_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const integration = await getJiraIntegration();
+    if (!integration || integration.id !== integrationId) {
+      throw new Error("Jira integration is no longer available.");
+    }
+    if (integration.status === "ERROR") {
+      throw new Error("Jira project sync failed. Reconnect Jira Cloud and try again.");
+    }
+    if (integration.status !== "ACTIVE") {
+      throw new Error("Jira integration is no longer active.");
+    }
+    if (integration.lastSyncedAt !== previousLastSyncedAt) {
+      return {
+        integration,
+        projects: await listJiraProjects(),
+      };
+    }
+    await wait(JIRA_SYNC_POLL_INTERVAL_MS);
+  }
+
+  return null;
+}
 
 export function IntegrationsPage() {
   const { state: authState } = useAuth();
@@ -44,6 +81,8 @@ export function IntegrationsPage() {
 
   const [isPending, startTransition] = useTransition();
   const [syncingGithub, setSyncingGithub] = useState(false);
+  const [syncingJira, setSyncingJira] = useState(false);
+  const [jiraSyncMessage, setJiraSyncMessage] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -123,6 +162,30 @@ export function IntegrationsPage() {
       await loadData();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to disconnect Jira");
+    }
+  };
+
+  const handleSyncJira = async () => {
+    if (!jira) return;
+    setSyncingJira(true);
+    setError(null);
+    setJiraSyncMessage(null);
+    try {
+      const previousLastSyncedAt = jira.lastSyncedAt;
+      await syncJiraProjects(jira.id);
+      const completed = await waitForJiraProjectSync(jira.id, previousLastSyncedAt);
+      if (completed) {
+        setJira(completed.integration);
+        setJiraProjects(completed.projects);
+        setJiraSyncMessage("Jira projects synchronized successfully.");
+      } else {
+        await loadData();
+        setJiraSyncMessage("Jira project sync is still processing. The catalog will update on your next visit.");
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sync Jira projects");
+    } finally {
+      setSyncingJira(false);
     }
   };
 
@@ -224,6 +287,23 @@ export function IntegrationsPage() {
             }}
           >
             {error}
+          </div>
+        )}
+
+        {jiraSyncMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              padding: "1rem",
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              border: "1px solid rgba(34, 197, 94, 0.45)",
+              borderRadius: "8px",
+              color: "#4ade80",
+              fontSize: "0.9rem",
+            }}
+          >
+            {jiraSyncMessage}
           </div>
         )}
 
@@ -407,14 +487,26 @@ export function IntegrationsPage() {
 
                 <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
                   {jira.status === "ACTIVE" ? (
-                    <button
-                      type="button"
-                      className="button-link"
-                      onClick={handleDisconnectJira}
-                      style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
-                    >
-                      Disconnect
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={() => void handleSyncJira()}
+                        disabled={syncingJira}
+                        style={{ fontSize: "0.85rem", padding: "0.4rem 0.9rem" }}
+                      >
+                        {syncingJira ? "Syncing..." : "Sync Jira Projects"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button-link"
+                        onClick={handleDisconnectJira}
+                        disabled={syncingJira}
+                        style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
+                      >
+                        Disconnect
+                      </button>
+                    </>
                   ) : (
                     <button
                       type="button"
