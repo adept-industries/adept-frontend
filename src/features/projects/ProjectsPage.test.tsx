@@ -62,6 +62,29 @@ describe("ProjectsPage with Lead Assignments", () => {
     document.cookie = "XSRF-TOKEN=test-csrf; Path=/";
   });
 
+  it("keeps the project creation form collapsed until requested", async () => {
+    server.use(
+      http.get("/api/v1/repositories", () => HttpResponse.json([])),
+    );
+
+    renderProjectsPage();
+
+    expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
+    const user = userEvent.setup();
+    const expandButton = screen.getByRole("button", { name: "Expand create project form" });
+    expect(expandButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(expandButton);
+
+    expect(screen.getByRole("textbox", { name: "Project name" })).toBeVisible();
+    const collapseButton = screen.getByRole("button", { name: "Collapse create project form" });
+    expect(collapseButton).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(collapseButton);
+
+    expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
+  });
+
   it("renders projects with attached repositories and assigned leads", async () => {
     const mockProjects = [
       {

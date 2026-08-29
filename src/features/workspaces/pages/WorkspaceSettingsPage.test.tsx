@@ -215,8 +215,13 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(within(memberships).getByText("Lead")).toBeVisible();
     expect(screen.queryByRole("heading", { name: "General Settings" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Danger Zone" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Workspace name" })).not.toBeInTheDocument();
 
     const user = userEvent.setup();
+    const expandButton = screen.getByRole("button", { name: "Expand create workspace form" });
+    expect(expandButton).toHaveAttribute("aria-expanded", "false");
+    await user.click(expandButton);
+    expect(screen.getByRole("button", { name: "Collapse create workspace form" })).toHaveAttribute("aria-expanded", "true");
     await user.type(screen.getByRole("textbox", { name: "Workspace name" }), "Lead Owned");
     await user.click(screen.getByRole("button", { name: "Create and switch" }));
 

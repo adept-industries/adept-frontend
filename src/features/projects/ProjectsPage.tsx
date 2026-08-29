@@ -17,6 +17,7 @@ export function ProjectsPage() {
   const [createRepoIds, setCreateRepoIds] = useState<string[]>([]);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showCreateProjectForm, setShowCreateProjectForm] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -50,6 +51,7 @@ export function ProjectsPage() {
       setName("");
       setDescription("");
       setCreateRepoIds([]);
+      setShowCreateProjectForm(false);
       await reload();
     } catch (err: unknown) {
       setMutationError(err instanceof Error ? err.message : "Project could not be created.");
@@ -154,8 +156,35 @@ export function ProjectsPage() {
 
         {/* Create Project Card */}
         <section className="card" style={{ width: "100%", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1.25rem" }}>Create Project</h2>
-          <form onSubmit={(event) => void handleCreate(event)} style={{ display: "grid", gap: "1.25rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ margin: 0, fontSize: "1.25rem" }}>Create Project</h2>
+              <p style={{ color: "var(--text-secondary, #94a3b8)", margin: "0.5rem 0 0", fontSize: "0.9rem" }}>
+                Group tracked repositories and assign their Leads.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button-link"
+              aria-expanded={showCreateProjectForm}
+              aria-controls="create-project-panel"
+              aria-label={`${showCreateProjectForm ? "Collapse" : "Expand"} create project form`}
+              onClick={() => setShowCreateProjectForm((visible) => !visible)}
+            >
+              {showCreateProjectForm ? "Collapse" : "Expand"}
+            </button>
+          </div>
+
+          {showCreateProjectForm && (
+          <form id="create-project-panel" onSubmit={(event) => void handleCreate(event)} style={{ display: "grid", gap: "1.25rem" }}>
             <FormField
               id="project-name"
               label="Project name"
@@ -260,6 +289,7 @@ export function ProjectsPage() {
               </button>
             </div>
           </form>
+          )}
         </section>
 
         {/* Existing Projects List */}
