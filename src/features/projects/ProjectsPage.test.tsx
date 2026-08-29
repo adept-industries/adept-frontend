@@ -71,13 +71,13 @@ describe("ProjectsPage with Lead Assignments", () => {
 
     expect(screen.queryByRole("textbox", { name: "Project name" })).not.toBeInTheDocument();
     const user = userEvent.setup();
-    const expandButton = screen.getByRole("button", { name: "Expand create project form" });
-    expect(expandButton).toHaveAttribute("aria-expanded", "false");
+    const createButton = screen.getByRole("button", { name: "Create project" });
+    expect(createButton).toHaveAttribute("aria-expanded", "false");
 
-    await user.click(expandButton);
+    await user.click(createButton);
 
     expect(screen.getByRole("textbox", { name: "Project name" })).toBeVisible();
-    const collapseButton = screen.getByRole("button", { name: "Collapse create project form" });
+    const collapseButton = screen.getByRole("button", { name: "Collapse project" });
     expect(collapseButton).toHaveAttribute("aria-expanded", "true");
 
     await user.click(collapseButton);

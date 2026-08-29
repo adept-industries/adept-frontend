@@ -408,6 +408,73 @@ export function WorkspaceSettingsPage() {
           {switchError && <InlineAlert kind="error" message={switchError} />}
         </section>
 
+        <section className="card" style={{ width: "100%", marginBottom: "2.5rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <h2 style={{ fontSize: "1.2rem", margin: 0 }}>Create another workspace</h2>
+              <p style={{ color: "var(--text-secondary)", margin: "0.5rem 0 0" }}>
+                Create a separate workspace that you manage.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button-link"
+              aria-expanded={showCreateWorkspaceForm}
+              aria-controls="create-workspace-panel"
+              aria-label={`${showCreateWorkspaceForm ? "Collapse" : "Create"} workspace`}
+              onClick={() => setShowCreateWorkspaceForm((visible) => !visible)}
+            >
+              {showCreateWorkspaceForm ? "Collapse" : "Create"}
+            </button>
+          </div>
+
+          {showCreateWorkspaceForm && (
+            <div id="create-workspace-panel" style={{ marginTop: "1.5rem" }}>
+              <p style={{ color: "var(--text-secondary)", marginTop: 0 }}>
+                A workspace is a separate security boundary. You become its Manager and can switch back at any time.
+              </p>
+              <form
+                onSubmit={(event) => void handleCreateWorkspace(event)}
+                style={{ display: "grid", gap: "1rem" }}
+              >
+                <FormField
+                  id="new-workspace-name"
+                  label="Workspace name"
+                  value={newWorkspaceName}
+                  onChange={(event) => setNewWorkspaceName(event.target.value)}
+                  maxLength={160}
+                  required
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                  <label htmlFor="new-workspace-timezone">Timezone</label>
+                  <select
+                    id="new-workspace-timezone"
+                    className="form-input"
+                    value={newWorkspaceTimezone}
+                    onChange={(event) => setNewWorkspaceTimezone(event.target.value)}
+                  >
+                    {timezones.current.map((tz) => (
+                      <option key={tz} value={tz}>{formatTimezone(tz)}</option>
+                    ))}
+                  </select>
+                </div>
+                {createError && <InlineAlert kind="error" message={createError} />}
+                <button type="submit" disabled={creating || !newWorkspaceName.trim()}>
+                  {creating ? "Creating…" : "Create and switch"}
+                </button>
+              </form>
+            </div>
+          )}
+        </section>
+
         {isManager && loadError && <InlineAlert kind="error" message={loadError} />}
 
         {isManager && !workspace && !loadError && (
@@ -483,73 +550,6 @@ export function WorkspaceSettingsPage() {
               </form>
           </div>
         )}
-
-        <section className="card" style={{ width: "100%", marginBottom: "2.5rem" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <h2 style={{ fontSize: "1.2rem", margin: 0 }}>Create another workspace</h2>
-              <p style={{ color: "var(--text-secondary)", margin: "0.5rem 0 0" }}>
-                Create a separate workspace that you manage.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="button-link"
-              aria-expanded={showCreateWorkspaceForm}
-              aria-controls="create-workspace-panel"
-              aria-label={`${showCreateWorkspaceForm ? "Collapse" : "Expand"} create workspace form`}
-              onClick={() => setShowCreateWorkspaceForm((visible) => !visible)}
-            >
-              {showCreateWorkspaceForm ? "Collapse" : "Expand"}
-            </button>
-          </div>
-
-          {showCreateWorkspaceForm && (
-            <div id="create-workspace-panel" style={{ marginTop: "1.5rem" }}>
-              <p style={{ color: "var(--text-secondary)", marginTop: 0 }}>
-                A workspace is a separate security boundary. You become its Manager and can switch back at any time.
-              </p>
-              <form
-                onSubmit={(event) => void handleCreateWorkspace(event)}
-                style={{ display: "grid", gap: "1rem" }}
-              >
-                <FormField
-                  id="new-workspace-name"
-                  label="Workspace name"
-                  value={newWorkspaceName}
-                  onChange={(event) => setNewWorkspaceName(event.target.value)}
-                  maxLength={160}
-                  required
-                />
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-                  <label htmlFor="new-workspace-timezone">Timezone</label>
-                  <select
-                    id="new-workspace-timezone"
-                    className="form-input"
-                    value={newWorkspaceTimezone}
-                    onChange={(event) => setNewWorkspaceTimezone(event.target.value)}
-                  >
-                    {timezones.current.map((tz) => (
-                      <option key={tz} value={tz}>{formatTimezone(tz)}</option>
-                    ))}
-                  </select>
-                </div>
-                {createError && <InlineAlert kind="error" message={createError} />}
-                <button type="submit" disabled={creating || !newWorkspaceName.trim()}>
-                  {creating ? "Creating…" : "Create and switch"}
-                </button>
-              </form>
-            </div>
-          )}
-        </section>
 
         {isManager && workspace && (
           <section

@@ -186,7 +186,11 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(within(memberships).getByText("Manager")).toBeVisible();
     expect(within(memberships).getByText("Delivery")).toBeVisible();
     expect(within(memberships).getByText("Lead")).toBeVisible();
-    expect(await screen.findByRole("heading", { name: "General Settings" })).toBeVisible();
+    const generalSettingsHeading = await screen.findByRole("heading", { name: "General Settings" });
+    const createWorkspaceHeading = screen.getByRole("heading", { name: "Create another workspace" });
+    expect(createWorkspaceHeading.compareDocumentPosition(generalSettingsHeading)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Switch to Delivery" }));
     expect(actions.selectWorkspace).toHaveBeenCalledWith("ws-2");
@@ -218,10 +222,10 @@ describe("WorkspaceSettingsPage role-aware workspace access", () => {
     expect(screen.queryByRole("textbox", { name: "Workspace name" })).not.toBeInTheDocument();
 
     const user = userEvent.setup();
-    const expandButton = screen.getByRole("button", { name: "Expand create workspace form" });
-    expect(expandButton).toHaveAttribute("aria-expanded", "false");
-    await user.click(expandButton);
-    expect(screen.getByRole("button", { name: "Collapse create workspace form" })).toHaveAttribute("aria-expanded", "true");
+    const createButton = screen.getByRole("button", { name: "Create workspace" });
+    expect(createButton).toHaveAttribute("aria-expanded", "false");
+    await user.click(createButton);
+    expect(screen.getByRole("button", { name: "Collapse workspace" })).toHaveAttribute("aria-expanded", "true");
     await user.type(screen.getByRole("textbox", { name: "Workspace name" }), "Lead Owned");
     await user.click(screen.getByRole("button", { name: "Create and switch" }));
 

@@ -176,10 +176,10 @@ export function ProjectsPage() {
               className="button-link"
               aria-expanded={showCreateProjectForm}
               aria-controls="create-project-panel"
-              aria-label={`${showCreateProjectForm ? "Collapse" : "Expand"} create project form`}
+              aria-label={`${showCreateProjectForm ? "Collapse" : "Create"} project`}
               onClick={() => setShowCreateProjectForm((visible) => !visible)}
             >
-              {showCreateProjectForm ? "Collapse" : "Expand"}
+              {showCreateProjectForm ? "Collapse" : "Create"}
             </button>
           </div>
 

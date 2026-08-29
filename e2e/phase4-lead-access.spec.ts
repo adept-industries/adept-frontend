@@ -23,7 +23,7 @@ test.describe("Phase 4 Lead repository-scoped access and Manager UI", () => {
 
     // 3. Create a project
     const projectName = `Platform Project ${Date.now()}`;
-    await page.getByRole("button", { name: "Expand create project form" }).click();
+    await page.getByRole("button", { name: "Create project", exact: true }).click();
     await page.getByLabel("Project name", { exact: true }).fill(projectName);
     await page.getByRole("button", { name: /Create project/i }).click();
 
