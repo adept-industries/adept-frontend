@@ -64,7 +64,7 @@ export function ProjectsPage() {
       listJiraProjects().catch(() => []),
     ]);
     setAvailableRepos((repos ?? []).filter((repo) => repo.trackingEnabled && !repo.archived));
-    setJiraProjects(projects ?? []);
+    setJiraProjects((projects ?? []).filter((project) => project.trackingEnabled));
   }, []);
 
   useEffect(() => {
@@ -123,7 +123,12 @@ export function ProjectsPage() {
     setEditDescription(project.description ?? "");
     setEditRepoIds(project.repositories.map((repo) => repo.id));
     setEditJiraSelections(Object.fromEntries(
-      project.repositories.map((repo) => [repo.id, repo.jiraProjects.map((jiraProject) => jiraProject.id)]),
+      project.repositories.map((repo) => [
+        repo.id,
+        repo.jiraProjects
+          .filter((jiraProject) => jiraProject.trackingEnabled)
+          .map((jiraProject) => jiraProject.id),
+      ]),
     ));
     setMutationError(null);
     void fetchCatalog();
