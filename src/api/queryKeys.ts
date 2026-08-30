@@ -8,6 +8,7 @@
 
 import type { DoraMetricsFilters, DoraMetricsSeriesFilters } from "../features/metrics/types.js";
 import type { ProjectPullRequestRiskFilters } from "../features/pullRequests/api.js";
+import type { ProjectIssuePageRequest } from "../features/issues/api.js";
 
 export const queryKeys = {
   /** User identity — not workspace-scoped. */
@@ -48,6 +49,18 @@ export const queryKeys = {
     projectId: string,
     filters: ProjectPullRequestRiskFilters,
   ) => [workspaceId, "projects", projectId, "pull-request-risks", filters] as const,
+
+  projectGithubIssues: (
+    workspaceId: string,
+    projectId: string,
+    request: ProjectIssuePageRequest,
+  ) => [workspaceId, "projects", projectId, "issues", "github", request] as const,
+
+  projectJiraIssues: (
+    workspaceId: string,
+    projectId: string,
+    request: ProjectIssuePageRequest,
+  ) => [workspaceId, "projects", projectId, "issues", "jira", request] as const,
 
   /** All keys belonging to a given workspace — use to invalidate on switch. */
   workspaceAll: (workspaceId: string) => [workspaceId] as const,
