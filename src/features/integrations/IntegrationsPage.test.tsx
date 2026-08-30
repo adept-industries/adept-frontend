@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -243,6 +243,25 @@ describe("IntegrationsPage", () => {
     expect(syncRequests).toBe(1);
   });
 
+  it("disables manual DORA rebuild for an untracked repository", async () => {
+    server.use(
+      http.get("/api/v1/integrations/github", () => HttpResponse.json(null)),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([repository("repo-1", "core-service")])),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+    );
+
+    renderPage();
+
+    const rebuild = await screen.findByRole("button", { name: "Rebuild DORA" });
+    expect(rebuild).toBeDisabled();
+    expect(rebuild).toHaveAttribute(
+      "title",
+      "Enable tracking before rebuilding DORA data",
+    );
+  });
+
   it("syncs Jira projects and refreshes the catalog after engine completion", async () => {
     const user = userEvent.setup();
     const beforeSync = "2026-08-29T00:00:00Z";
@@ -417,13 +436,19 @@ describe("IntegrationsPage", () => {
 
     renderPage();
 
-    const settingsBtn = await screen.findByRole("button", { name: "Settings" });
-    await user.click(settingsBtn);
-
-    expect(await screen.findByText("Repository Settings")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Rebuild DORA Data" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("DORA data rebuild queued");
+    const rebuildBtn = await screen.findByRole("button", { name: "Rebuild DORA" });
+    await user.click(rebuildBtn);
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "DORA rebuild queued for acme-org/core-service.",
+    );
     expect(backfillRequests).toBe(1);
+
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    const modalHeading = await screen.findByText("Repository Settings");
+    const modal = modalHeading.closest(".modal-card");
+    expect(modal).not.toBeNull();
+    expect(within(modal as HTMLElement).queryByRole("button", { name: /Rebuild DORA/i }))
+      .not.toBeInTheDocument();
 
     await user.clear(screen.getByLabelText("DORA Exclusions"));
     await user.type(screen.getByLabelText("DORA Exclusions"), "*preview*, *staging*");
