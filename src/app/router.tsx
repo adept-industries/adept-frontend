@@ -87,58 +87,6 @@ function Dashboard() {
 
       {/* Provider issues use the same Manager/Lead project scope enforced by the API. */}
       <ProjectIssuesSection selectedProjectId={selectedProject?.id ?? null} />
-
-      {/* Projects section */}
-      {projects.length > 0 ? (
-        <>
-          <h2 className="dash-section-title">Your Projects</h2>
-          <div className="dash-projects-grid">
-            {projects.map((project, i) => (
-              <div
-                key={project.id}
-                className="project-card"
-                style={{ animationDelay: `${0.05 + i * 0.05}s` }}
-              >
-                <div className="project-card-header">
-                  <h3 className="project-card-name">{project.name}</h3>
-                  <span className="project-card-badge">Active</span>
-                </div>
-                <div className="project-card-repos">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  {project.repositories.length} {project.repositories.length === 1 ? "repository" : "repositories"}
-                </div>
-                {project.repositories.length > 0 && (
-                  <ul style={{ margin: 0, padding: "0 0 0 1rem", listStyle: "disc", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
-                    {project.repositories.slice(0, 3).map((repo) => (
-                      <li key={repo.id} style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
-                        <code style={{ fontFamily: "monospace", fontSize: "0.78rem" }}>{repo.fullName}</code>
-                      </li>
-                    ))}
-                    {project.repositories.length > 3 && (
-                      <li style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>
-                        +{project.repositories.length - 3} more
-                      </li>
-                    )}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div className="dash-empty">
-          <div className="dash-empty-icon">📂</div>
-          <h2 className="dash-empty-title">No projects yet</h2>
-          <p className="dash-empty-desc">
-            A Manager can create a project and attach repositories after GitHub synchronization.
-            Once set up, DORA metrics will appear here.
-          </p>
-        </div>
-      )}
     </AppShell>
   );
 }

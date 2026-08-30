@@ -220,4 +220,5 @@ test("dashboard shows project pull-request risks and provider issues", async ({ 
   await expect(page.getByRole("link", { name: /ADEPT-81: Investigate issue synchronization/ })).toBeVisible();
   await expect(page.getByText("ADEPT — Adept Platform")).toBeVisible();
   await expect(page.getByRole("button", { name: "Sync issues" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Your Projects" })).toHaveCount(0);
 });
