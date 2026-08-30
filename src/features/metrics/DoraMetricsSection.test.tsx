@@ -35,7 +35,10 @@ function authenticatedState(): AuthenticatedState {
   };
 }
 
-function renderSection(props: { selectedProjectId?: string | null } = {}) {
+function renderSection(props: {
+  selectedProjectId?: string | null;
+  repositories?: ReadonlyArray<{ id: string; fullName: string }>;
+} = {}) {
   const state = authenticatedState();
   const actions = { logout: vi.fn() } as unknown as AuthContextValue["actions"];
 
@@ -241,11 +244,74 @@ describe("DoraMetricsSection", () => {
       ),
     );
 
-    renderSection({ selectedProjectId: "proj-123" });
+    renderSection({
+      selectedProjectId: "proj-123",
+      repositories: [{ id: "repo-1", fullName: "acme/api" }],
+    });
 
     await waitFor(() => expect(capturedUrls.length).toBeGreaterThan(0));
     const url = new URL(capturedUrls[capturedUrls.length - 1]);
     expect(url.searchParams.get("projectId")).toBe("proj-123");
+    expect(url.searchParams.has("repositoryId")).toBe(false);
+    expect(screen.getByRole("option", { name: "All repositories" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "acme/api" })).toBeInTheDocument();
+  });
+
+  it("requests one authorized project repository when selected", async () => {
+    const summaryUrls: string[] = [];
+    const seriesUrls: string[] = [];
+    server.use(
+      http.get(`${API}/metrics/summary`, ({ request }) => {
+        summaryUrls.push(request.url);
+        return HttpResponse.json(SUMMARY_FIXTURE);
+      }),
+      http.get(`${API}/metrics/series`, ({ request }) => {
+        seriesUrls.push(request.url);
+        return HttpResponse.json({
+          workspaceId: "ws-1",
+          projectId: "proj-123",
+          repositoryId: "repo-2",
+          repositoryCount: 1,
+          granularity: "DAY",
+          series: [],
+        });
+      }),
+    );
+
+    renderSection({
+      selectedProjectId: "proj-123",
+      repositories: [
+        { id: "repo-1", fullName: "acme/api" },
+        { id: "repo-2", fullName: "acme/frontend" },
+      ],
+    });
+    const user = userEvent.setup();
+
+    await user.selectOptions(screen.getByLabelText("Repository"), "repo-2");
+
+    await waitFor(() => {
+      const summaryUrl = new URL(summaryUrls[summaryUrls.length - 1]);
+      const seriesUrl = new URL(seriesUrls[seriesUrls.length - 1]);
+      expect(summaryUrl.searchParams.get("projectId")).toBe("proj-123");
+      expect(summaryUrl.searchParams.get("repositoryId")).toBe("repo-2");
+      expect(seriesUrl.searchParams.get("projectId")).toBe("proj-123");
+      expect(seriesUrl.searchParams.get("repositoryId")).toBe("repo-2");
+    });
+  });
+
+  it("only offers repositories supplied by the selected project scope", async () => {
+    renderSection({
+      selectedProjectId: "proj-lead",
+      repositories: [
+        { id: "repo-api", fullName: "acme/api" },
+        { id: "repo-engine", fullName: "acme/engine" },
+      ],
+    });
+
+    await waitFor(() => expect(screen.getByText("Deployment Frequency")).toBeInTheDocument());
+    const selector = screen.getByLabelText("Repository");
+    expect(within(selector).getAllByRole("option")).toHaveLength(3);
+    expect(within(selector).queryByRole("option", { name: "acme/frontend" })).not.toBeInTheDocument();
   });
 
 });

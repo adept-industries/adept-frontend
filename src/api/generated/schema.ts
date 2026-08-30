@@ -551,6 +551,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Get a scoped DORA metrics time series
+         * @description When projectId is supplied without repositoryId, metrics are aggregated across the repositories readable in that project. When both are supplied, the repository must be tracked, attached to that project, and readable by the caller.
+         */
         get: operations["getSeries"];
         put?: never;
         post?: never;
@@ -567,6 +571,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Get a scoped DORA metrics summary
+         * @description When projectId is supplied without repositoryId, metrics are aggregated across the repositories readable in that project. When both are supplied, the repository must be tracked, attached to that project, and readable by the caller.
+         */
         get: operations["getSummary"];
         put?: never;
         post?: never;
@@ -3188,7 +3196,9 @@ export interface operations {
     getSeries: {
         parameters: {
             query?: {
+                /** @description Optional selected project scope. */
                 projectId?: string;
+                /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
                 metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
                 granularity?: "DAY" | "WEEK" | "MONTH";
@@ -3215,7 +3225,9 @@ export interface operations {
     getSummary: {
         parameters: {
             query?: {
+                /** @description Optional selected project scope. */
                 projectId?: string;
+                /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
                 from?: string;
                 to?: string;
