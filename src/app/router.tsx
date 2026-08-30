@@ -22,6 +22,7 @@ import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { useProjects } from "../features/projects/useProjects";
 import { DoraMetricsSection } from "../features/metrics/DoraMetricsSection";
+import { ProjectPullRequestRiskSection } from "../features/pullRequests/ProjectPullRequestRiskSection";
 
 import { useContext } from "react";
 import { AuthContext } from "../auth/AuthContext";
@@ -74,6 +75,9 @@ function Dashboard() {
 
       {/* DORA Metrics Section */}
       <DoraMetricsSection selectedProjectId={selectedProject?.id ?? null} />
+
+      {/* Open pull requests, scoped by the API to the current Manager or Lead. */}
+      <ProjectPullRequestRiskSection selectedProjectId={selectedProject?.id ?? null} />
 
       {/* Projects section */}
       {projects.length > 0 ? (

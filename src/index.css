@@ -1699,3 +1699,327 @@ p {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ═══════════════════════════════════════════════
+   PULL REQUEST REVIEW QUEUE
+   ═══════════════════════════════════════════════ */
+
+.pr-risk-section {
+  margin-bottom: 2rem;
+}
+
+.pr-risk-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pr-risk-heading {
+  margin: 0;
+}
+
+.pr-risk-section-description {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.pr-risk-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pr-risk-secondary-button,
+.pr-risk-filter-button,
+.pr-risk-pagination button {
+  min-height: 2.25rem !important;
+  padding: 0.45rem 0.75rem !important;
+  font-size: 0.78rem !important;
+}
+
+.pr-risk-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.65rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pr-risk-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pr-risk-select-label select {
+  min-width: 10rem;
+  height: 2.25rem;
+  padding: 0 2rem 0 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.45rem;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.pr-risk-filter-button--active {
+  border-color: var(--primary-light) !important;
+  color: var(--primary-light) !important;
+  background: var(--primary-surface) !important;
+}
+
+.pr-risk-panel {
+  overflow: hidden;
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.75rem;
+  background: var(--stat-card-bg);
+  box-shadow: var(--stat-card-shadow);
+}
+
+.pr-risk-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-risk-row {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--stat-card-border);
+}
+
+.pr-risk-row:last-child {
+  border-bottom: 0;
+}
+
+.pr-risk-row-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pr-risk-copy {
+  min-width: 0;
+}
+
+.pr-risk-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pr-risk-title {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.pr-risk-title:hover {
+  color: var(--primary-light);
+}
+
+.pr-risk-external {
+  margin-left: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.pr-risk-neutral-badge,
+.pr-risk-stalled-badge,
+.pr-risk-level {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 99px;
+  padding: 0.18rem 0.45rem;
+  font-size: 0.61rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pr-risk-neutral-badge {
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+}
+
+.pr-risk-stalled-badge {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.dark-theme .pr-risk-stalled-badge {
+  color: #fbbf24;
+}
+
+.pr-risk-meta,
+.pr-risk-factors {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.pr-risk-factors-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.pr-risk-score {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: none;
+}
+
+.pr-risk-score strong {
+  min-width: 2.5rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.pr-risk-level--low {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.pr-risk-level--medium {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.pr-risk-level--high {
+  color: #c2410c;
+  background: rgba(249, 115, 22, 0.13);
+}
+
+.pr-risk-level--critical {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.dark-theme .pr-risk-level--low { color: #4ade80; }
+.dark-theme .pr-risk-level--medium { color: #fbbf24; }
+.dark-theme .pr-risk-level--high { color: #fb923c; }
+.dark-theme .pr-risk-level--critical { color: #f87171; }
+
+.pr-risk-empty {
+  display: flex;
+  min-height: 8rem;
+  padding: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.pr-risk-empty h3,
+.pr-risk-empty p {
+  margin: 0;
+}
+
+.pr-risk-empty h3 {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.pr-risk-empty p {
+  max-width: 36rem;
+  margin-top: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.pr-risk-empty button {
+  margin-top: 0.8rem;
+}
+
+.pr-risk-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.1rem;
+  border-top: 1px solid var(--stat-card-border);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.pr-risk-pagination > div {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.pr-risk-disclaimer {
+  margin: 0;
+  padding: 0.7rem 1.1rem;
+  border-top: 1px solid var(--stat-card-border);
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.pr-risk-notice,
+.pr-risk-error {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.pr-risk-notice {
+  color: var(--text-primary);
+  background: var(--primary-surface);
+}
+
+.pr-risk-error {
+  color: var(--danger-color);
+  background: var(--danger-surface);
+  border: 1px solid var(--danger-border);
+}
+
+@media (max-width: 768px) {
+  .pr-risk-section-header,
+  .pr-risk-row-main,
+  .pr-risk-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pr-risk-actions {
+    justify-content: flex-start;
+  }
+
+  .pr-risk-score {
+    justify-content: flex-start;
+  }
+
+  .pr-risk-pagination > div {
+    justify-content: space-between;
+  }
+}
