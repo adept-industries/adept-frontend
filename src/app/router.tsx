@@ -75,7 +75,12 @@ function Dashboard() {
       {error && <p role="alert" style={{ color: "var(--danger-color)", marginBottom: "1rem" }}>{error}</p>}
 
       {/* DORA Metrics Section */}
-      <DoraMetricsSection selectedProjectId={selectedProject?.id ?? null} />
+      <DoraMetricsSection
+        selectedProjectId={selectedProject?.id ?? null}
+        repositories={selectedProject?.repositories.filter(
+          (repository) => repository.trackingEnabled && !repository.archived,
+        ) ?? []}
+      />
 
       {/* Open pull requests, scoped by the API to the current Manager or Lead. */}
       <ProjectPullRequestRiskSection selectedProjectId={selectedProject?.id ?? null} />

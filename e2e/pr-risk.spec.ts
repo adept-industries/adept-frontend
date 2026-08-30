@@ -5,6 +5,7 @@ const PROJECT_ID = "60000000-0000-4000-8000-000000000011";
 const REPOSITORY_ID = "40000000-0000-4000-8000-000000000011";
 
 test("dashboard shows project pull-request risks and provider issues", async ({ page }) => {
+  const requestedMetricSummaries: URL[] = [];
   const membership = {
     id: "20000000-0000-4000-8000-000000000011",
     workspaceId: WORKSPACE_ID,
@@ -66,10 +67,12 @@ test("dashboard shows project pull-request risks and provider issues", async ({ 
       }],
     }]),
   }));
-  await page.route("**/api/v1/metrics/summary?*", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({
+  await page.route("**/api/v1/metrics/summary?*", (route) => {
+    requestedMetricSummaries.push(new URL(route.request().url()));
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
       workspaceId: WORKSPACE_ID,
       projectId: PROJECT_ID,
       repositoryId: null,
@@ -84,8 +87,9 @@ test("dashboard shows project pull-request risks and provider issues", async ({ 
       changeFailureRate: { value: 0, unit: "percent", sampleSize: 0, rating: "UNKNOWN", dimensions: {} },
       calculatedAt: null,
       stale: false,
-    }),
-  }));
+      }),
+    });
+  });
   await page.route("**/api/v1/metrics/series?*", (route) => route.fulfill({
     status: 200,
     contentType: "application/json",
@@ -187,6 +191,20 @@ test("dashboard shows project pull-request risks and provider issues", async ({ 
   }));
 
   await page.goto("/dashboard");
+
+  const repositorySelector = page.getByLabel("Repository");
+  await expect(repositorySelector).toBeVisible();
+  await expect(repositorySelector.getByRole("option")).toHaveCount(2);
+  await repositorySelector.selectOption(REPOSITORY_ID);
+  await expect.poll(() => {
+    const request = requestedMetricSummaries.at(-1);
+    return request
+      ? {
+          projectId: request.searchParams.get("projectId"),
+          repositoryId: request.searchParams.get("repositoryId"),
+        }
+      : null;
+  }).toEqual({ projectId: PROJECT_ID, repositoryId: REPOSITORY_ID });
 
   await expect(page.getByRole("heading", { name: "Pull request review queue" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Expose project pull request risks/ })).toBeVisible();

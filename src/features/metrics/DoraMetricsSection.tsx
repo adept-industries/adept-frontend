@@ -85,17 +85,38 @@ function seriesFor(items: MetricSeriesItemDto[], type: MetricType): MetricSeries
 
 interface DoraMetricsSectionProps {
   selectedProjectId?: string | null;
+  repositories?: ReadonlyArray<{
+    id: string;
+    fullName: string;
+  }>;
 }
 
-export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProps) {
+interface RepositorySelection {
+  projectId: string | null;
+  repositoryId: string | null;
+}
+
+export function DoraMetricsSection({
+  selectedProjectId,
+  repositories = [],
+}: DoraMetricsSectionProps) {
   const [preset, setPreset] = useState<TimeRangePreset>("30d");
+  const [repositorySelection, setRepositorySelection] = useState<RepositorySelection>({
+    projectId: selectedProjectId ?? null,
+    repositoryId: null,
+  });
   const range = useMemo(() => presetToRange(preset), [preset]);
+  const selectedRepositoryId = repositorySelection.projectId === (selectedProjectId ?? null)
+    && repositories.some((repository) => repository.id === repositorySelection.repositoryId)
+      ? repositorySelection.repositoryId
+      : null;
 
   const filters: DoraMetricsFilters = useMemo(() => ({
     projectId:  selectedProjectId ?? null,
+    repositoryId: selectedRepositoryId,
     from: range.from,
     to:   range.to,
-  }), [selectedProjectId, range]);
+  }), [selectedProjectId, selectedRepositoryId, range]);
 
   const summaryQuery = useDoraMetricsSummary(filters);
   const seriesQuery = useDoraMetricsSeries({
@@ -122,18 +143,40 @@ export function DoraMetricsSection({ selectedProjectId }: DoraMetricsSectionProp
       {/* Section header + filter bar */}
       <div className="dora-section-header">
         <h2 className="dash-section-title" style={{ margin: 0 }}>DORA Metrics</h2>
-        <div className="dora-filter-bar" role="group" aria-label="Time range">
-          {PRESETS.map((p) => (
-            <button
-              key={p.value}
-              id={`dora-filter-${p.value}`}
-              className={`dora-filter-btn${preset === p.value ? " dora-filter-btn--active" : ""}`}
-              aria-pressed={preset === p.value}
-              onClick={() => setPreset(p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="dora-filter-controls">
+          {selectedProjectId && repositories.length > 0 && (
+            <label className="dora-repository-filter">
+              <span>Repository</span>
+              <select
+                aria-label="Repository"
+                value={selectedRepositoryId ?? ""}
+                onChange={(event) => setRepositorySelection({
+                  projectId: selectedProjectId,
+                  repositoryId: event.target.value || null,
+                })}
+              >
+                <option value="">All repositories</option>
+                {repositories.map((repository) => (
+                  <option key={repository.id} value={repository.id}>
+                    {repository.fullName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className="dora-filter-bar" role="group" aria-label="Time range">
+            {PRESETS.map((p) => (
+              <button
+                key={p.value}
+                id={`dora-filter-${p.value}`}
+                className={`dora-filter-btn${preset === p.value ? " dora-filter-btn--active" : ""}`}
+                aria-pressed={preset === p.value}
+                onClick={() => setPreset(p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
