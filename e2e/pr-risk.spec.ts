@@ -4,7 +4,7 @@ const WORKSPACE_ID = "30000000-0000-4000-8000-000000000011";
 const PROJECT_ID = "60000000-0000-4000-8000-000000000011";
 const REPOSITORY_ID = "40000000-0000-4000-8000-000000000011";
 
-test("dashboard shows the project pull-request risk queue", async ({ page }) => {
+test("dashboard shows project pull-request risks and provider issues", async ({ page }) => {
   const membership = {
     id: "20000000-0000-4000-8000-000000000011",
     workspaceId: WORKSPACE_ID,
@@ -137,6 +137,54 @@ test("dashboard shows the project pull-request risk queue", async ({ page }) => 
       totalPages: 1,
     }),
   }));
+  await page.route(`**/api/v1/projects/${PROJECT_ID}/issues/github?*`, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      items: [{
+        id: "80000000-0000-4000-8000-000000000011",
+        repositoryId: REPOSITORY_ID,
+        repositoryFullName: "adept-industries/adept-api",
+        number: 81,
+        title: "Correct project issue authorization",
+        authorLogin: "adept-reviewer",
+        assigneeLogins: ["api-lead"],
+        labels: ["bug"],
+        commentsCount: 2,
+        url: "https://github.com/adept-industries/adept-api/issues/81",
+        createdAt: "2026-08-29T08:00:00Z",
+        updatedAt: "2026-08-30T08:00:00Z",
+      }],
+      page: 0,
+      size: 10,
+      totalElements: 1,
+      totalPages: 1,
+    }),
+  }));
+  await page.route(`**/api/v1/projects/${PROJECT_ID}/issues/jira?*`, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({
+      items: [{
+        id: "90000000-0000-4000-8000-000000000011",
+        jiraProjectId: "90000000-0000-4000-8000-000000000012",
+        jiraProjectKey: "ADEPT",
+        jiraProjectName: "Adept Platform",
+        issueKey: "ADEPT-81",
+        summary: "Investigate issue synchronization",
+        issueType: "Bug",
+        statusName: "In Progress",
+        priorityName: "High",
+        url: "https://adept.atlassian.net/browse/ADEPT-81",
+        createdAt: "2026-08-29T08:00:00Z",
+        updatedAt: "2026-08-30T08:00:00Z",
+      }],
+      page: 0,
+      size: 10,
+      totalElements: 1,
+      totalPages: 1,
+    }),
+  }));
 
   await page.goto("/dashboard");
 
@@ -146,4 +194,12 @@ test("dashboard shows the project pull-request risk queue", async ({ page }) => 
   await expect(page.getByText("Stalled", { exact: true })).toBeVisible();
   await expect(page.getByLabel("critical risk, 47%")).toBeVisible();
   await expect(page.getByRole("button", { name: "Score open PRs" })).toBeVisible();
+
+  await expect(page.getByRole("heading", { name: "Open issues" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Correct project issue authorization/ })).toBeVisible();
+  await expect(page.getByText("adept-industries/adept-api #81")).toBeVisible();
+  await page.getByRole("tab", { name: /Jira/ }).click();
+  await expect(page.getByRole("link", { name: /ADEPT-81: Investigate issue synchronization/ })).toBeVisible();
+  await expect(page.getByText("ADEPT — Adept Platform")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sync issues" })).toBeVisible();
 });

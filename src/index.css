@@ -623,6 +623,112 @@ p {
 }
 
 /* ═══════════════════════════════════════════════
+   PROJECT ISSUES
+   ═══════════════════════════════════════════════ */
+
+.project-issues-section {
+  margin-bottom: 2rem;
+}
+
+.project-issue-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  background: var(--surface-muted);
+}
+
+.project-issue-tabs button {
+  min-height: 2.15rem !important;
+  padding: 0.4rem 0.85rem !important;
+  border: 0 !important;
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  font-size: 0.78rem !important;
+}
+
+.project-issue-tabs button.project-issue-tab--active {
+  color: var(--primary-light) !important;
+  background: var(--primary-surface) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.project-issues-panel {
+  min-height: 8rem;
+}
+
+.project-issue-row {
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--stat-card-border);
+}
+
+.project-issue-row:last-child {
+  border-bottom: 0;
+}
+
+.project-issue-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.project-issue-title {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.project-issue-title:hover {
+  color: var(--primary-light);
+}
+
+.project-issue-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.45rem;
+  border-radius: 99px;
+  font-size: 0.61rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.project-issue-badge--label,
+.project-issue-badge--status {
+  color: var(--primary-light);
+  background: var(--primary-surface);
+}
+
+.project-issue-badge--priority {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.dark-theme .project-issue-badge--priority {
+  color: #fbbf24;
+}
+
+.project-issue-meta,
+.project-issue-detail {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.project-issue-detail {
+  font-size: 0.68rem;
+}
+
+/* ═══════════════════════════════════════════════
    FLOATING SIDEBAR
    ═══════════════════════════════════════════════ */
 
