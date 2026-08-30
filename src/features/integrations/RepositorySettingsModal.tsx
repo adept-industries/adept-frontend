@@ -157,7 +157,7 @@ export function RepositorySettingsModal({
               }}
             >
               <option value="WORKFLOW_RUN">GitHub Actions Workflow Run</option>
-              <option value="DEPLOYMENT">GitHub Deployment API Event (AWS rollout)</option>
+              <option value="DEPLOYMENT">GitHub Deployment API Event</option>
             </select>
             <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
               Use Deployment API events when image publication and the live rollout are separate steps.
