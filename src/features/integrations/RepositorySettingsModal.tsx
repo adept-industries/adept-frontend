@@ -5,14 +5,12 @@ interface RepositorySettingsModalProps {
   repository: RepositoryResponse;
   onClose: () => void;
   onSave: (settings: Partial<RepositorySettings>) => Promise<void>;
-  onRebuild: () => Promise<void>;
 }
 
 export function RepositorySettingsModal({
   repository,
   onClose,
   onSave,
-  onRebuild,
 }: RepositorySettingsModalProps) {
   const current = repository.settings;
 
@@ -39,8 +37,6 @@ export function RepositorySettingsModal({
   );
   const [backfillDays, setBackfillDays] = useState<number>(current?.backfillDays ?? 90);
   const [saving, setSaving] = useState(false);
-  const [rebuilding, setRebuilding] = useState(false);
-  const [rebuildQueued, setRebuildQueued] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,20 +66,6 @@ export function RepositorySettingsModal({
       setError(err instanceof Error ? err.message : "Failed to update repository settings");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleRebuild = async () => {
-    setRebuilding(true);
-    setRebuildQueued(false);
-    setError(null);
-    try {
-      await onRebuild();
-      setRebuildQueued(true);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to queue DORA data rebuild");
-    } finally {
-      setRebuilding(false);
     }
   };
 
@@ -347,24 +329,7 @@ export function RepositorySettingsModal({
             </div>
           </div>
 
-          {rebuildQueued && (
-            <div role="status" style={{ color: "var(--text-secondary, #94a3b8)", fontSize: "0.8rem" }}>
-              DORA data rebuild queued.
-            </div>
-          )}
-
-          <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", marginTop: "1rem" }}>
-            <button
-              type="button"
-              className="button-link"
-              onClick={() => void handleRebuild()}
-              disabled={saving || rebuilding || repository.archived || !repository.trackingEnabled}
-              title={!repository.trackingEnabled ? "Enable tracking before rebuilding DORA data" : undefined}
-              style={{ padding: "0.5rem 1rem" }}
-            >
-              {rebuilding ? "Queuing..." : "Rebuild DORA Data"}
-            </button>
-            <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
             <button
               type="button"
               className="button-link"
@@ -382,7 +347,6 @@ export function RepositorySettingsModal({
             >
               {saving ? "Saving..." : "Save Settings"}
             </button>
-            </div>
           </div>
         </form>
       </div>

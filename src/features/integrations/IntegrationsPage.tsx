@@ -80,6 +80,7 @@ export function IntegrationsPage() {
   const [isPending, startTransition] = useTransition();
   const [syncingGithub, setSyncingGithub] = useState(false);
   const [syncingJira, setSyncingJira] = useState(false);
+  const [rebuildingRepositoryId, setRebuildingRepositoryId] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -213,9 +214,19 @@ export function IntegrationsPage() {
     setSelectedRepoForSettings(null);
   };
 
-  const handleRebuildRepoData = async () => {
-    if (!selectedRepoForSettings) return;
-    await requestRepositoryBackfill(selectedRepoForSettings.id);
+  const handleRebuildRepoData = async (repo: RepositoryResponse) => {
+    if (repo.archived || !repo.trackingEnabled || rebuildingRepositoryId) return;
+    setRebuildingRepositoryId(repo.id);
+    setError(null);
+    setSyncMessage(null);
+    try {
+      await requestRepositoryBackfill(repo.id);
+      setSyncMessage(`DORA rebuild queued for ${repo.fullName}.`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to queue DORA data rebuild");
+    } finally {
+      setRebuildingRepositoryId(null);
+    }
   };
 
   const handleToggleJiraTracking = async (project: JiraProjectResponse) => {
@@ -677,15 +688,33 @@ export function IntegrationsPage() {
                           {repo.settings?.deploymentSignal ?? "WORKFLOW_RUN"}
                         </span>
                       </td>
-                      <td style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>
-                        <button
-                          type="button"
-                          className="button-link"
-                          onClick={() => setSelectedRepoForSettings(repo)}
-                          style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
-                        >
-                          Settings
-                        </button>
+                      <td style={{ padding: "0.75rem 0.5rem" }}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className="button-link"
+                            onClick={() => void handleRebuildRepoData(repo)}
+                            disabled={repo.archived || !repo.trackingEnabled || rebuildingRepositoryId !== null}
+                            title={
+                              repo.archived
+                                ? "Archived repositories cannot be rebuilt"
+                                : !repo.trackingEnabled
+                                  ? "Enable tracking before rebuilding DORA data"
+                                  : "Rebuild DORA data using saved settings"
+                            }
+                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                          >
+                            {rebuildingRepositoryId === repo.id ? "Queuing..." : "Rebuild DORA"}
+                          </button>
+                          <button
+                            type="button"
+                            className="button-link"
+                            onClick={() => setSelectedRepoForSettings(repo)}
+                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                          >
+                            Settings
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -752,7 +781,6 @@ export function IntegrationsPage() {
             repository={selectedRepoForSettings}
             onClose={() => setSelectedRepoForSettings(null)}
             onSave={handleSaveRepoSettings}
-            onRebuild={handleRebuildRepoData}
           />
         )}
       </div>
