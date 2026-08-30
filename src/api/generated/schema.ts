@@ -642,6 +642,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/pull-request-risks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List current estimated review risks for a project
+         * @description Managers see predictions for every tracked project repository. Leads see only repositories assigned to their active membership. Results contain safe derived metadata and no source code or diffs.
+         */
+        get: operations["listProjectPullRequestRisks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/pull-request-risks/rebuild": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue risk-only backfills for a project
+         * @description Manager-only operation. Queues one deduplicated open-pull-request scoring job for each tracked, non-archived project repository without rebuilding DORA metrics.
+         */
+        post: operations["rebuildProjectPullRequestRisks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/repositories": {
         parameters: {
             query?: never;
@@ -1180,6 +1220,56 @@ export interface components {
             projectKey: string;
             projectName: string;
             trackingEnabled: boolean;
+        };
+        ProjectPullRequestRiskItemResponse: {
+            authorLogin?: string;
+            draft: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: date-time */
+            openedAt: string;
+            /** Format: date-time */
+            predictedAt: string;
+            /** Format: uuid */
+            pullRequestId: string;
+            repositoryFullName: string;
+            /** Format: uuid */
+            repositoryId: string;
+            /** @enum {string} */
+            riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+            riskScore: number;
+            stalled: boolean;
+            thresholdUsed?: number;
+            title: string;
+            topFactors: {
+                [key: string]: unknown;
+            }[];
+            url: string;
+        };
+        ProjectPullRequestRiskPageResponse: {
+            disclaimer: string;
+            displayLabel: string;
+            featureSchemaVersion: string;
+            items: components["schemas"]["ProjectPullRequestRiskItemResponse"][];
+            modelName: string;
+            modelVersion: string;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: date-time */
+            stalledBefore: string;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        ProjectPullRequestRiskRebuildResponse: {
+            /** Format: int32 */
+            alreadyQueuedRepositories: number;
+            modelVersion: string;
+            /** Format: int32 */
+            queuedRepositories: number;
         };
         ProjectRepositoryConfigurationRequest: {
             jiraProjectIds: string[];
@@ -3453,6 +3543,136 @@ export interface operations {
             };
             /** @description The request body used an unsupported media type */
             415: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    listProjectPullRequestRisks: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                riskLevel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+                stalledOnly?: boolean;
+            };
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Project pull-request risks returned */
+            200: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPullRequestRiskPageResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    rebuildProjectPullRequestRisks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Project risk rebuild accepted */
+            202: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectPullRequestRiskRebuildResponse"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
                 headers: {
                     /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";

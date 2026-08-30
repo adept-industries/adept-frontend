@@ -422,4 +422,19 @@ export const handlers = [
 
   // Projects (default empty — tests override as needed)
   http.get(`${API}/projects`, () => HttpResponse.json([])),
+
+  // Project pull-request review queue (default empty — tests override as needed)
+  http.get(`${API}/projects/:projectId/pull-request-risks`, () => HttpResponse.json({
+    displayLabel: "Estimated review risk",
+    disclaimer: "This score helps prioritize code review. It does not prove that the pull request contains a defect.",
+    modelName: "jitfine-expert-pr-risk-mvp",
+    modelVersion: "jitfine-expert-pr-risk-mvp-v1",
+    featureSchemaVersion: "jitfine-pr-features-v1",
+    stalledBefore: "2026-08-28T00:00:00Z",
+    items: [],
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0,
+  })),
 ];
