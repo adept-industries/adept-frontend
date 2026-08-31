@@ -132,9 +132,11 @@ function SidebarNavItem({ to, onClick, icon, label, id, active }: SidebarNavItem
 interface FloatingSidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
+function FloatingSidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollapse }: FloatingSidebarProps) {
   const { state, actions } = useAuth();
   const location = useLocation();
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
@@ -164,7 +166,12 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
     dashboardThemePreference.set(next);
   };
 
-  const sidebarCls = `floating-sidebar${mobileOpen ? " mobile-open" : ""}`;
+  // On desktop: always expanded unless user collapsed it; on mobile: controlled by mobileOpen
+  const sidebarCls = [
+    "floating-sidebar",
+    mobileOpen ? "mobile-open" : "",
+    !collapsed ? "expanded" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <>
@@ -173,17 +180,27 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
       )}
 
       <aside className={sidebarCls} aria-label="Main navigation">
-        {/* Logo */}
-        <Link
-          to="/dashboard"
-          className="sidebar-logo-area"
-          id="sidebar-logo-link"
-          aria-label="Go to dashboard"
-          onClick={onMobileClose}
-        >
-          <img src={logoPath} alt="Adept" className="sidebar-logo-img" />
-          <span className="sidebar-brand-name">Adept</span>
-        </Link>
+        {/* Logo / collapse toggle (desktop) */}
+        <div className="sidebar-logo-area" id="sidebar-logo-area">
+          <button
+            type="button"
+            className="sidebar-logo-toggle"
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <img src={logoPath} alt="Adept" className="sidebar-logo-img" />
+          </button>
+          <Link
+            to="/dashboard"
+            className="sidebar-brand-name"
+            id="sidebar-logo-link"
+            aria-label="Go to dashboard"
+            onClick={onMobileClose}
+          >
+            Adept
+          </Link>
+        </div>
 
         {/* Mobile-only: workspace & project selectors inside sidebar */}
         {isAuthenticated && (
@@ -279,6 +296,7 @@ function FloatingSidebar({ mobileOpen, onMobileClose }: FloatingSidebarProps) {
 export function AppShell({ children }: AppShellProps) {
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     return dashboardThemePreference.subscribe(setTheme);
@@ -307,6 +325,8 @@ export function AppShell({ children }: AppShellProps) {
       <FloatingSidebar
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((p) => !p)}
       />
 
       {/* Content area */}

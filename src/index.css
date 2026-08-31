@@ -767,7 +767,6 @@ p {
   animation: sidebarFadeIn 0.3s ease;
 }
 
-.floating-sidebar:hover,
 .floating-sidebar.expanded {
   width: var(--sidebar-expanded);
 }
@@ -779,10 +778,27 @@ p {
   padding: 1.1rem 1rem;
   min-height: 64px;
   border-bottom: 1px solid var(--sidebar-border);
-  text-decoration: none;
-  color: var(--text-primary);
   overflow: hidden;
   flex-shrink: 0;
+}
+
+.sidebar-logo-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 0.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar-logo-toggle:hover {
+  opacity: 0.75;
 }
 
 .sidebar-logo-img {
@@ -806,9 +822,10 @@ p {
   transform: translateX(-6px);
   transition: opacity 0.18s ease 0.05s, transform 0.18s ease 0.05s;
   pointer-events: none;
+  text-decoration: none;
+  color: var(--text-primary);
 }
 
-.floating-sidebar:hover .sidebar-brand-name,
 .floating-sidebar.expanded .sidebar-brand-name {
   opacity: 1;
   transform: translateX(0);
@@ -884,7 +901,6 @@ p {
   text-overflow: ellipsis;
 }
 
-.floating-sidebar:hover .sidebar-nav-label,
 .floating-sidebar.expanded .sidebar-nav-label {
   opacity: 1;
   transform: translateX(0);
@@ -933,7 +949,6 @@ p {
   transition: opacity 0.15s ease 0.04s, transform 0.15s ease 0.04s;
 }
 
-.floating-sidebar:hover .sidebar-user-info,
 .floating-sidebar.expanded .sidebar-user-info {
   opacity: 1;
   transform: translateX(0);
@@ -987,8 +1002,7 @@ p {
   transition: margin-left 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Push content right when sidebar is hovered or pinned open */
-.dashboard-shell:has(.floating-sidebar:hover) .dashboard-content-area,
+/* Push content right when sidebar is pinned open */
 .dashboard-shell:has(.floating-sidebar.expanded) .dashboard-content-area {
   margin-left: calc(var(--sidebar-expanded) + 1.5rem);
 }
