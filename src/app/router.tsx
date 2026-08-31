@@ -20,6 +20,7 @@ import { captureActionToken, clearActionToken } from "../features/auth/actionTok
 import { AcceptInvitePage } from "../features/auth/pages/AcceptInvitePage";
 import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
+import { AlertsPage } from "../features/alerts/AlertsPage";
 import { useProjects } from "../features/projects/useProjects";
 import { DoraMetricsSection } from "../features/metrics/DoraMetricsSection";
 import { ProjectPullRequestRiskSection } from "../features/pullRequests/ProjectPullRequestRiskSection";
@@ -178,6 +179,19 @@ export const router = createBrowserRouter([
         <WorkspaceRoute>
           <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
             <ProjectsPage />
+          </RoleRoute>
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/dashboard/alerts",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
+            <AlertsPage />
           </RoleRoute>
         </WorkspaceRoute>
       </ProtectedRoute>

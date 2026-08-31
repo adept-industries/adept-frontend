@@ -62,6 +62,9 @@ export const queryKeys = {
     request: ProjectIssuePageRequest,
   ) => [workspaceId, "projects", projectId, "issues", "jira", request] as const,
 
+  alertRules: (workspaceId: string, repositoryId?: string) =>
+    [workspaceId, "alert-rules", { repositoryId }] as const,
+
   /** All keys belonging to a given workspace — use to invalidate on switch. */
   workspaceAll: (workspaceId: string) => [workspaceId] as const,
 } as const;
