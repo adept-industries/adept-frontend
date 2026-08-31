@@ -90,6 +90,7 @@ describe("AppShell theme", () => {
       "Dashboard",
       "Integrations",
       "Projects",
+      "Alerts",
       "Workspaces",
     ]);
     expect(container.querySelector(".sidebar-nav-divider")).not.toBeInTheDocument();
@@ -120,6 +121,7 @@ describe("AppShell theme", () => {
     expect(within(navigation).getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
       "Dashboard",
       "Projects",
+      "Alerts",
       "Workspaces",
     ]);
     expect(screen.queryByRole("link", { name: "Integrations" })).not.toBeInTheDocument();
