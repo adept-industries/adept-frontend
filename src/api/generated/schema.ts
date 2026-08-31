@@ -4,6 +4,54 @@
  */
 
 export interface paths {
+    "/api/v1/alert-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List alert rules
+         * @description Managers see rules across all workspace repositories. Leads see only rules for assigned repositories.
+         */
+        get: operations["listAlertRules"];
+        put?: never;
+        /**
+         * Create an alert rule
+         * @description Creates a threshold comparison rule for a tracked repository. Managers can create for any repository; Leads can create only for assigned repositories.
+         */
+        post: operations["createAlertRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alert-rules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete an alert rule
+         * @description Deletes an existing alert rule. Can only be performed by the rule creator or a Manager within the current workspace.
+         */
+        delete: operations["deleteAlertRule"];
+        options?: never;
+        head?: never;
+        /**
+         * Update an alert rule
+         * @description Updates an existing alert rule. Can only be performed by the rule creator or a Manager within the current workspace.
+         */
+        patch: operations["updateAlertRule"];
+        trace?: never;
+    };
     "/api/v1/auth/csrf": {
         parameters: {
             query?: never;
@@ -1007,6 +1055,37 @@ export interface components {
         ActionTokenRequest: {
             token: string;
         };
+        AlertRuleResponse: {
+            /** @enum {string} */
+            channel: "EMAIL";
+            /** @enum {string} */
+            comparator: "GT" | "GTE" | "LT" | "LTE" | "EQ";
+            /** Format: int32 */
+            cooldownMinutes: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            createdByMembershipId?: string;
+            destination: string;
+            enabled: boolean;
+            /** Format: int32 */
+            evaluationWindowMinutes: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastTriggeredAt?: string;
+            /** @enum {string} */
+            metricType: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_RISK_SCORE";
+            name: string;
+            repositoryFullName: string;
+            /** Format: uuid */
+            repositoryId: string;
+            thresholdValue: number;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: uuid */
+            workspaceId: string;
+        };
         AuthSessionResponse: components["schemas"]["AuthenticatedSessionResponse"] | components["schemas"]["WorkspaceSelectionSessionResponse"];
         AuthenticatedSessionResponse: {
             /** @description Memory-only Bearer JWT. */
@@ -1019,6 +1098,25 @@ export interface components {
             workspaceSelectionRequired: false;
             /** @description Active workspace memberships. Empty when the account must create a workspace. */
             workspaces: components["schemas"]["WorkspaceSummaryResponse"][];
+        };
+        CreateAlertRuleRequest: {
+            /** @enum {string} */
+            channel?: "EMAIL";
+            /** @enum {string} */
+            comparator: "GT" | "GTE" | "LT" | "LTE" | "EQ";
+            /** Format: int32 */
+            cooldownMinutes?: number;
+            /** Format: email */
+            destination?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            evaluationWindowMinutes?: number;
+            /** @enum {string} */
+            metricType: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_RISK_SCORE";
+            name: string;
+            /** Format: uuid */
+            repositoryId: string;
+            thresholdValue: number;
         };
         CreateProjectRequest: {
             description?: string;
@@ -1493,6 +1591,23 @@ export interface components {
             user: components["schemas"]["UserSummary"];
             workspace: components["schemas"]["WorkspaceSummaryResponse"];
         };
+        /** @description Presence-aware patch for alert rules. At least one field must be provided. */
+        UpdateAlertRuleRequest: {
+            /** @enum {string} */
+            channel?: "EMAIL";
+            /** @enum {string} */
+            comparator?: "GT" | "GTE" | "LT" | "LTE" | "EQ";
+            /** Format: int32 */
+            cooldownMinutes?: number;
+            destination?: string;
+            enabled?: boolean;
+            /** Format: int32 */
+            evaluationWindowMinutes?: number;
+            /** @enum {string} */
+            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_RISK_SCORE";
+            name?: string;
+            thresholdValue?: number;
+        };
         UpdateJiraProjectRequest: {
             trackingEnabled: boolean;
         };
@@ -1548,6 +1663,304 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listAlertRules: {
+        parameters: {
+            query?: {
+                repositoryId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alert rules returned */
+            200: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertRuleResponse"][];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    createAlertRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAlertRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description Alert rule created */
+            201: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertRuleResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    deleteAlertRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Alert rule deleted */
+            204: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    updateAlertRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAlertRuleRequest"];
+            };
+        };
+        responses: {
+            /** @description Alert rule updated */
+            200: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertRuleResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body exceeded the 16 KiB limit */
+            413: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The request body used an unsupported media type */
+            415: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     getCsrfToken: {
         parameters: {
             query?: never;
