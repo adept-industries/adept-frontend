@@ -58,17 +58,51 @@ const COMPARATOR_OPTIONS: { label: string; value: AlertComparator }[] = [
   { label: "= Equal to", value: "EQ" },
 ];
 
+function validateRuleValues(
+  metricType: AlertMetricType,
+  threshold: number,
+  evaluationWindowMinutes: number,
+  cooldownMinutes: number,
+): string | null {
+  if (!Number.isFinite(threshold)) {
+    return "Provide a valid numeric threshold.";
+  }
+  if (metricType === "PR_RISK_SCORE" && (threshold < 0 || threshold > 1)) {
+    return "PR risk thresholds must be between 0 and 1.";
+  }
+  if (metricType === "CHANGE_FAILURE_RATE_PERCENT" && (threshold < 0 || threshold > 100)) {
+    return "Change failure rate thresholds must be between 0% and 100%.";
+  }
+  if (
+    metricType !== "PR_RISK_SCORE"
+    && metricType !== "CHANGE_FAILURE_RATE_PERCENT"
+    && threshold < 0
+  ) {
+    return "Deployment and duration thresholds cannot be negative.";
+  }
+  if (!Number.isInteger(evaluationWindowMinutes) || evaluationWindowMinutes < 1) {
+    return "Evaluation window must be at least 1 minute.";
+  }
+  if (!Number.isInteger(cooldownMinutes) || cooldownMinutes < 0) {
+    return "Cooldown must be 0 minutes or greater.";
+  }
+  return null;
+}
+
 export function AlertsPage() {
   const { state } = useAuth();
   const isAuthenticated = state.status === "authenticated";
   const userEmail = isAuthenticated ? state.user.email : "";
   const workspaceTimezone = isAuthenticated ? state.currentMembership.timezone : "UTC";
+  const currentMembershipId = isAuthenticated ? state.currentMembership.id : "";
+  const isManager = isAuthenticated && state.currentMembership.role === "MANAGER";
 
   const [rules, setRules] = useState<AlertRuleResponse[]>([]);
   const [repositories, setRepositories] = useState<RepositoryResponse[]>([]);
   const [selectedRepoFilter, setSelectedRepoFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Create form state
@@ -93,34 +127,43 @@ export function AlertsPage() {
   const [editDestination, setEditDestination] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
 
-  const fetchCatalog = useCallback(async () => {
+  const fetchCatalog = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoading(true);
       setError(null);
       const [fetchedRules, fetchedRepos] = await Promise.all([
-        listAlertRules(selectedRepoFilter === "ALL" ? undefined : selectedRepoFilter),
-        listRepositories(true).catch(() => []),
+        listAlertRules(selectedRepoFilter === "ALL" ? undefined : selectedRepoFilter, signal),
+        listRepositories(true, signal),
       ]);
+      if (signal?.aborted) return;
       setRules(fetchedRules);
       const activeRepos = (fetchedRepos ?? []).filter((r) => r.trackingEnabled && !r.archived);
       setRepositories(activeRepos);
-      if (activeRepos.length > 0 && !repositoryId) {
-        setRepositoryId(activeRepos[0].id);
-      }
+      setRepositoryId((current) => (
+        activeRepos.some((repository) => repository.id === current)
+          ? current
+          : (activeRepos[0]?.id ?? "")
+      ));
     } catch (err: unknown) {
+      if (signal?.aborted) return;
       setError(err instanceof Error ? err.message : "Failed to load alert rules.");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
-  }, [selectedRepoFilter, repositoryId]);
+  }, [selectedRepoFilter]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      void fetchCatalog();
-    }
+    if (!isAuthenticated) return;
+    const controller = new AbortController();
+    void fetchCatalog(controller.signal);
+    return () => controller.abort();
   }, [fetchCatalog, isAuthenticated]);
 
   const handleOpenCreateModal = () => {
+    if (repositories.length === 0) {
+      setError("Track an accessible repository before creating an alert rule.");
+      return;
+    }
     setRuleName("");
     setMetricType("CHANGE_FAILURE_RATE_PERCENT");
     setComparator("GT");
@@ -132,6 +175,7 @@ export function AlertsPage() {
       setRepositoryId(selectedRepoFilter !== "ALL" ? selectedRepoFilter : repositories[0].id);
     }
     setError(null);
+    setFormError(null);
     setShowCreateModal(true);
   };
 
@@ -140,14 +184,20 @@ export function AlertsPage() {
     const trimmedName = ruleName.trim();
     if (!trimmedName || !repositoryId) return;
 
-    const parsedThreshold = parseFloat(thresholdValue);
-    if (isNaN(parsedThreshold)) {
-      setError("Please provide a valid numeric threshold value.");
+    const parsedThreshold = Number(thresholdValue);
+    const validationError = validateRuleValues(
+      metricType,
+      parsedThreshold,
+      evaluationWindowMinutes,
+      cooldownMinutes,
+    );
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setFormError(null);
     try {
       await createAlertRule({
         name: trimmedName,
@@ -155,8 +205,8 @@ export function AlertsPage() {
         metricType,
         comparator,
         thresholdValue: parsedThreshold,
-        evaluationWindowMinutes: Number(evaluationWindowMinutes) || 1440,
-        cooldownMinutes: Number(cooldownMinutes) || 1440,
+        evaluationWindowMinutes,
+        cooldownMinutes,
         destination: destination.trim() || userEmail,
         enabled: true,
         channel: "EMAIL",
@@ -165,7 +215,7 @@ export function AlertsPage() {
       setSuccessMessage(`Alert rule "${trimmedName}" created successfully.`);
       await fetchCatalog();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create alert rule.");
+      setFormError(err instanceof Error ? err.message : "Failed to create alert rule.");
     } finally {
       setSubmitting(false);
     }
@@ -181,20 +231,27 @@ export function AlertsPage() {
     setEditDestination(rule.destination);
     setEditEnabled(rule.enabled);
     setError(null);
+    setFormError(null);
   };
 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!editingRule) return;
 
-    const parsedThreshold = parseFloat(editThresholdValue);
-    if (isNaN(parsedThreshold)) {
-      setError("Please provide a valid numeric threshold value.");
+    const parsedThreshold = Number(editThresholdValue);
+    const validationError = validateRuleValues(
+      editingRule.metricType,
+      parsedThreshold,
+      editEvaluationWindowMinutes,
+      editCooldownMinutes,
+    );
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
 
     setSubmitting(true);
-    setError(null);
+    setFormError(null);
     try {
       await updateAlertRule(editingRule.id, {
         name: editName.trim() || undefined,
@@ -209,13 +266,14 @@ export function AlertsPage() {
       setSuccessMessage(`Alert rule "${editingRule.name}" updated successfully.`);
       await fetchCatalog();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to update alert rule.");
+      setFormError(err instanceof Error ? err.message : "Failed to update alert rule.");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleToggleEnabled = async (rule: AlertRuleResponse) => {
+    if (!isManager && rule.createdByMembershipId !== currentMembershipId) return;
     try {
       setError(null);
       await updateAlertRule(rule.id, { enabled: !rule.enabled });
@@ -226,6 +284,7 @@ export function AlertsPage() {
   };
 
   const handleDelete = async (rule: AlertRuleResponse) => {
+    if (!isManager && rule.createdByMembershipId !== currentMembershipId) return;
     if (!window.confirm(`Are you sure you want to delete alert rule "${rule.name}"?`)) return;
     try {
       setError(null);
@@ -241,10 +300,10 @@ export function AlertsPage() {
     <AppShell>
       <div className="dash-header-row">
         <div className="dash-welcome">
-          <p className="dash-welcome-eyebrow">Real-Time Threshold Monitoring</p>
+          <p className="dash-welcome-eyebrow">Repository Threshold Monitoring</p>
           <h1 id="alerts-title" className="dash-welcome-title">Alert Rules</h1>
           <p className="dash-welcome-sub">
-            Configure automated email notifications for your tracked repositories when DORA metrics or PR review risk exceed thresholds.
+            Email workspace members when repository DORA metrics or estimated PR review risk match a rule.
           </p>
         </div>
 
@@ -254,6 +313,8 @@ export function AlertsPage() {
             id="create-alert-btn"
             className="primary-button"
             onClick={handleOpenCreateModal}
+            disabled={loading || repositories.length === 0}
+            title={repositories.length === 0 ? "Track an accessible repository first" : undefined}
             style={{ padding: "0.55rem 1.25rem", fontSize: "0.9rem" }}
           >
             + New Alert Rule
@@ -346,6 +407,7 @@ export function AlertsPage() {
             type="button"
             className="primary-button"
             onClick={handleOpenCreateModal}
+            disabled={repositories.length === 0}
             style={{ fontSize: "0.875rem", padding: "0.5rem 1rem" }}
           >
             Create Rule
@@ -376,6 +438,7 @@ export function AlertsPage() {
             <tbody>
               {rules.map((rule) => {
                 const metricMeta = METRIC_OPTIONS.find((m) => m.value === rule.metricType);
+                const canManage = isManager || rule.createdByMembershipId === currentMembershipId;
                 return (
                   <tr
                     key={rule.id}
@@ -414,23 +477,38 @@ export function AlertsPage() {
                       {rule.destination}
                     </td>
                     <td style={{ padding: "1rem" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleEnabled(rule)}
-                        style={{
-                          padding: "0.25rem 0.6rem",
-                          borderRadius: "9999px",
-                          fontSize: "0.75rem",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          border: "none",
-                          backgroundColor: rule.enabled ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted)",
-                          color: rule.enabled ? "#10b981" : "var(--text-secondary)",
-                        }}
-                        title="Click to toggle rule status"
-                      >
-                        {rule.enabled ? "Active" : "Disabled"}
-                      </button>
+                      {canManage ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleEnabled(rule)}
+                          style={{
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "9999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            border: "none",
+                            backgroundColor: rule.enabled ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted)",
+                            color: rule.enabled ? "#10b981" : "var(--text-secondary)",
+                          }}
+                          aria-label={`${rule.enabled ? "Disable" : "Enable"} ${rule.name}`}
+                        >
+                          {rule.enabled ? "Active" : "Disabled"}
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "9999px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            backgroundColor: rule.enabled ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted)",
+                            color: rule.enabled ? "#10b981" : "var(--text-secondary)",
+                          }}
+                        >
+                          {rule.enabled ? "Active" : "Disabled"}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
                       {rule.lastTriggeredAt
@@ -438,24 +516,30 @@ export function AlertsPage() {
                         : "Never"}
                     </td>
                     <td style={{ padding: "1rem", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                        <button
-                          type="button"
-                          className="button-link"
-                          onClick={() => handleStartEdit(rule)}
-                          style={{ fontSize: "0.8rem", padding: "0.3rem 0.6rem" }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="button-link"
-                          onClick={() => handleDelete(rule)}
-                          style={{ fontSize: "0.8rem", color: "var(--danger-color)", padding: "0.3rem 0.6rem" }}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      {canManage ? (
+                        <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className="button-link"
+                            onClick={() => handleStartEdit(rule)}
+                            style={{ fontSize: "0.8rem", padding: "0.3rem 0.6rem" }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="button-link"
+                            onClick={() => handleDelete(rule)}
+                            style={{ fontSize: "0.8rem", color: "var(--danger-color)", padding: "0.3rem 0.6rem" }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                          Read only
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -499,6 +583,12 @@ export function AlertsPage() {
             <h2 id="modal-create-title" style={{ margin: "0 0 1.25rem 0", fontSize: "1.25rem", fontWeight: 600 }}>
               Create Alert Rule
             </h2>
+
+            {formError && (
+              <div style={{ marginBottom: "1rem" }}>
+                <InlineAlert message={formError} kind="error" id="create-alert-error" />
+              </div>
+            )}
 
             <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -696,11 +786,18 @@ export function AlertsPage() {
                 />
               </div>
 
+              <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                The enabled rule is evaluated after creation using data inside its selected window.
+              </p>
+
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
                 <button
                   type="button"
                   className="button-link"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setFormError(null);
+                  }}
                   disabled={submitting}
                   style={{ padding: "0.55rem 1rem" }}
                 >
@@ -754,6 +851,12 @@ export function AlertsPage() {
             <h2 id="modal-edit-title" style={{ margin: "0 0 1.25rem 0", fontSize: "1.25rem", fontWeight: 600 }}>
               Edit Alert Rule: {editingRule.name}
             </h2>
+
+            {formError && (
+              <div style={{ marginBottom: "1rem" }}>
+                <InlineAlert message={formError} kind="error" id="edit-alert-error" />
+              </div>
+            )}
 
             <form onSubmit={handleUpdate} style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -911,7 +1014,10 @@ export function AlertsPage() {
                 <button
                   type="button"
                   className="button-link"
-                  onClick={() => setEditingRule(null)}
+                  onClick={() => {
+                    setEditingRule(null);
+                    setFormError(null);
+                  }}
                   disabled={submitting}
                   style={{ padding: "0.55rem 1rem" }}
                 >
