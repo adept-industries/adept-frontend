@@ -40,6 +40,7 @@ const mockRule: AlertRuleResponse = {
   workspaceId: "ws-1",
   repositoryId: "repo-1",
   repositoryFullName: "acme/service-a",
+  createdByMembershipId: "mem-1",
   name: "High CFR Alert",
   metricType: "CHANGE_FAILURE_RATE_PERCENT",
   comparator: "GT",
@@ -146,6 +147,9 @@ describe("AlertsPage", () => {
 
     const nameInput = screen.getByLabelText(/Rule Name/i);
     await user.type(nameInput, "New Lead Time Alert");
+    const cooldownInput = screen.getByLabelText(/Cooldown Period/i);
+    await user.clear(cooldownInput);
+    await user.type(cooldownInput, "0");
 
     const submitBtn = screen.getByRole("button", { name: "Create Rule" });
     await user.click(submitBtn);
@@ -154,6 +158,57 @@ describe("AlertsPage", () => {
       expect(createdPayload).toBeTruthy();
     });
     expect((createdPayload as { name: string }).name).toBe("New Lead Time Alert");
+    expect((createdPayload as { cooldownMinutes: number }).cooldownMinutes).toBe(0);
+  });
+
+  it("validates metric-specific thresholds inside the create dialog", async () => {
+    const user = userEvent.setup();
+    let createRequests = 0;
+    server.use(
+      http.post("/api/v1/alert-rules", () => {
+        createRequests += 1;
+        return HttpResponse.json(mockRule, { status: 201 });
+      })
+    );
+
+    renderAlertsPage();
+    await user.click(await screen.findByRole("button", { name: "+ New Alert Rule" }));
+    await user.type(screen.getByLabelText(/Rule Name/i), "Invalid risk threshold");
+    await user.selectOptions(screen.getByLabelText(/Metric to Evaluate/i), "PR_RISK_SCORE");
+    const thresholdInput = screen.getByLabelText(/Threshold \(score\)/i);
+    await user.clear(thresholdInput);
+    await user.type(thresholdInput, "1.5");
+    await user.click(screen.getByRole("button", { name: "Create Rule" }));
+
+    expect(await screen.findByText("PR risk thresholds must be between 0 and 1.")).toBeInTheDocument();
+    expect(createRequests).toBe(0);
+  });
+
+  it("shows another Lead's rule as read only", async () => {
+    server.use(
+      http.get("/api/v1/alert-rules", () => HttpResponse.json([
+        { ...mockRule, createdByMembershipId: "manager-membership" },
+      ]))
+    );
+
+    renderAlertsPage("LEAD");
+
+    expect(await screen.findByText("High CFR Alert")).toBeInTheDocument();
+    expect(screen.getByText("Read only")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Disable High CFR Alert/i })).not.toBeInTheDocument();
+  });
+
+  it("disables alert creation when no accessible tracked repository exists", async () => {
+    server.use(
+      http.get("/api/v1/repositories", () => HttpResponse.json([]))
+    );
+
+    renderAlertsPage();
+
+    const createButton = await screen.findByRole("button", { name: "+ New Alert Rule" });
+    await waitFor(() => expect(createButton).toBeDisabled());
   });
 
   it("allows updating an existing alert rule", async () => {
