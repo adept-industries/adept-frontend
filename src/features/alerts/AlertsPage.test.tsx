@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -121,6 +121,21 @@ describe("AlertsPage", () => {
     expect(screen.getAllByText("acme/service-a").length).toBeGreaterThan(0);
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("manager@example.com")).toBeInTheDocument();
+  });
+
+  it("labels each rule field for the responsive card layout", async () => {
+    renderAlertsPage();
+
+    const ruleName = await screen.findByText("High CFR Alert");
+    const row = ruleName.closest("tr");
+
+    expect(row).not.toBeNull();
+    expect(within(row as HTMLTableRowElement).getByText("acme/service-a").closest("td"))
+      .toHaveAttribute("data-label", "Repository");
+    expect(within(row as HTMLTableRowElement).getByText("manager@example.com").closest("td"))
+      .toHaveAttribute("data-label", "Destination");
+    expect(within(row as HTMLTableRowElement).getByRole("button", { name: "Edit" }).closest("td"))
+      .toHaveAttribute("data-label", "Actions");
   });
 
   it("creates an alert rule through the modal dialog", async () => {
