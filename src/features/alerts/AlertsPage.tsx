@@ -335,36 +335,16 @@ export function AlertsPage() {
       )}
 
       {/* Filter and Stats Toolbar */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "1rem",
-          marginBottom: "1.5rem",
-          padding: "1rem 1.25rem",
-          backgroundColor: "var(--card-bg)",
-          borderRadius: "8px",
-          border: "1px solid var(--border-color)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <label htmlFor="repo-filter" style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--text-secondary)" }}>
+      <div className="alerts-toolbar">
+        <div className="alerts-toolbar__filter">
+          <label htmlFor="repo-filter">
             Repository:
           </label>
           <select
             id="repo-filter"
+            className="alerts-toolbar__select"
             value={selectedRepoFilter}
             onChange={(e) => setSelectedRepoFilter(e.target.value)}
-            style={{
-              padding: "0.4rem 0.8rem",
-              borderRadius: "6px",
-              border: "1px solid var(--border-color)",
-              backgroundColor: "var(--input-bg)",
-              color: "var(--text-primary)",
-              fontSize: "0.875rem",
-            }}
           >
             <option value="ALL">All Accessible Repositories</option>
             {repositories.map((repo) => (
@@ -375,10 +355,13 @@ export function AlertsPage() {
           </select>
         </div>
 
-        <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-          Total Rules: <strong style={{ color: "var(--text-primary)" }}>{rules.length}</strong>
-          {" | "}
-          Active: <strong style={{ color: "var(--primary)" }}>{rules.filter((r) => r.enabled).length}</strong>
+        <div
+          className="alerts-toolbar__summary"
+          aria-label={`${rules.length} total rules, ${rules.filter((rule) => rule.enabled).length} active`}
+        >
+          <span>Total Rules: <strong>{rules.length}</strong></span>
+          <span className="alerts-toolbar__divider" aria-hidden="true" />
+          <span>Active: <strong className="alerts-toolbar__active-count">{rules.filter((rule) => rule.enabled).length}</strong></span>
         </div>
       </div>
 
@@ -414,25 +397,18 @@ export function AlertsPage() {
           </button>
         </div>
       ) : (
-        <div
-          style={{
-            overflowX: "auto",
-            backgroundColor: "var(--card-bg)",
-            borderRadius: "10px",
-            border: "1px solid var(--border-color)",
-          }}
-        >
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.875rem" }}>
+        <div className="alerts-table-panel">
+          <table className="alerts-table">
             <thead>
-              <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "var(--surface-muted)" }}>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Rule Name</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Repository</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Condition</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Window / Cooldown</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Destination</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Status</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600 }}>Last Triggered</th>
-                <th style={{ padding: "0.85rem 1rem", fontWeight: 600, textAlign: "right" }}>Actions</th>
+              <tr>
+                <th>Rule</th>
+                <th>Repository</th>
+                <th>Condition</th>
+                <th>Window / Cooldown</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Last Triggered</th>
+                <th className="alerts-table__actions-heading">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -442,87 +418,65 @@ export function AlertsPage() {
                 return (
                   <tr
                     key={rule.id}
-                    style={{
-                      borderBottom: "1px solid var(--border-color)",
-                      opacity: rule.enabled ? 1 : 0.65,
-                    }}
+                    className={rule.enabled ? undefined : "alerts-table__row--disabled"}
                   >
-                    <td style={{ padding: "1rem", fontWeight: 500 }}>
-                      <div style={{ color: "var(--text-primary)" }}>{rule.name}</div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                        {metricMeta?.label ?? rule.metricType}
+                    <td data-label="Rule">
+                      <div className="alerts-table__rule">
+                        <strong>{rule.name}</strong>
+                        <span>{metricMeta?.label ?? rule.metricType}</span>
                       </div>
                     </td>
-                    <td style={{ padding: "1rem", color: "var(--text-primary)" }}>
-                      <code>{rule.repositoryFullName}</code>
+                    <td data-label="Repository">
+                      <code className="alerts-table__repository">{rule.repositoryFullName}</code>
                     </td>
-                    <td style={{ padding: "1rem" }}>
-                      <span
-                        style={{
-                          padding: "0.2rem 0.5rem",
-                          borderRadius: "4px",
-                          backgroundColor: "var(--surface-muted)",
-                          border: "1px solid var(--border-color)",
-                          fontFamily: "monospace",
-                        }}
-                      >
+                    <td data-label="Condition">
+                      <span className="alerts-table__condition">
                         {rule.comparator} {rule.thresholdValue} {metricMeta?.unit}
                       </span>
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                      <div>Window: {rule.evaluationWindowMinutes}m</div>
-                      <div>Cooldown: {rule.cooldownMinutes}m</div>
+                    <td data-label="Window / Cooldown">
+                      <div className="alerts-table__timing">
+                        <span><strong>Window:</strong> {rule.evaluationWindowMinutes}m</span>
+                        <span><strong>Cooldown:</strong> {rule.cooldownMinutes}m</span>
+                      </div>
                     </td>
-                    <td style={{ padding: "1rem", color: "var(--text-secondary)", fontSize: "0.85rem" }}>
-                      {rule.destination}
+                    <td data-label="Destination">
+                      <span className="alerts-table__destination">{rule.destination}</span>
                     </td>
-                    <td style={{ padding: "1rem" }}>
+                    <td data-label="Status">
+                      <div>
+                        {canManage ? (
+                          <button
+                            type="button"
+                            className={`alerts-status ${rule.enabled ? "alerts-status--active" : "alerts-status--disabled"}`}
+                            onClick={() => handleToggleEnabled(rule)}
+                            aria-label={`${rule.enabled ? "Disable" : "Enable"} ${rule.name}`}
+                          >
+                            {rule.enabled ? "Active" : "Disabled"}
+                          </button>
+                        ) : (
+                          <span
+                            className={`alerts-status ${rule.enabled ? "alerts-status--active" : "alerts-status--disabled"}`}
+                          >
+                            {rule.enabled ? "Active" : "Disabled"}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td data-label="Last Triggered">
+                      <span className="alerts-table__last-triggered">
+                        {rule.lastTriggeredAt
+                          ? formatWorkspaceDateTime(rule.lastTriggeredAt, workspaceTimezone)
+                          : "Never"}
+                      </span>
+                    </td>
+                    <td data-label="Actions" className="alerts-table__actions-cell">
                       {canManage ? (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleEnabled(rule)}
-                          style={{
-                            padding: "0.25rem 0.6rem",
-                            borderRadius: "9999px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            cursor: "pointer",
-                            border: "none",
-                            backgroundColor: rule.enabled ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted)",
-                            color: rule.enabled ? "#10b981" : "var(--text-secondary)",
-                          }}
-                          aria-label={`${rule.enabled ? "Disable" : "Enable"} ${rule.name}`}
-                        >
-                          {rule.enabled ? "Active" : "Disabled"}
-                        </button>
-                      ) : (
-                        <span
-                          style={{
-                            padding: "0.25rem 0.6rem",
-                            borderRadius: "9999px",
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            backgroundColor: rule.enabled ? "rgba(16, 185, 129, 0.15)" : "var(--surface-muted)",
-                            color: rule.enabled ? "#10b981" : "var(--text-secondary)",
-                          }}
-                        >
-                          {rule.enabled ? "Active" : "Disabled"}
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                      {rule.lastTriggeredAt
-                        ? formatWorkspaceDateTime(rule.lastTriggeredAt, workspaceTimezone)
-                        : "Never"}
-                    </td>
-                    <td style={{ padding: "1rem", textAlign: "right" }}>
-                      {canManage ? (
-                        <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                        <div className="alerts-table__actions">
                           <button
                             type="button"
                             className="button-link"
                             onClick={() => handleStartEdit(rule)}
-                            style={{ fontSize: "0.8rem", padding: "0.3rem 0.6rem" }}
                           >
                             Edit
                           </button>
@@ -530,13 +484,13 @@ export function AlertsPage() {
                             type="button"
                             className="button-link"
                             onClick={() => handleDelete(rule)}
-                            style={{ fontSize: "0.8rem", color: "var(--danger-color)", padding: "0.3rem 0.6rem" }}
+                            data-variant="danger"
                           >
                             Delete
                           </button>
                         </div>
                       ) : (
-                        <span style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                        <span className="alerts-table__read-only">
                           Read only
                         </span>
                       )}
