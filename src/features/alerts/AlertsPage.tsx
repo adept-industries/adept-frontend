@@ -58,6 +58,24 @@ const COMPARATOR_OPTIONS: { label: string; value: AlertComparator }[] = [
   { label: "= Equal to", value: "EQ" },
 ];
 
+const MINUTES_PER_HOUR = 60;
+
+function hoursToMinutes(value: string): number {
+  const hours = Number(value);
+  if (!Number.isFinite(hours)) return Number.NaN;
+  if (hours < 0) return -1;
+  return Math.round(hours * MINUTES_PER_HOUR);
+}
+
+function minutesToHoursInput(minutes: number): string {
+  return String(Number((minutes / MINUTES_PER_HOUR).toFixed(4)));
+}
+
+function formatDurationHours(minutes: number): string {
+  const hours = minutes / MINUTES_PER_HOUR;
+  return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(hours)}h`;
+}
+
 function validateRuleValues(
   metricType: AlertMetricType,
   threshold: number,
@@ -81,10 +99,10 @@ function validateRuleValues(
     return "Deployment and duration thresholds cannot be negative.";
   }
   if (!Number.isInteger(evaluationWindowMinutes) || evaluationWindowMinutes < 1) {
-    return "Evaluation window must be at least 1 minute.";
+    return "Evaluation window must be greater than 0 hours.";
   }
   if (!Number.isInteger(cooldownMinutes) || cooldownMinutes < 0) {
-    return "Cooldown must be 0 minutes or greater.";
+    return "Cooldown must be 0 hours or greater.";
   }
   return null;
 }
@@ -113,8 +131,8 @@ export function AlertsPage() {
   const [metricType, setMetricType] = useState<AlertMetricType>("CHANGE_FAILURE_RATE_PERCENT");
   const [comparator, setComparator] = useState<AlertComparator>("GT");
   const [thresholdValue, setThresholdValue] = useState<string>("15.0");
-  const [evaluationWindowMinutes, setEvaluationWindowMinutes] = useState<number>(1440);
-  const [cooldownMinutes, setCooldownMinutes] = useState<number>(1440);
+  const [evaluationWindowHours, setEvaluationWindowHours] = useState("24");
+  const [cooldownHours, setCooldownHours] = useState("24");
   const [destination, setDestination] = useState("");
 
   // Edit state
@@ -122,8 +140,8 @@ export function AlertsPage() {
   const [editName, setEditName] = useState("");
   const [editComparator, setEditComparator] = useState<AlertComparator>("GT");
   const [editThresholdValue, setEditThresholdValue] = useState<string>("");
-  const [editEvaluationWindowMinutes, setEditEvaluationWindowMinutes] = useState<number>(1440);
-  const [editCooldownMinutes, setEditCooldownMinutes] = useState<number>(1440);
+  const [editEvaluationWindowHours, setEditEvaluationWindowHours] = useState("24");
+  const [editCooldownHours, setEditCooldownHours] = useState("24");
   const [editDestination, setEditDestination] = useState("");
   const [editEnabled, setEditEnabled] = useState(true);
 
@@ -168,8 +186,8 @@ export function AlertsPage() {
     setMetricType("CHANGE_FAILURE_RATE_PERCENT");
     setComparator("GT");
     setThresholdValue("15.0");
-    setEvaluationWindowMinutes(1440);
-    setCooldownMinutes(1440);
+    setEvaluationWindowHours("24");
+    setCooldownHours("24");
     setDestination(userEmail);
     if (repositories.length > 0) {
       setRepositoryId(selectedRepoFilter !== "ALL" ? selectedRepoFilter : repositories[0].id);
@@ -185,6 +203,8 @@ export function AlertsPage() {
     if (!trimmedName || !repositoryId) return;
 
     const parsedThreshold = Number(thresholdValue);
+    const evaluationWindowMinutes = hoursToMinutes(evaluationWindowHours);
+    const cooldownMinutes = hoursToMinutes(cooldownHours);
     const validationError = validateRuleValues(
       metricType,
       parsedThreshold,
@@ -226,8 +246,8 @@ export function AlertsPage() {
     setEditName(rule.name);
     setEditComparator(rule.comparator);
     setEditThresholdValue(String(rule.thresholdValue));
-    setEditEvaluationWindowMinutes(rule.evaluationWindowMinutes);
-    setEditCooldownMinutes(rule.cooldownMinutes);
+    setEditEvaluationWindowHours(minutesToHoursInput(rule.evaluationWindowMinutes));
+    setEditCooldownHours(minutesToHoursInput(rule.cooldownMinutes));
     setEditDestination(rule.destination);
     setEditEnabled(rule.enabled);
     setError(null);
@@ -239,6 +259,8 @@ export function AlertsPage() {
     if (!editingRule) return;
 
     const parsedThreshold = Number(editThresholdValue);
+    const editEvaluationWindowMinutes = hoursToMinutes(editEvaluationWindowHours);
+    const editCooldownMinutes = hoursToMinutes(editCooldownHours);
     const validationError = validateRuleValues(
       editingRule.metricType,
       parsedThreshold,
@@ -436,8 +458,8 @@ export function AlertsPage() {
                     </td>
                     <td data-label="Window / Cooldown">
                       <div className="alerts-table__timing">
-                        <span><strong>Window:</strong> {rule.evaluationWindowMinutes}m</span>
-                        <span><strong>Cooldown:</strong> {rule.cooldownMinutes}m</span>
+                        <span><strong>Window:</strong> {formatDurationHours(rule.evaluationWindowMinutes)}</span>
+                        <span><strong>Cooldown:</strong> {formatDurationHours(rule.cooldownMinutes)}</span>
                       </div>
                     </td>
                     <td data-label="Destination">
@@ -676,15 +698,16 @@ export function AlertsPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   <label htmlFor="create-rule-window" style={{ fontSize: "0.875rem", fontWeight: 600 }}>
-                    Evaluation Window (Minutes) *
+                    Evaluation Window (Hours) *
                   </label>
                   <input
                     id="create-rule-window"
                     type="number"
-                    min={1}
+                    min={0.01}
+                    step="any"
                     required
-                    value={evaluationWindowMinutes}
-                    onChange={(e) => setEvaluationWindowMinutes(parseInt(e.target.value, 10) || 1440)}
+                    value={evaluationWindowHours}
+                    onChange={(e) => setEvaluationWindowHours(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "0.55rem 0.75rem",
@@ -698,15 +721,16 @@ export function AlertsPage() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   <label htmlFor="create-rule-cooldown" style={{ fontSize: "0.875rem", fontWeight: 600 }}>
-                    Cooldown Period (Minutes) *
+                    Cooldown Period (Hours) *
                   </label>
                   <input
                     id="create-rule-cooldown"
                     type="number"
                     min={0}
+                    step="any"
                     required
-                    value={cooldownMinutes}
-                    onChange={(e) => setCooldownMinutes(parseInt(e.target.value, 10) || 0)}
+                    value={cooldownHours}
+                    onChange={(e) => setCooldownHours(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "0.55rem 0.75rem",
@@ -888,15 +912,16 @@ export function AlertsPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   <label htmlFor="edit-rule-window" style={{ fontSize: "0.875rem", fontWeight: 600 }}>
-                    Evaluation Window (Minutes) *
+                    Evaluation Window (Hours) *
                   </label>
                   <input
                     id="edit-rule-window"
                     type="number"
-                    min={1}
+                    min={0.01}
+                    step="any"
                     required
-                    value={editEvaluationWindowMinutes}
-                    onChange={(e) => setEditEvaluationWindowMinutes(parseInt(e.target.value, 10) || 1440)}
+                    value={editEvaluationWindowHours}
+                    onChange={(e) => setEditEvaluationWindowHours(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "0.55rem 0.75rem",
@@ -910,15 +935,16 @@ export function AlertsPage() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   <label htmlFor="edit-rule-cooldown" style={{ fontSize: "0.875rem", fontWeight: 600 }}>
-                    Cooldown Period (Minutes) *
+                    Cooldown Period (Hours) *
                   </label>
                   <input
                     id="edit-rule-cooldown"
                     type="number"
                     min={0}
+                    step="any"
                     required
-                    value={editCooldownMinutes}
-                    onChange={(e) => setEditCooldownMinutes(parseInt(e.target.value, 10) || 0)}
+                    value={editCooldownHours}
+                    onChange={(e) => setEditCooldownHours(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "0.55rem 0.75rem",

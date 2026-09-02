@@ -121,6 +121,8 @@ describe("AlertsPage", () => {
     expect(screen.getAllByText("acme/service-a").length).toBeGreaterThan(0);
     expect(screen.getByText("Active")).toBeInTheDocument();
     expect(screen.getByText("manager@example.com")).toBeInTheDocument();
+    expect(screen.getByText("24h")).toBeInTheDocument();
+    expect(screen.getByText("1h")).toBeInTheDocument();
   });
 
   it("labels each rule field for the responsive card layout", async () => {
@@ -173,6 +175,7 @@ describe("AlertsPage", () => {
       expect(createdPayload).toBeTruthy();
     });
     expect((createdPayload as { name: string }).name).toBe("New Lead Time Alert");
+    expect((createdPayload as { evaluationWindowMinutes: number }).evaluationWindowMinutes).toBe(1440);
     expect((createdPayload as { cooldownMinutes: number }).cooldownMinutes).toBe(0);
   });
 
@@ -249,6 +252,15 @@ describe("AlertsPage", () => {
     await user.clear(nameInput);
     await user.type(nameInput, "Updated Name");
 
+    const windowInput = screen.getByLabelText(/Evaluation Window \(Hours\)/i);
+    const cooldownInput = screen.getByLabelText(/Cooldown Period \(Hours\)/i);
+    expect(windowInput).toHaveValue(24);
+    expect(cooldownInput).toHaveValue(1);
+    await user.clear(windowInput);
+    await user.type(windowInput, "168");
+    await user.clear(cooldownInput);
+    await user.type(cooldownInput, "2");
+
     const saveBtn = screen.getByRole("button", { name: "Save Changes" });
     await user.click(saveBtn);
 
@@ -256,6 +268,8 @@ describe("AlertsPage", () => {
       expect(updatedPayload).toBeTruthy();
     });
     expect((updatedPayload as { name: string }).name).toBe("Updated Name");
+    expect((updatedPayload as { evaluationWindowMinutes: number }).evaluationWindowMinutes).toBe(10080);
+    expect((updatedPayload as { cooldownMinutes: number }).cooldownMinutes).toBe(120);
   });
 
   it("allows deleting an alert rule", async () => {
