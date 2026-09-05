@@ -147,15 +147,6 @@ export function RepositorySettingsModal({
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div style={{ padding: "0.75rem", border: "1px solid var(--border-color, #3b3b54)", borderRadius: "6px" }}>
-            <p style={{ ...helpTextStyle, margin: 0 }}>
-              Choose the GitHub event that confirms a production deployment. Check these defaults against your repository's delivery process.
-            </p>
-            <p style={helpTextStyle}>
-              Patterns ignore letter case. Separate values with commas; <code>*</code> matches any text.
-              For example, <code>*deploy*</code> matches <code>Deploy Production</code>.
-            </p>
-          </div>
           <div>
             <label htmlFor="repository-deployment-signal" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
               Deployment Signal Type
@@ -179,15 +170,14 @@ export function RepositorySettingsModal({
             </select>
             <p id="repository-deployment-signal-help" style={helpTextStyle}>
               {deploymentSignal === "WORKFLOW_RUN"
-                ? "Counts completed workflow runs matching the branch and workflow name below. Use this when a successful run means production is live. Runs that only test, build images, or skip deployment can produce misleading metrics."
-                : "Counts GitHub deployment success or failure statuses for the environments below. Your delivery process must report its rollout result to GitHub. Works with any hosting provider, including AWS and Railway."}
+                ? "Use when a successful workflow run means production is live."
+                : "Use when your deployment reports success or failure to GitHub."}
             </p>
-            {deploymentSignal === "WORKFLOW_RUN" && (
-              <p style={helpTextStyle}>
-                If your workflow has a separate deployment job with a GitHub environment, consider GitHub Deployment API Event to track that job's rollout result.
-              </p>
-            )}
           </div>
+
+          <p style={helpTextStyle}>
+            Patterns ignore case. Separate with commas; <code>*</code> matches any text.
+          </p>
 
           {deploymentSignal === "WORKFLOW_RUN" && (
             <div>
@@ -211,8 +201,7 @@ export function RepositorySettingsModal({
                 }}
               />
               <p id="repository-production-branches-help" style={helpTextStyle}>
-                Match the branch of the workflow run, for example <code>main</code> or <code>release/*</code>.
-                Both this branch and the workflow name must match. Deployment API events use environment names instead.
+                Match production branches, e.g. <code>main</code> or <code>release/*</code>.
               </p>
             </div>
           )}
@@ -239,9 +228,7 @@ export function RepositorySettingsModal({
                 }}
               />
               <p id="repository-production-environments-help" style={helpTextStyle}>
-                Use the environment name recorded in GitHub Deployments. For a deployment job with <code>environment: production</code>,
-                enter <code>production</code>, even if the job is called <code>deploy</code>.
-                Workflow names and branch patterns do not filter these events.
+                Match the GitHub deployment environment, e.g. <code>production</code>.
               </p>
             </div>
           )}
@@ -268,10 +255,15 @@ export function RepositorySettingsModal({
                 }}
               />
               <p id="repository-deployment-workflows-help" style={helpTextStyle}>
-                Use the workflow's top-level <code>name:</code> shown in GitHub Actions.
-                For <code>name: CI</code> with a job called <code>deploy</code>, the matching value is <code>CI</code>.
-                Individual job and step names are not matched. Only choose <code>CI</code> if its successful runs actually deploy to production.
+                Match the workflow name in GitHub Actions, not a job or step name.
               </p>
+              <details style={helpTextStyle}>
+                <summary style={{ cursor: "pointer", color: "var(--text-primary, #ffffff)" }}>See example</summary>
+                <p style={helpTextStyle}>
+                  Workflow <code>name: CI</code> with a job called <code>deploy</code>: enter <code>CI</code>.
+                  Use only if successful runs deploy to production.
+                </p>
+              </details>
             </div>
           )}
 
@@ -300,9 +292,8 @@ export function RepositorySettingsModal({
             />
             <p id="repository-dora-exclusions-help" style={helpTextStyle}>
               {deploymentSignal === "WORKFLOW_RUN"
-                ? "Exclude matching workflow names, even if the branch and workflow patterns above match."
-                : "Exclude matching deployment environments, even if the production environment patterns above match."}
-              {" "}For example, <code>*staging*</code> or <code>*preview*</code>. Leave empty to exclude nothing.
+                ? "Ignore matching workflow names. Leave empty to exclude nothing."
+                : "Ignore matching environments. Leave empty to exclude nothing."}
             </p>
           </div>
 
@@ -331,7 +322,7 @@ export function RepositorySettingsModal({
                 <option value="MANUAL" disabled>Manual incidents (Phase 9)</option>
               </select>
               <p id="repository-incident-source-help" style={helpTextStyle}>
-                Failed production deployments create incidents. The next success records their recovery time. Jira issues are not used for DORA incidents yet.
+                Tracks failed deployments until the next successful deployment.
               </p>
             </div>
 
@@ -358,7 +349,7 @@ export function RepositorySettingsModal({
                 <option value="MONTH">Month</option>
               </select>
               <p id="repository-metric-granularity-help" style={helpTextStyle}>
-                Saved grouping preference. The dashboard currently uses daily points for 7/30 days and weekly points for 90 days, regardless of this preference.
+                Saved preference; dashboard chart grouping follows its selected period instead.
               </p>
             </div>
 
@@ -387,15 +378,15 @@ export function RepositorySettingsModal({
                 <option value={365}>1 Year</option>
               </select>
               <p id="repository-backfill-days-help" style={helpTextStyle}>
-                How much past PR and deployment history to import from the GitHub API during a rebuild. This is separate from the dashboard's date range; new events arrive through webhooks.
+                Days of past PR and deployment history to import.
               </p>
             </div>
           </div>
 
           <p style={helpTextStyle}>
             {repository.trackingEnabled && !repository.archived
-              ? "Saving changed settings automatically queues a DORA rebuild for this repository. Wait for processing to finish, then refresh the dashboard. No separate rebuild click is needed."
-              : "Settings are saved now. History is imported when tracking is enabled for a non-archived repository."}
+              ? "Saving changes automatically queues a DORA rebuild."
+              : "History imports when the repository is tracked and not archived."}
           </p>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
             <button

@@ -452,14 +452,22 @@ describe("IntegrationsPage", () => {
 
     const signal = screen.getByRole("combobox", { name: "Deployment Signal Type" });
     const workflow = screen.getByRole("textbox", { name: "Deployment Workflow Name Patterns" });
-    expect(workflow).toHaveAccessibleDescription(/top-level.*name:.*CI.*job called.*deploy/);
+    expect(workflow).toHaveAccessibleDescription(/workflow name.*not a job or step name/);
+    const exampleToggle = screen.getByText("See example");
+    const example = exampleToggle.closest("details");
+    expect(example).not.toHaveAttribute("open");
+    await user.click(exampleToggle);
+    expect(example).toHaveAttribute("open");
+    expect(example).toHaveTextContent(/name: CI.*job called deploy.*enter CI/);
+    await user.click(exampleToggle);
+    expect(example).not.toHaveAttribute("open");
     await user.clear(workflow);
     await user.type(workflow, "CI");
     await user.selectOptions(signal, "DEPLOYMENT");
     expect(screen.queryByRole("textbox", { name: "Deployment Workflow Name Patterns" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Production Branch Patterns" })).not.toBeInTheDocument();
     const environments = screen.getByRole("textbox", { name: "Production Environment Patterns" });
-    expect(environments).toHaveAccessibleDescription(/environment: production.*enter production/);
+    expect(environments).toHaveAccessibleDescription(/GitHub deployment environment.*production/);
     await user.clear(environments);
     await user.type(environments, "production, live");
 
