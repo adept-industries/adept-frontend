@@ -450,6 +450,27 @@ describe("IntegrationsPage", () => {
     expect(within(modal as HTMLElement).queryByRole("button", { name: /Rebuild DORA/i }))
       .not.toBeInTheDocument();
 
+    const signal = screen.getByRole("combobox", { name: "Deployment Signal Type" });
+    const workflow = screen.getByRole("textbox", { name: "Deployment Workflow Name Patterns" });
+    expect(workflow).toHaveAccessibleDescription(/top-level.*name:.*CI.*job called.*deploy/);
+    await user.clear(workflow);
+    await user.type(workflow, "CI");
+    await user.selectOptions(signal, "DEPLOYMENT");
+    expect(screen.queryByRole("textbox", { name: "Deployment Workflow Name Patterns" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Production Branch Patterns" })).not.toBeInTheDocument();
+    const environments = screen.getByRole("textbox", { name: "Production Environment Patterns" });
+    expect(environments).toHaveAccessibleDescription(/environment: production.*enter production/);
+    await user.clear(environments);
+    await user.type(environments, "production, live");
+
+    // Exploring both signals keeps the repository's configured values intact.
+    await user.selectOptions(signal, "WORKFLOW_RUN");
+    expect(screen.getByRole("textbox", { name: "Deployment Workflow Name Patterns" })).toHaveValue("CI");
+    expect(screen.getByRole("textbox", { name: "Production Branch Patterns" })).toHaveValue("main");
+    expect(screen.queryByRole("textbox", { name: "Production Environment Patterns" })).not.toBeInTheDocument();
+    await user.selectOptions(signal, "DEPLOYMENT");
+    expect(screen.getByRole("textbox", { name: "Production Environment Patterns" })).toHaveValue("production, live");
+
     await user.clear(screen.getByLabelText("DORA Exclusions"));
     await user.type(screen.getByLabelText("DORA Exclusions"), "*preview*, *staging*");
     const saveBtn = screen.getByRole("button", { name: /Save Settings/i });
@@ -458,6 +479,11 @@ describe("IntegrationsPage", () => {
     await waitFor(() => {
       expect(screen.queryByText("Repository Settings")).not.toBeInTheDocument();
     });
+    expect(savedSettings?.deploymentSignal).toBe("DEPLOYMENT");
+    expect(savedSettings?.productionBranchPatterns).toEqual(["main"]);
+    expect(savedSettings?.deploymentWorkflowNamePatterns).toEqual(["CI"]);
+    expect(savedSettings?.productionEnvironmentPatterns).toEqual(["production", "live"]);
     expect(savedSettings?.doraExclusions).toEqual(["*preview*", "*staging*"]);
+    expect(backfillRequests).toBe(1);
   });
 });
