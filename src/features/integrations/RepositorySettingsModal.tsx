@@ -1,5 +1,12 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import type { RepositoryResponse, RepositorySettings, DeploymentSignal, MetricGranularity } from "./api.js";
+
+const helpTextStyle: CSSProperties = {
+  fontSize: "0.8rem",
+  color: "var(--text-secondary, #94a3b8)",
+  lineHeight: 1.5,
+  margin: "0.35rem 0 0",
+};
 
 interface RepositorySettingsModalProps {
   repository: RepositoryResponse;
@@ -141,10 +148,12 @@ export function RepositorySettingsModal({
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+            <label htmlFor="repository-deployment-signal" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
               Deployment Signal Type
             </label>
             <select
+              id="repository-deployment-signal"
+              aria-describedby="repository-deployment-signal-help"
               value={deploymentSignal}
               onChange={(e) => setDeploymentSignal(e.target.value as DeploymentSignal)}
               style={{
@@ -159,40 +168,52 @@ export function RepositorySettingsModal({
               <option value="WORKFLOW_RUN">GitHub Actions Workflow Run</option>
               <option value="DEPLOYMENT">GitHub Deployment API Event</option>
             </select>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
-              Use Deployment API events when image publication and the live rollout are separate steps.
-            </span>
+            <p id="repository-deployment-signal-help" style={helpTextStyle}>
+              {deploymentSignal === "WORKFLOW_RUN"
+                ? "Use when a successful workflow run means production is live."
+                : "Use when your deployment reports success or failure to GitHub."}
+            </p>
           </div>
 
-          <div>
-            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-              Production Branch Patterns
-            </label>
-            <input
-              type="text"
-              value={productionBranchPatterns}
-              onChange={(e) => setProductionBranchPatterns(e.target.value)}
-              placeholder="main, master, release/*"
-              style={{
-                width: "100%",
-                padding: "0.5rem",
-                borderRadius: "6px",
-                backgroundColor: "var(--input-bg, #242436)",
-                border: "1px solid var(--border-color, #3b3b54)",
-                color: "var(--text-primary, #ffffff)",
-              }}
-            />
-            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
-              Comma-separated globs to recognize production target branches.
-            </span>
-          </div>
+          <p style={helpTextStyle}>
+            Patterns ignore case. Separate with commas; <code>*</code> matches any text.
+          </p>
+
+          {deploymentSignal === "WORKFLOW_RUN" && (
+            <div>
+              <label htmlFor="repository-production-branches" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+                Production Branch Patterns
+              </label>
+              <input
+                id="repository-production-branches"
+                aria-describedby="repository-production-branches-help"
+                type="text"
+                value={productionBranchPatterns}
+                onChange={(e) => setProductionBranchPatterns(e.target.value)}
+                placeholder="main, master, release/*"
+                style={{
+                  width: "100%",
+                  padding: "0.5rem",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--input-bg, #242436)",
+                  border: "1px solid var(--border-color, #3b3b54)",
+                  color: "var(--text-primary, #ffffff)",
+                }}
+              />
+              <p id="repository-production-branches-help" style={helpTextStyle}>
+                Match production branches, e.g. <code>main</code> or <code>release/*</code>.
+              </p>
+            </div>
+          )}
 
           {deploymentSignal === "DEPLOYMENT" && (
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+              <label htmlFor="repository-production-environments" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                 Production Environment Patterns
               </label>
               <input
+                id="repository-production-environments"
+                aria-describedby="repository-production-environments-help"
                 type="text"
                 value={productionEnvironmentPatterns}
                 onChange={(e) => setProductionEnvironmentPatterns(e.target.value)}
@@ -206,19 +227,24 @@ export function RepositorySettingsModal({
                   color: "var(--text-primary, #ffffff)",
                 }}
               />
+              <p id="repository-production-environments-help" style={helpTextStyle}>
+                Match the GitHub deployment environment, e.g. <code>production</code>.
+              </p>
             </div>
           )}
 
           {deploymentSignal === "WORKFLOW_RUN" && (
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+              <label htmlFor="repository-deployment-workflows" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                 Deployment Workflow Name Patterns
               </label>
               <input
+                id="repository-deployment-workflows"
+                aria-describedby="repository-deployment-workflows-help"
                 type="text"
                 value={deploymentWorkflowNamePatterns}
                 onChange={(e) => setDeploymentWorkflowNamePatterns(e.target.value)}
-                placeholder="*deploy*, *production*, *release*"
+                placeholder="Deploy Production, *deploy*"
                 style={{
                   width: "100%",
                   padding: "0.5rem",
@@ -228,6 +254,16 @@ export function RepositorySettingsModal({
                   color: "var(--text-primary, #ffffff)",
                 }}
               />
+              <p id="repository-deployment-workflows-help" style={helpTextStyle}>
+                Match the workflow name in GitHub Actions, not a job or step name.
+              </p>
+              <details style={helpTextStyle}>
+                <summary style={{ cursor: "pointer", color: "var(--text-primary, #ffffff)" }}>See example</summary>
+                <p style={helpTextStyle}>
+                  Workflow <code>name: CI</code> with a job called <code>deploy</code>: enter <code>CI</code>.
+                  Use only if successful runs deploy to production.
+                </p>
+              </details>
             </div>
           )}
 
@@ -240,6 +276,7 @@ export function RepositorySettingsModal({
             </label>
             <input
               id="repository-dora-exclusions"
+              aria-describedby="repository-dora-exclusions-help"
               type="text"
               value={doraExclusions}
               onChange={(e) => setDoraExclusions(e.target.value)}
@@ -253,17 +290,21 @@ export function RepositorySettingsModal({
                 color: "var(--text-primary, #ffffff)",
               }}
             />
-            <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)", display: "block", marginTop: "0.25rem" }}>
-              Comma-separated workflow-name or deployment-environment globs to exclude.
-            </span>
+            <p id="repository-dora-exclusions-help" style={helpTextStyle}>
+              {deploymentSignal === "WORKFLOW_RUN"
+                ? "Ignore matching workflow names. Leave empty to exclude nothing."
+                : "Ignore matching environments. Leave empty to exclude nothing."}
+            </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 14rem), 1fr))", gap: "1rem" }}>
+            <div style={{ minWidth: 0 }}>
+              <label htmlFor="repository-incident-source" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                 Incident Source
               </label>
               <select
+                id="repository-incident-source"
+                aria-describedby="repository-incident-source-help"
                 value={incidentSource}
                 onChange={(e) => setIncidentSource(e.target.value as "GITHUB" | "JIRA" | "MANUAL" | "BOTH")}
                 style={{
@@ -280,13 +321,18 @@ export function RepositorySettingsModal({
                 <option value="JIRA" disabled>Jira incidents (Phase 9)</option>
                 <option value="MANUAL" disabled>Manual incidents (Phase 9)</option>
               </select>
+              <p id="repository-incident-source-help" style={helpTextStyle}>
+                Tracks failed deployments until the next successful deployment.
+              </p>
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+            <div style={{ minWidth: 0 }}>
+              <label htmlFor="repository-metric-granularity" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                 Metric Granularity
               </label>
               <select
+                id="repository-metric-granularity"
+                aria-describedby="repository-metric-granularity-help"
                 value={defaultMetricGranularity}
                 onChange={(e) => setDefaultMetricGranularity(e.target.value as MetricGranularity)}
                 style={{
@@ -302,13 +348,18 @@ export function RepositorySettingsModal({
                 <option value="WEEK">Week (Default)</option>
                 <option value="MONTH">Month</option>
               </select>
+              <p id="repository-metric-granularity-help" style={helpTextStyle}>
+                Saved preference; dashboard chart grouping follows its selected period instead.
+              </p>
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+            <div style={{ minWidth: 0 }}>
+              <label htmlFor="repository-backfill-days" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                 Backfill Duration (Days)
               </label>
               <select
+                id="repository-backfill-days"
+                aria-describedby="repository-backfill-days-help"
                 value={backfillDays}
                 onChange={(e) => setBackfillDays(Number(e.target.value))}
                 style={{
@@ -326,9 +377,17 @@ export function RepositorySettingsModal({
                 <option value={180}>180 Days</option>
                 <option value={365}>1 Year</option>
               </select>
+              <p id="repository-backfill-days-help" style={helpTextStyle}>
+                Days of past PR and deployment history to import.
+              </p>
             </div>
           </div>
 
+          <p style={helpTextStyle}>
+            {repository.trackingEnabled && !repository.archived
+              ? "Saving changes automatically queues a DORA rebuild."
+              : "History imports when the repository is tracked and not archived."}
+          </p>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
             <button
               type="button"
