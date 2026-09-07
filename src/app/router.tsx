@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import { ProtectedRoute } from "../auth/ProtectedRoute";
 import { WorkspaceRoute } from "../auth/WorkspaceRoute";
 import { RoleRoute } from "../auth/RoleRoute";
@@ -30,6 +30,7 @@ import { useContext } from "react";
 import { AuthContext } from "../auth/AuthContext";
 import { WorkspaceSwitcher } from "../features/workspaces/WorkspaceSwitcher";
 import { ProjectSelector } from "../features/projects/ProjectSelector";
+import { LandingPage } from "../features/landing/LandingPage";
 
 /**
  * Dashboard with scoped DORA metrics and project context.
@@ -96,7 +97,9 @@ function Dashboard() {
  * Router is created once outside React state to avoid recreation on re-renders.
  */
 export const router = createBrowserRouter([
-  // ── Public account pages ────────────────────────────────────────────────────
+  // ── Public landing & account pages ──────────────────────────────────────────
+  { path: "/", element: <LandingPage /> },
+  { path: "/landing", element: <LandingPage /> },
   { path: "/signup", element: <PublicOnlyRoute><SignupPage /></PublicOnlyRoute> },
   { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },
   { path: "/google/onboarding", element: <PublicOnlyRoute><GoogleOnboardingPage /></PublicOnlyRoute> },
@@ -133,19 +136,6 @@ export const router = createBrowserRouter([
       </WorkspaceSelectionRoute>
     ),
   },
-
-  // ── Root redirect ────────────────────────────────────────────────────────────
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <WorkspaceRoute>
-          <Navigate to="/dashboard" replace />
-        </WorkspaceRoute>
-      </ProtectedRoute>
-    ),
-  },
-
   // ── Protected dashboard ─────────────────────────────────────────────────────
   {
     path: "/dashboard",

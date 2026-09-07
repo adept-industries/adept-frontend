@@ -1,0 +1,914 @@
+/* ═══════════════════════════════════════════════════════════════════
+   ADEPT MODERN LANDING PAGE (EXACT STYLES)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.adept-landing-root {
+  background-color: #08080a;
+  color: #e4e1e7;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.adept-landing-root * {
+  box-sizing: border-box;
+}
+
+/* Background Atmosphere */
+.adept-bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.adept-hero-glow {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1280px;
+  height: 640px;
+  background: radial-gradient(ellipse 65% 55% at 50% -10%, rgba(79, 70, 229, 0.18), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Glass Panels ── */
+.adept-glass-panel {
+  background: rgba(14, 14, 18, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.adept-glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* ── Header ── */
+.adept-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8, 8, 10, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  height: 4rem;
+}
+
+.adept-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 100%;
+}
+
+.adept-brand-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.adept-logo-img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.adept-brand-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+
+.adept-version-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #a3a3a3;
+  font-weight: 500;
+}
+
+.adept-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.adept-link-signin {
+  font-size: 0.875rem;
+  color: #d4d4d8;
+  text-decoration: none;
+  padding: 0.375rem 0.75rem;
+  transition: color 0.15s ease;
+  font-weight: 500;
+}
+
+.adept-link-signin:hover {
+  color: #ffffff;
+}
+
+.adept-btn-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem !important;
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.12) !important;
+  transition: all 0.15s ease !important;
+}
+
+.adept-btn-white:hover {
+  background: #e5e5e5 !important;
+  transform: translateY(-1px);
+}
+
+.adept-btn-white:active {
+  transform: scale(0.98);
+}
+
+.adept-btn-white-lg {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+}
+
+/* ── Hero Section ── */
+.adept-hero-section {
+  padding: 5rem 1.5rem 4rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+  text-align: center;
+}
+
+.adept-hero-title {
+  font-size: clamp(2.25rem, 5.5vw, 3.75rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  color: #ffffff;
+  margin: 0 auto 1.5rem;
+  max-width: 900px;
+  line-height: 1.12;
+}
+
+.adept-title-gradient {
+  background: linear-gradient(to right, #ffffff, #e5e5e5, #a3a3a3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.adept-hero-subtitle {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  color: #a1a1aa;
+  max-width: 680px;
+  margin: 0 auto 2.25rem;
+  line-height: 1.65;
+}
+
+/* ── Hero DORA Dashboard Showcase ── */
+.adept-dashboard-showcase {
+  width: 100%;
+  max-width: 1152px;
+  margin: 0 auto;
+  background: #0b0c0f;
+  border: 1px solid #1b1d24;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .adept-dashboard-showcase {
+    padding: 2rem;
+  }
+}
+
+.adept-dash-topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #1c1e26;
+}
+
+@media (min-width: 640px) {
+  .adept-dash-topbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.adept-dash-heading {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.adept-dash-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.adept-repo-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adept-repo-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a3a3a3;
+  letter-spacing: 0.05em;
+}
+
+.adept-repo-btn {
+  background: #12141a !important;
+  color: #e4e1e7 !important;
+  font-size: 0.75rem !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #262933 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  min-height: auto !important;
+}
+
+.adept-repo-btn:hover {
+  background: #181a22 !important;
+}
+
+.adept-pills-container {
+  display: inline-flex;
+  border-radius: 0.5rem;
+  padding: 2px;
+  background: #12141a;
+  border: 1px solid #262933;
+  font-size: 0.75rem;
+}
+
+.adept-pill-btn {
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: #a3a3a3 !important;
+  font-size: 0.75rem !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: auto !important;
+}
+
+.adept-pill-btn:hover {
+  color: #e4e1e7 !important;
+}
+
+.adept-pill-btn.active {
+  background: #1a2035 !important;
+  color: #818cf8 !important;
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  font-weight: 500 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* ── 4 DORA Metric Cards Grid ── */
+.adept-dora-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .adept-dora-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .adept-dora-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.adept-dora-card {
+  background-color: #0c0d10;
+  border: 1px solid #1c1e24;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.15s ease;
+}
+
+.adept-dora-card:hover {
+  border-color: #2b2e38;
+}
+
+.adept-card-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.adept-icon-box {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adept-icon-box.purple {
+  background: rgba(49, 46, 129, 0.6);
+  border: 1px solid rgba(67, 56, 202, 0.4);
+  color: #818cf8;
+}
+
+.adept-icon-box.emerald {
+  background: rgba(6, 78, 59, 0.6);
+  border: 1px solid rgba(4, 120, 87, 0.4);
+  color: #34d399;
+}
+
+.adept-icon-box.amber {
+  background: rgba(120, 53, 15, 0.6);
+  border: 1px solid rgba(180, 83, 9, 0.4);
+  color: #fbbf24;
+}
+
+.adept-tier-tag {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.adept-tier-tag.purple {
+  background: rgba(49, 46, 129, 0.8);
+  color: #818cf8;
+  border: 1px solid rgba(67, 56, 202, 0.5);
+}
+
+.adept-tier-tag.emerald {
+  background: rgba(6, 78, 59, 0.8);
+  color: #34d399;
+  border: 1px solid rgba(4, 120, 87, 0.5);
+}
+
+.adept-tier-tag.amber {
+  background: rgba(120, 53, 15, 0.8);
+  color: #fbbf24;
+  border: 1px solid rgba(180, 83, 9, 0.5);
+}
+
+.adept-metric-number-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.adept-metric-val {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.adept-metric-unit {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+}
+
+.adept-card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.125rem;
+}
+
+.adept-card-desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+}
+
+.adept-card-meta {
+  font-size: 11px;
+  color: #a1a1aa;
+  margin-bottom: 1rem;
+}
+
+.adept-sparkline-wrap {
+  width: 100%;
+  height: 2.5rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+/* ── Section 3: Ecosystem Integrations ── */
+.adept-ecosystem-section {
+  padding: 3.5rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(11, 12, 16, 0.6);
+}
+
+.adept-ecosystem-inner {
+  max-width: 1152px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .adept-ecosystem-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
+
+.adept-eco-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a1a1aa;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.adept-eco-title {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem;
+}
+
+.adept-eco-desc {
+  font-size: 0.875rem;
+  color: #a1a1aa;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 36rem;
+}
+
+.adept-eco-cards-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.adept-eco-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.15s ease;
+}
+
+.adept-eco-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.adept-eco-card-title {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.adept-eco-card-status {
+  display: block;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Section 4: 4 Core Value Pillars ── */
+.adept-pillars-section {
+  padding: 6rem 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.adept-section-header {
+  text-align: center;
+  max-width: 48rem;
+  margin: 0 auto 3.5rem;
+}
+
+.adept-section-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.adept-section-title {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.75rem;
+}
+
+.adept-section-sub {
+  font-size: 0.95rem;
+  color: #a1a1aa;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.adept-pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .adept-pillars-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .adept-pillars-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.adept-pillar-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.adept-pillar-icon-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.adept-pillar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.5rem;
+}
+
+.adept-pillar-desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.adept-snippet-box {
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #a1a1aa;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Section 5: Engineering ROI ── */
+.adept-roi-section {
+  padding: 5rem 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adept-roi-inner {
+  padding: 2rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .adept-roi-inner {
+    padding: 3rem;
+  }
+}
+
+.adept-roi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .adept-roi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .adept-roi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.adept-roi-card {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adept-roi-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.75rem;
+  line-height: 1;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+.adept-roi-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.adept-roi-desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Section 6: High-Impact Call to Action ── */
+.adept-cta-section {
+  padding: 5rem 1.5rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.adept-cta-box {
+  padding: 2.5rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+@media (min-width: 768px) {
+  .adept-cta-box {
+    padding: 3.5rem;
+  }
+}
+
+.adept-cta-glow {
+  position: absolute;
+  top: -6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24rem;
+  height: 24rem;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 9999px;
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+.adept-cta-title {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 auto 1rem;
+  max-width: 42rem;
+  line-height: 1.25;
+}
+
+.adept-cta-sub {
+  font-size: 0.95rem;
+  color: #a1a1aa;
+  max-width: 36rem;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.adept-cta-form {
+  max-width: 28rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .adept-cta-form {
+    flex-direction: row;
+  }
+}
+
+.adept-cta-input {
+  width: 100%;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0.5rem !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  font-size: 0.875rem !important;
+  min-height: 2.75rem;
+}
+
+.adept-cta-input:focus {
+  outline: none;
+  border-color: #ffffff !important;
+}
+
+.adept-guarantees {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+/* ── Section 7: Developer Footer ── */
+.adept-footer {
+  background: #060608;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.adept-footer-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.adept-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+@media (min-width: 640px) {
+  .adept-footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .adept-footer-grid {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
+.adept-footer-desc {
+  font-size: 0.75rem;
+  color: #a1a1aa;
+  max-width: 24rem;
+  margin: 1rem 0;
+  line-height: 1.6;
+}
+
+.adept-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.adept-dot-green {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #34d399;
+}
+
+.adept-footer-heading {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #ffffff;
+  display: block;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.adept-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  font-size: 0.75rem;
+}
+
+.adept-footer-link {
+  color: #a1a1aa;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.adept-footer-link:hover {
+  color: #ffffff;
+}
+
+.adept-footer-bottom {
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #71717a;
+}
+
+@media (min-width: 640px) {
+  .adept-footer-bottom {
+    flex-direction: row;
+  }
+}
