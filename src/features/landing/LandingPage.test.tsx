@@ -40,19 +40,23 @@ describe("LandingPage", () => {
     renderLanding(false);
 
     const banner = screen.getByRole("banner");
-    expect(within(banner).getByText("ADEPT")).toBeInTheDocument();
-    expect(screen.getByText(/Turn DevOps Signals into Unstoppable/i)).toBeInTheDocument();
-    expect(screen.getByText("18.4 / wk")).toBeInTheDocument();
+    expect(within(banner).getByText("Adept")).toBeInTheDocument();
+    expect(within(banner).getByText("v2.5 Live")).toBeInTheDocument();
+    expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
+    expect(screen.getByText("Unstoppable Engineering Velocity")).toBeInTheDocument();
+    expect(screen.getByText("3.5")).toBeInTheDocument();
     expect(screen.getByText("Deployment Frequency")).toBeInTheDocument();
-    expect(screen.getByText("Mean Time to Recovery")).toBeInTheDocument();
+    expect(screen.getByText("Change Lead Time")).toBeInTheDocument();
+    expect(screen.getByText("Recovery Time")).toBeInTheDocument();
+    expect(screen.getByText("Change Failure Rate")).toBeInTheDocument();
   });
 
-  it("shows Sign In and Get Started buttons in header for anonymous visitors", () => {
+  it("shows Sign In and Deploy Free buttons in header for anonymous visitors", () => {
     renderLanding(false);
 
     const banner = screen.getByRole("banner");
     expect(within(banner).getByRole("link", { name: /^Sign In$/i })).toBeInTheDocument();
-    expect(within(banner).getByRole("link", { name: /^Get Started/i })).toBeInTheDocument();
+    expect(within(banner).getByRole("link", { name: /^Deploy Free/i })).toBeInTheDocument();
   });
 
   it("shows Console button in header for authenticated users", () => {
@@ -62,13 +66,31 @@ describe("LandingPage", () => {
     expect(within(banner).getByRole("link", { name: /^Console/i })).toBeInTheDocument();
   });
 
-  it("renders feature bento cards and pricing sections", () => {
+  it("renders ecosystem integrations, core value pillars, and ROI metrics", () => {
     renderLanding(false);
 
-    expect(screen.getByText("Automated 4 DORA Metrics Calculation")).toBeInTheDocument();
-    expect(screen.getByText("JIT-Fine PR Review Risk Engine")).toBeInTheDocument();
-    expect(screen.getByText("Predictable Plans for")).toBeInTheDocument();
-    expect(screen.getByText("Community")).toBeInTheDocument();
-    expect(screen.getByText("Pro Team")).toBeInTheDocument();
+    // Integrations
+    expect(screen.getByText("GitHub App")).toBeInTheDocument();
+    expect(screen.getByText("Atlassian Jira")).toBeInTheDocument();
+
+    // Value Pillars
+    expect(screen.getByText("Zero-Secret-Leak Sync")).toBeInTheDocument();
+    expect(screen.getByText("JIT-Fine Risk Engine")).toBeInTheDocument();
+    expect(screen.getByText("Proactive SLA Governance")).toBeInTheDocument();
+    expect(screen.getByText("Multi-Tenant Scoping")).toBeInTheDocument();
+
+    // ROI Metrics
+    expect(screen.getByText("4.2x")).toBeInTheDocument();
+    expect(screen.getByText("Faster Deploy Cadence")).toBeInTheDocument();
+    expect(screen.getByText("65%")).toBeInTheDocument();
+    expect(screen.getByText("Shorter PR Review Latency")).toBeInTheDocument();
+    expect(screen.getByText("85%")).toBeInTheDocument();
+    expect(screen.getByText("MTTR Reduction")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("Secrets Persisted")).toBeInTheDocument();
+
+    // Bottom CTA & Footer
+    expect(screen.getByText("Ready to Elevate Your Team’s Engineering Velocity?")).toBeInTheDocument();
+    expect(screen.getByText(/Operational — Lightsail ap-south-1/i)).toBeInTheDocument();
   });
 });

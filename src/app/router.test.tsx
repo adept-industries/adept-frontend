@@ -51,15 +51,15 @@ describe("Root / routing", () => {
   it("renders LandingPage at / for anonymous visitors without redirecting to login", () => {
     renderAppAt("/", false);
 
-    expect(screen.getByText(/Turn DevOps Signals into Unstoppable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Sign In$/i })[0]).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /^Get Started/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /^Deploy Free/i })[0]).toBeInTheDocument();
   });
 
   it("renders LandingPage at / for authenticated users without forcing redirect to dashboard", () => {
     renderAppAt("/", true);
 
-    expect(screen.getByText(/Turn DevOps Signals into Unstoppable/i)).toBeInTheDocument();
+    expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /^Console/i })).toBeInTheDocument();
   });
 });
