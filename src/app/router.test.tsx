@@ -52,8 +52,7 @@ describe("Root / routing", () => {
     renderAppAt("/", false);
 
     expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /^Sign In$/i })[0]).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: /^Deploy Free/i })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: /^Log In$/i })[0]).toBeInTheDocument();
   });
 
   it("renders LandingPage at / for authenticated users without forcing redirect to dashboard", () => {

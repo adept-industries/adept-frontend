@@ -29,34 +29,26 @@ export function LandingPage() {
       {/* SECTION 1: MINIMAL BRAND HEADER (Clean Bar) */}
       <header className="adept-header" role="banner">
         <div className="adept-header-inner">
-          {/* Brand & Version Pill */}
+          {/* Brand Link */}
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <Link to="/" className="adept-brand-link">
               <img src={logoUrl} alt="Adept Logo" className="adept-logo-img" />
               <span className="adept-brand-text">Adept</span>
             </Link>
-            <div className="adept-version-pill">
-              v2.5 Live
-            </div>
           </div>
 
-          {/* Right Trailing Actions */}
+          {/* Right Trailing Action */}
           <div className="adept-header-actions">
             {isAuthenticated ? (
               <Link to="/dashboard" className="adept-btn-white">
                 <span>Console</span>
-                <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }} aria-hidden="true">arrow_forward</span>
               </Link>
             ) : (
-              <>
-                <Link to="/login" className="adept-link-signin">
-                  Sign In
-                </Link>
-                <Link to="/signup" className="adept-btn-white">
-                  <span>Deploy Free</span>
-                  <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>arrow_forward</span>
-                </Link>
-              </>
+              <Link to="/login" className="adept-btn-white">
+                <span>Log In</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "16px" }} aria-hidden="true">arrow_forward</span>
+              </Link>
             )}
           </div>
         </div>
@@ -84,7 +76,7 @@ export function LandingPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Link to="/signup" className="adept-btn-white adept-btn-white-lg">
                 <span>Start Free Trial</span>
-                <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>arrow_forward</span>
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }} aria-hidden="true">arrow_forward</span>
               </Link>
             </div>
           </div>
@@ -516,30 +508,18 @@ export function LandingPage() {
               <ul className="adept-footer-links">
                 <li><a href="#dora-metrics" className="adept-footer-link">DORA Metrics</a></li>
                 <li><a href="#pr-risk" className="adept-footer-link">PR Risk Engine</a></li>
-                <li><a href="#benchmarks" className="adept-footer-link">DORA Benchmark 2025</a></li>
-                <li><Link to="/login" className="adept-footer-link">Telemetry API</Link></li>
+                <li><a href="#integrations" className="adept-footer-link">Integrations</a></li>
+                <li><a href="#faq" className="adept-footer-link">FAQ</a></li>
               </ul>
             </div>
 
-            {/* Resources Links */}
+            {/* Platform & Account Links */}
             <div>
-              <span className="adept-footer-heading">Resources</span>
+              <span className="adept-footer-heading">Platform</span>
               <ul className="adept-footer-links">
-                <li><Link to="/login" className="adept-footer-link">CLI Docs</Link></li>
-                <li><a href="#integrations" className="adept-footer-link">GitHub App Setup</a></li>
-                <li><a href="#integrations" className="adept-footer-link">Jira Cloud Sync</a></li>
-                <li><Link to="/login" className="adept-footer-link">Release Notes v2.5</Link></li>
-              </ul>
-            </div>
-
-            {/* Security & Legal Links */}
-            <div>
-              <span className="adept-footer-heading">Security &amp; Trust</span>
-              <ul className="adept-footer-links">
-                <li><Link to="/login" className="adept-footer-link">Security &amp; SOC2</Link></li>
-                <li><Link to="/login" className="adept-footer-link">Privacy &amp; Terms</Link></li>
-                <li><Link to="/dashboard" className="adept-footer-link">Live Status Dashboard</Link></li>
-                <li><Link to="/login" className="adept-footer-link">SLA Guarantees</Link></li>
+                <li><Link to="/login" className="adept-footer-link">Log In</Link></li>
+                <li><Link to="/signup" className="adept-footer-link">Sign Up</Link></li>
+                <li><a href="#benchmarks" className="adept-footer-link">ROI Benchmarks</a></li>
               </ul>
             </div>
           </div>

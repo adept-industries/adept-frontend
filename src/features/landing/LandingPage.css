@@ -835,7 +835,7 @@
 
 @media (min-width: 768px) {
   .adept-footer-grid {
-    grid-template-columns: 2fr 1fr 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
   }
 }
 

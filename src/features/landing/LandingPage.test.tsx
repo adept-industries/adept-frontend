@@ -41,7 +41,6 @@ describe("LandingPage", () => {
 
     const banner = screen.getByRole("banner");
     expect(within(banner).getByText("Adept")).toBeInTheDocument();
-    expect(within(banner).getByText("v2.5 Live")).toBeInTheDocument();
     expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
     expect(screen.getByText("Unstoppable Engineering Velocity")).toBeInTheDocument();
     expect(screen.getByText("3.5")).toBeInTheDocument();
@@ -51,12 +50,11 @@ describe("LandingPage", () => {
     expect(screen.getByText("Change Failure Rate")).toBeInTheDocument();
   });
 
-  it("shows Sign In and Deploy Free buttons in header for anonymous visitors", () => {
+  it("shows Log In button in header for anonymous visitors", () => {
     renderLanding(false);
 
     const banner = screen.getByRole("banner");
-    expect(within(banner).getByRole("link", { name: /^Sign In$/i })).toBeInTheDocument();
-    expect(within(banner).getByRole("link", { name: /^Deploy Free/i })).toBeInTheDocument();
+    expect(within(banner).getByRole("link", { name: /^Log In$/i })).toBeInTheDocument();
   });
 
   it("shows Console button in header for authenticated users", () => {
@@ -89,8 +87,9 @@ describe("LandingPage", () => {
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("Secrets Persisted")).toBeInTheDocument();
 
-    // Bottom CTA & Footer
+    // Bottom CTA, FAQ & Footer
     expect(screen.getByText("Ready to Elevate Your Team’s Engineering Velocity?")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^FAQ$/i })).toBeInTheDocument();
     expect(screen.getByText(/Operational — Lightsail ap-south-1/i)).toBeInTheDocument();
   });
 });
