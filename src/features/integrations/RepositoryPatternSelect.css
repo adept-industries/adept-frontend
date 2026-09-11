@@ -1,0 +1,142 @@
+.repository-pattern-select {
+  min-width: 0;
+}
+
+.repository-pattern-select > label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.repository-pattern-trigger,
+.repository-pattern-panel {
+  width: 100%;
+  border: 1px solid var(--border-color, #3b3b54);
+  border-radius: 6px;
+  background: var(--input-bg, #242436);
+  color: var(--text-primary, #fff);
+}
+
+.repository-pattern-trigger {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  text-align: left;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.repository-pattern-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.repository-pattern-chips li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border-color, #3b3b54);
+  border-radius: 5px;
+  font-size: 0.8rem;
+}
+
+.repository-pattern-chips li > span,
+.repository-pattern-option > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.repository-pattern-chips button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0;
+}
+
+.repository-pattern-help {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.5;
+  margin: 0.35rem 0 0;
+}
+
+.repository-pattern-panel {
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+}
+
+.repository-pattern-panel > input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #3b3b54);
+  border-radius: 4px;
+  background: var(--card-bg, #1a1a24);
+  color: var(--text-primary, #fff);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.repository-pattern-options {
+  max-height: 180px;
+  overflow-y: auto;
+  margin: 0.4rem 0;
+}
+
+.repository-pattern-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.repository-pattern-option > input {
+  width: auto;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.repository-pattern-add {
+  width: 100%;
+  padding: 0.5rem;
+  text-align: left;
+  border: 1px solid var(--border-color, #3b3b54);
+  border-radius: 4px;
+  background: var(--card-bg, #1a1a24);
+  color: var(--text-primary, #fff);
+  font: inherit;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.repository-pattern-select button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.repository-pattern-select :is(button, input):focus-visible {
+  outline: 2px solid var(--primary, #818cf8);
+  outline-offset: 2px;
+}
+
+.repository-pattern-error {
+  font-size: 0.8rem;
+  color: var(--danger-color, #ef4444);
+  margin: 0.5rem 0 0;
+}

@@ -778,6 +778,7 @@ export function IntegrationsPage() {
         {/* Modals */}
         {selectedRepoForSettings && (
           <RepositorySettingsModal
+            key={selectedRepoForSettings.id}
             repository={selectedRepoForSettings}
             onClose={() => setSelectedRepoForSettings(null)}
             onSave={handleSaveRepoSettings}

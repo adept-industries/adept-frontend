@@ -451,7 +451,7 @@ describe("IntegrationsPage", () => {
       .not.toBeInTheDocument();
 
     const signal = screen.getByRole("combobox", { name: "Deployment Signal Type" });
-    const workflow = screen.getByRole("textbox", { name: "Deployment Workflow Name Patterns" });
+    const workflow = screen.getByRole("button", { name: "Deployment Workflow Name Patterns" });
     expect(workflow).toHaveAccessibleDescription(/workflow name.*not a job or step name/);
     const exampleToggle = screen.getByText("See example");
     const example = exampleToggle.closest("details");
@@ -461,23 +461,25 @@ describe("IntegrationsPage", () => {
     expect(example).toHaveTextContent(/name: CI.*job called deploy.*enter CI/);
     await user.click(exampleToggle);
     expect(example).not.toHaveAttribute("open");
-    await user.clear(workflow);
-    await user.type(workflow, "CI");
+    await user.click(screen.getByRole("button", { name: "Remove *deploy*" }));
+    await user.click(workflow);
+    await user.click(await screen.findByRole("checkbox", { name: "CI" }));
     await user.selectOptions(signal, "DEPLOYMENT");
-    expect(screen.queryByRole("textbox", { name: "Deployment Workflow Name Patterns" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("textbox", { name: "Production Branch Patterns" })).not.toBeInTheDocument();
-    const environments = screen.getByRole("textbox", { name: "Production Environment Patterns" });
-    expect(environments).toHaveAccessibleDescription(/GitHub deployment environment.*production/);
-    await user.clear(environments);
-    await user.type(environments, "production, live");
+    expect(screen.queryByRole("button", { name: "Deployment Workflow Name Patterns" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Production Branch Patterns" })).not.toBeInTheDocument();
+    const environments = screen.getByRole("button", { name: "Production Environment Patterns" });
+    expect(environments).toHaveAccessibleDescription(/environments.*production/);
+    await user.click(environments);
+    await user.click(await screen.findByRole("checkbox", { name: "live" }));
 
     // Exploring both signals keeps the repository's configured values intact.
     await user.selectOptions(signal, "WORKFLOW_RUN");
-    expect(screen.getByRole("textbox", { name: "Deployment Workflow Name Patterns" })).toHaveValue("CI");
-    expect(screen.getByRole("textbox", { name: "Production Branch Patterns" })).toHaveValue("main");
-    expect(screen.queryByRole("textbox", { name: "Production Environment Patterns" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove CI" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove main" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Production Environment Patterns" })).not.toBeInTheDocument();
     await user.selectOptions(signal, "DEPLOYMENT");
-    expect(screen.getByRole("textbox", { name: "Production Environment Patterns" })).toHaveValue("production, live");
+    expect(screen.getByRole("button", { name: "Remove production" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove live" })).toBeInTheDocument();
 
     await user.clear(screen.getByLabelText("DORA Exclusions"));
     await user.type(screen.getByLabelText("DORA Exclusions"), "*preview*, *staging*");

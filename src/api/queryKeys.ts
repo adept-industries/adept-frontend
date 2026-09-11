@@ -30,6 +30,9 @@ export const queryKeys = {
   leadCandidates: (workspaceId: string, repositoryId: string) =>
     [workspaceId, "repositories", repositoryId, "lead-candidates"] as const,
 
+  repositorySettingsOptions: (workspaceId: string, repositoryId: string, integrationId: string) =>
+    [workspaceId, "repositories", repositoryId, "settings-options", integrationId] as const,
+
   mappedJiraProjects: (workspaceId: string, repositoryId: string) =>
     [workspaceId, "repositories", repositoryId, "jira-projects"] as const,
 

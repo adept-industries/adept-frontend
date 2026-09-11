@@ -1,5 +1,23 @@
 import { apiRequest } from "../../api/client.js";
 
+export interface RepositorySettingsOptions {
+  values: string[];
+  complete: boolean;
+  warning?: string | null;
+}
+
+export interface RepositorySettingsOptionsResponse {
+  branches: RepositorySettingsOptions;
+  workflows: RepositorySettingsOptions;
+  environments: RepositorySettingsOptions;
+}
+
+export function getRepositorySettingsOptions(repositoryId: string, signal?: AbortSignal) {
+  return apiRequest<RepositorySettingsOptionsResponse>({
+    method: "GET", path: `/repositories/${repositoryId}/settings-options`, auth: "bearer", signal,
+  });
+}
+
 export type IntegrationStatus = "ACTIVE" | "REVOKED" | "SUSPENDED" | "ERROR";
 export type DeploymentSignal = "WORKFLOW_RUN" | "DEPLOYMENT";
 export type MetricGranularity = "DAY" | "WEEK" | "MONTH";

@@ -935,6 +935,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/repositories/{repositoryId}/settings-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Discover repository settings options
+         * @description Manager-only, workspace-scoped GitHub branch, workflow and environment names. Each list reports completeness and a safe warning independently. Successful results are cached for five minutes; discovery never changes settings or queues a backfill.
+         */
+        get: operations["settingsOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks/github": {
         parameters: {
             query?: never;
@@ -1574,9 +1594,20 @@ export interface components {
             productionBranchPatterns?: string[];
             productionEnvironmentPatterns?: string[];
         };
+        RepositorySettingsOptionsResponse: {
+            branches: components["schemas"]["SettingsOptions"];
+            environments: components["schemas"]["SettingsOptions"];
+            workflows: components["schemas"]["SettingsOptions"];
+        };
         ResetPasswordRequest: {
             newPassword: string;
             token: string;
+        };
+        SettingsOptions: {
+            complete: boolean;
+            values: string[];
+            /** @description Safe explanation when discovery is unavailable or partial */
+            warning?: string;
         };
         SignupRequest: {
             displayName: string;
@@ -4893,6 +4924,74 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["LeadCandidateResponse"][];
+                };
+            };
+        };
+    };
+    settingsOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                repositoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repository settings options returned (possibly partial) */
+            200: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepositorySettingsOptionsResponse"];
+                };
+            };
+            /** @description Validation failed or the request was malformed */
+            400: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The scoped resource was not found */
+            404: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
                 };
             };
         };

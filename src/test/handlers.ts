@@ -7,6 +7,11 @@ const API = "/api/v1";
  * Tests override specific handlers with server.use(...).
  */
 export const handlers = [
+  http.get(`${API}/repositories/:repositoryId/settings-options`, () => HttpResponse.json({
+    branches: { values: ["main", "release/next"], complete: true },
+    workflows: { values: ["CI", "Deploy Production"], complete: true },
+    environments: { values: ["production", "live"], complete: true },
+  })),
   // CSRF seed
   http.get(`${API}/auth/csrf`, () => new HttpResponse(null, { status: 204 })),
 
