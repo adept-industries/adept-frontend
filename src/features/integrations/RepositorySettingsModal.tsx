@@ -1,4 +1,8 @@
 import { useState, type CSSProperties } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "../../api/queryKeys.js";
+import { getRepositorySettingsOptions } from "./api.js";
+import { RepositoryPatternSelect } from "./RepositoryPatternSelect.js";
 import type { RepositoryResponse, RepositorySettings, DeploymentSignal, MetricGranularity } from "./api.js";
 
 const helpTextStyle: CSSProperties = {
@@ -20,18 +24,28 @@ export function RepositorySettingsModal({
   onSave,
 }: RepositorySettingsModalProps) {
   const current = repository.settings;
+  const discovery = useQuery({
+    queryKey: queryKeys.repositorySettingsOptions(repository.workspaceId, repository.id, repository.githubIntegrationId),
+    queryFn: ({ signal }) => getRepositorySettingsOptions(repository.id, signal),
+    // Revalidate on reopening; the API owns the five-minute discovery cache.
+    staleTime: 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const incompleteOptions = discovery.isError || (discovery.data &&
+    (!discovery.data.branches.complete || !discovery.data.workflows.complete || !discovery.data.environments.complete));
 
   const [deploymentSignal, setDeploymentSignal] = useState<DeploymentSignal>(
     current?.deploymentSignal ?? "WORKFLOW_RUN"
   );
-  const [productionBranchPatterns, setProductionBranchPatterns] = useState<string>(
-    (current?.productionBranchPatterns ?? ["main", "master", "release/*"]).join(", ")
+  const [productionBranchPatterns, setProductionBranchPatterns] = useState<string[]>(
+    current?.productionBranchPatterns ?? ["main", "master", "release/*"]
   );
-  const [productionEnvironmentPatterns, setProductionEnvironmentPatterns] = useState<string>(
-    (current?.productionEnvironmentPatterns ?? ["production", "prod", "live"]).join(", ")
+  const [productionEnvironmentPatterns, setProductionEnvironmentPatterns] = useState<string[]>(
+    current?.productionEnvironmentPatterns ?? ["production", "prod", "live"]
   );
-  const [deploymentWorkflowNamePatterns, setDeploymentWorkflowNamePatterns] = useState<string>(
-    (current?.deploymentWorkflowNamePatterns ?? ["*deploy*", "*production*", "*release*"]).join(", ")
+  const [deploymentWorkflowNamePatterns, setDeploymentWorkflowNamePatterns] = useState<string[]>(
+    current?.deploymentWorkflowNamePatterns ?? ["*deploy*", "*production*", "*release*"]
   );
   const [incidentSource, setIncidentSource] = useState<"GITHUB" | "JIRA" | "MANUAL" | "BOTH">(
     current?.incidentSource ?? "GITHUB"
@@ -60,9 +74,9 @@ export function RepositorySettingsModal({
     try {
       await onSave({
         deploymentSignal,
-        productionBranchPatterns: parseList(productionBranchPatterns),
-        productionEnvironmentPatterns: parseList(productionEnvironmentPatterns),
-        deploymentWorkflowNamePatterns: parseList(deploymentWorkflowNamePatterns),
+        productionBranchPatterns,
+        productionEnvironmentPatterns,
+        deploymentWorkflowNamePatterns,
         incidentSource,
         doraExclusions: parseList(doraExclusions),
         defaultMetricGranularity,
@@ -176,87 +190,39 @@ export function RepositorySettingsModal({
           </div>
 
           <p style={helpTextStyle}>
-            Patterns ignore case. Separate with commas; <code>*</code> matches any text.
+            Choose GitHub names or add custom patterns, e.g. <code>release/*</code>. Matching ignores case.
           </p>
 
+          {incompleteOptions && <p style={helpTextStyle}>
+            Some GitHub options could not be loaded. Manual entry still works.{" "}
+            <button type="button" onClick={() => void discovery.refetch()} disabled={discovery.isFetching}>
+              {discovery.isFetching ? "Retrying…" : "Retry options"}
+            </button>
+          </p>}
+
           {deploymentSignal === "WORKFLOW_RUN" && (
-            <div>
-              <label htmlFor="repository-production-branches" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-                Production Branch Patterns
-              </label>
-              <input
-                id="repository-production-branches"
-                aria-describedby="repository-production-branches-help"
-                type="text"
-                value={productionBranchPatterns}
-                onChange={(e) => setProductionBranchPatterns(e.target.value)}
-                placeholder="main, master, release/*"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--input-bg, #242436)",
-                  border: "1px solid var(--border-color, #3b3b54)",
-                  color: "var(--text-primary, #ffffff)",
-                }}
-              />
-              <p id="repository-production-branches-help" style={helpTextStyle}>
-                Match production branches, e.g. <code>main</code> or <code>release/*</code>.
-              </p>
-            </div>
+            <RepositoryPatternSelect id="repository-production-branches" label="Production Branch Patterns"
+              help="Choose branches used for production, e.g. main or release/*."
+              placeholder="Search branches or type release/*" value={productionBranchPatterns}
+              onChange={setProductionBranchPatterns} options={discovery.data?.branches}
+              loading={discovery.isFetching} disabled={saving} />
           )}
 
           {deploymentSignal === "DEPLOYMENT" && (
-            <div>
-              <label htmlFor="repository-production-environments" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-                Production Environment Patterns
-              </label>
-              <input
-                id="repository-production-environments"
-                aria-describedby="repository-production-environments-help"
-                type="text"
-                value={productionEnvironmentPatterns}
-                onChange={(e) => setProductionEnvironmentPatterns(e.target.value)}
-                placeholder="production, prod, live"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--input-bg, #242436)",
-                  border: "1px solid var(--border-color, #3b3b54)",
-                  color: "var(--text-primary, #ffffff)",
-                }}
-              />
-              <p id="repository-production-environments-help" style={helpTextStyle}>
-                Match the GitHub deployment environment, e.g. <code>production</code>.
-              </p>
-            </div>
+            <RepositoryPatternSelect id="repository-production-environments" label="Production Environment Patterns"
+              help="Choose environments that represent production, e.g. production."
+              placeholder="Search environments or type a pattern" value={productionEnvironmentPatterns}
+              onChange={setProductionEnvironmentPatterns} options={discovery.data?.environments}
+              loading={discovery.isFetching} disabled={saving} />
           )}
 
           {deploymentSignal === "WORKFLOW_RUN" && (
             <div>
-              <label htmlFor="repository-deployment-workflows" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-                Deployment Workflow Name Patterns
-              </label>
-              <input
-                id="repository-deployment-workflows"
-                aria-describedby="repository-deployment-workflows-help"
-                type="text"
-                value={deploymentWorkflowNamePatterns}
-                onChange={(e) => setDeploymentWorkflowNamePatterns(e.target.value)}
-                placeholder="Deploy Production, *deploy*"
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--input-bg, #242436)",
-                  border: "1px solid var(--border-color, #3b3b54)",
-                  color: "var(--text-primary, #ffffff)",
-                }}
-              />
-              <p id="repository-deployment-workflows-help" style={helpTextStyle}>
-                Match the workflow name in GitHub Actions, not a job or step name.
-              </p>
+              <RepositoryPatternSelect id="repository-deployment-workflows" label="Deployment Workflow Name Patterns"
+                help="Choose the workflow name, not a job or step name. Only select workflows that deploy to production."
+                placeholder="Search workflows or type *deploy*" value={deploymentWorkflowNamePatterns}
+                onChange={setDeploymentWorkflowNamePatterns} options={discovery.data?.workflows}
+                loading={discovery.isFetching} disabled={saving} />
               <details style={helpTextStyle}>
                 <summary style={{ cursor: "pointer", color: "var(--text-primary, #ffffff)" }}>See example</summary>
                 <p style={helpTextStyle}>
