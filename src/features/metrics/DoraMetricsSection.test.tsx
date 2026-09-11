@@ -163,7 +163,7 @@ describe("DoraMetricsSection", () => {
     expect(eliteBadge).toBeInTheDocument();
   });
 
-  it("shows empty state when all sampleSizes are 0", async () => {
+  it("shows a text-only empty state when all sampleSizes are 0", async () => {
     server.use(
       http.get(`${API}/metrics/summary`, () => HttpResponse.json(EMPTY_SUMMARY_FIXTURE)),
     );
@@ -173,6 +173,7 @@ describe("DoraMetricsSection", () => {
     await waitFor(() =>
       expect(screen.getByText("No deployments recorded in this period")).toBeInTheDocument(),
     );
+    expect(screen.queryByText("📊")).not.toBeInTheDocument();
     expect(screen.queryByText("Deployment Frequency")).not.toBeInTheDocument();
   });
 

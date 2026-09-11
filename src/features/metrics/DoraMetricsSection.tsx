@@ -204,7 +204,6 @@ export function DoraMetricsSection({
         ) : allEmpty || !summary ? (
           /* Empty state occupies the full 4-col row */
           <div className="dora-empty dash-empty" style={{ gridColumn: "1 / -1" }}>
-            <div className="dash-empty-icon">📊</div>
             <h3 className="dash-empty-title">No deployments recorded in this period</h3>
             <p className="dash-empty-desc">
               Connect your GitHub workflow or webhook to begin tracking DORA metrics.
