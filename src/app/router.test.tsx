@@ -51,14 +51,14 @@ describe("Root / routing", () => {
   it("renders LandingPage at / for anonymous visitors without redirecting to login", () => {
     renderAppAt("/", false);
 
-    expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /Know what’s shipping/ })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /^Log In$/i })[0]).toBeInTheDocument();
   });
 
   it("renders LandingPage at / for authenticated users without forcing redirect to dashboard", () => {
     renderAppAt("/", true);
 
-    expect(screen.getByText(/Turn DevOps Signals into/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Console/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /Know what’s shipping/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
   });
 });
