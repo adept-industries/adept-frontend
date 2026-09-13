@@ -80,3 +80,9 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run e2e
 Playwright uses Chromium, one worker, no retries, and no trace/video/screenshot artifacts because account links and cookies are sensitive. The stateful backend journeys include short spacing so one CI client IP stays inside the production proxy's auth rate limit.
 
 `e2e/google-auth.spec.ts` covers the Adept-side Google return, first-time onboarding, and recovery paths with deterministic route mocks. `e2e/dora-metrics.spec.ts` verifies dashboard metric values, calculation metadata, and repository scoping against contract-shaped fixtures. The Google test intentionally does not automate `accounts.google.com`; use a manual local smoke test with a Google test account to verify the provider consent screen and configured redirect URI.
+
+### Landing page review
+
+Run `npm run dev` and open `/` (or `/landing`) to review the public page. Its dashboard preview is explicitly illustrative; it makes no live metrics or provider requests. GitHub/Jira setup and metric limitations are covered in the expandable FAQs. Existing sessions link back to the dashboard.
+
+`e2e/landing.spec.ts` checks phone, tablet, and desktop layouts, keyboard FAQs, and account navigation with mocked API sessions. With the dev server running, run `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npm run e2e -- e2e/landing.spec.ts`. No backend or provider credentials are needed for these checks.
