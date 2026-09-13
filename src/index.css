@@ -782,6 +782,16 @@ p {
   flex-shrink: 0;
 }
 
+.floating-sidebar:not(.expanded) .sidebar-logo-area {
+  justify-content: center;
+  gap: 0;
+  padding-inline: 0;
+}
+
+.floating-sidebar:not(.expanded) .sidebar-brand-name {
+  display: none;
+}
+
 .sidebar-logo-toggle {
   display: flex;
   align-items: center;
@@ -790,7 +800,7 @@ p {
   width: 40px;
   height: 40px;
   background: transparent;
-  border: none;
+  border: none !important;
   cursor: pointer;
   padding: 0;
   border-radius: 0.5rem;
@@ -804,6 +814,7 @@ p {
 .sidebar-logo-img {
   width: 32px;
   height: 32px;
+  border-radius: 0.5rem;
   object-fit: contain;
   flex-shrink: 0;
   filter: grayscale(1);
@@ -1353,6 +1364,7 @@ p {
   .sidebar-mobile-logo img {
     width: 28px;
     height: 28px;
+    border-radius: 0.5rem;
     object-fit: contain;
     filter: grayscale(1);
   }

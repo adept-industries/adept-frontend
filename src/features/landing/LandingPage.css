@@ -68,6 +68,7 @@
 
 .adept-landing__brand img {
   display: block;
+  border-radius: 0.5rem;
   object-fit: contain;
 }
 
