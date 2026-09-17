@@ -78,9 +78,16 @@ test("authenticated visitors can use the landing alias and return to the dashboa
   }
 });
 
+test("authenticated visitors visiting the root domain are redirected to the dashboard", async ({ page }) => {
+  await mockSession(page, true);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
 test("keyboard users can skip navigation", async ({ page }) => {
   await mockSession(page);
   await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.keyboard.press("Enter");
