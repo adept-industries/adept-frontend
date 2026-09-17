@@ -98,7 +98,7 @@ function Dashboard() {
  */
 export const router = createBrowserRouter([
   // ── Public landing & account pages ──────────────────────────────────────────
-  { path: "/", element: <LandingPage /> },
+  { path: "/", element: <PublicOnlyRoute><LandingPage /></PublicOnlyRoute> },
   { path: "/landing", element: <LandingPage /> },
   { path: "/signup", element: <PublicOnlyRoute><SignupPage /></PublicOnlyRoute> },
   { path: "/login", element: <PublicOnlyRoute><LoginPage /></PublicOnlyRoute> },

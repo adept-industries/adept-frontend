@@ -78,6 +78,12 @@ test("authenticated visitors can use the landing alias and return to the dashboa
   }
 });
 
+test("authenticated visitors visiting the root domain are redirected to the dashboard", async ({ page }) => {
+  await mockSession(page, true);
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
 test("keyboard users can skip navigation", async ({ page }) => {
   await mockSession(page);
   await page.goto("/");
