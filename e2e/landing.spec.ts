@@ -87,6 +87,7 @@ test("authenticated visitors visiting the root domain are redirected to the dash
 test("keyboard users can skip navigation", async ({ page }) => {
   await mockSession(page);
   await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
   await page.keyboard.press("Enter");
