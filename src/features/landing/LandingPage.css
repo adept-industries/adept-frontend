@@ -14,6 +14,11 @@
   -webkit-font-smoothing: antialiased;
 }
 
+html:has(.adept-landing),
+body:has(.adept-landing) {
+  background: #0d0e11;
+}
+
 .adept-landing a {
   color: inherit;
   text-decoration: none;
