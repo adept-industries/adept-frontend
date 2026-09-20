@@ -61,11 +61,17 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 375, height: 812 
     await page.getByRole("combobox", { name: "Deployment Signal Type" }).selectOption("DEPLOYMENT");
     await page.getByRole("button", { name: "Production Environment Patterns", exact: true }).click();
     await page.getByRole("checkbox", { name: "live", exact: true }).check();
+    await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Save Settings" }).click();
     await expect(modal).not.toBeVisible();
-    expect(saved).toEqual({ ...settings, deploymentSignal: "DEPLOYMENT",
+    expect(saved).toEqual({
+      deploymentSignal: "DEPLOYMENT",
+      productionBranchPatterns: ["main"],
       deploymentWorkflowNamePatterns: ["*deploy*", "Deploy [[]production], API", "*release*"],
       productionEnvironmentPatterns: ["production", "live"],
+      incidentSource: "GITHUB",
+      doraExclusions: [],
+      backfillDays: 90,
     });
   });
 }

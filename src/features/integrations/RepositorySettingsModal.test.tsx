@@ -26,9 +26,18 @@ describe("RepositorySettingsModal discovery", () => {
     await user.click(screen.getByRole("button", { name: "Deployment Workflow Name Patterns" }));
     expect(await screen.findByRole("checkbox", { name: "CI" })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Remove Deploy, API" })).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Metric Granularity" })).not.toBeInTheDocument();
     expect(save).not.toHaveBeenCalled();
     await user.click(screen.getByRole("button", { name: "Save Settings" }));
-    expect(save).toHaveBeenCalledExactlyOnceWith(repository.settings);
+    expect(save).toHaveBeenCalledExactlyOnceWith({
+      deploymentSignal: "WORKFLOW_RUN",
+      productionBranchPatterns: ["main", "release/*"],
+      productionEnvironmentPatterns: ["production"],
+      deploymentWorkflowNamePatterns: ["Deploy, API", "CI [[]prod]"],
+      incidentSource: "GITHUB",
+      doraExclusions: ["*preview*"],
+      backfillDays: 90,
+    });
   });
 
   it("can save custom patterns during a discovery error and retry without losing edits", async () => {
@@ -51,7 +60,15 @@ describe("RepositorySettingsModal discovery", () => {
     await waitFor(() => expect(screen.queryByRole("button", { name: "Retry options" })).not.toBeInTheDocument());
     expect(screen.getByRole("button", { name: "Remove hotfix/*" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Save Settings" }));
-    expect(save).toHaveBeenCalledExactlyOnceWith({ ...repository.settings, productionBranchPatterns: ["main", "release/*", "hotfix/*"] });
+    expect(save).toHaveBeenCalledExactlyOnceWith({
+      deploymentSignal: "WORKFLOW_RUN",
+      productionBranchPatterns: ["main", "release/*", "hotfix/*"],
+      productionEnvironmentPatterns: ["production"],
+      deploymentWorkflowNamePatterns: ["Deploy, API", "CI [[]prod]"],
+      incidentSource: "GITHUB",
+      doraExclusions: ["*preview*"],
+      backfillDays: 90,
+    });
     expect(requests).toBe(2);
   });
 
