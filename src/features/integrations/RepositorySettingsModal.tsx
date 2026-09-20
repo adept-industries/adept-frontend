@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "../../api/queryKeys.js";
 import { getRepositorySettingsOptions } from "./api.js";
 import { RepositoryPatternSelect } from "./RepositoryPatternSelect.js";
-import type { RepositoryResponse, RepositorySettings, DeploymentSignal, MetricGranularity } from "./api.js";
+import type { RepositoryResponse, RepositorySettings, DeploymentSignal } from "./api.js";
 
 const helpTextStyle: CSSProperties = {
   fontSize: "0.8rem",
@@ -53,9 +53,6 @@ export function RepositorySettingsModal({
   const [doraExclusions, setDoraExclusions] = useState<string>(
     (current?.doraExclusions ?? []).join(", ")
   );
-  const [defaultMetricGranularity, setDefaultMetricGranularity] = useState<MetricGranularity>(
-    current?.defaultMetricGranularity ?? "WEEK"
-  );
   const [backfillDays, setBackfillDays] = useState<number>(current?.backfillDays ?? 90);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +76,6 @@ export function RepositorySettingsModal({
         deploymentWorkflowNamePatterns,
         incidentSource,
         doraExclusions: parseList(doraExclusions),
-        defaultMetricGranularity,
         backfillDays: Number(backfillDays),
       });
       onClose();
@@ -289,33 +285,6 @@ export function RepositorySettingsModal({
               </select>
               <p id="repository-incident-source-help" style={helpTextStyle}>
                 Tracks failed deployments until the next successful deployment.
-              </p>
-            </div>
-
-            <div style={{ minWidth: 0 }}>
-              <label htmlFor="repository-metric-granularity" style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
-                Metric Granularity
-              </label>
-              <select
-                id="repository-metric-granularity"
-                aria-describedby="repository-metric-granularity-help"
-                value={defaultMetricGranularity}
-                onChange={(e) => setDefaultMetricGranularity(e.target.value as MetricGranularity)}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  borderRadius: "6px",
-                  backgroundColor: "var(--input-bg, #242436)",
-                  border: "1px solid var(--border-color, #3b3b54)",
-                  color: "var(--text-primary, #ffffff)",
-                }}
-              >
-                <option value="DAY">Day</option>
-                <option value="WEEK">Week (Default)</option>
-                <option value="MONTH">Month</option>
-              </select>
-              <p id="repository-metric-granularity-help" style={helpTextStyle}>
-                Saved preference; dashboard chart grouping follows its selected period instead.
               </p>
             </div>
 
