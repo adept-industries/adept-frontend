@@ -214,7 +214,7 @@ export function ProjectsPage() {
 
         {/* Create Project Card */}
         {isManager && (
-        <section className="card" style={{ width: "100%", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        <section className="card" style={{ width: "100%", padding: "1.75rem", display: "flex", flexDirection: "column", gap: "1.25rem", boxSizing: "border-box" }}>
           <div
             style={{
               display: "flex",
@@ -306,11 +306,13 @@ export function ProjectsPage() {
                           borderRadius: "6px",
                           backgroundColor: isSelected ? "rgba(99, 102, 241, 0.06)" : "transparent",
                           border: `1px solid ${isSelected ? "rgba(99, 102, 241, 0.3)" : "transparent"}`,
+                          minWidth: 0,
                         }}
                       >
                         <label
                           style={{
                             display: "flex",
+                            flexWrap: "wrap",
                             alignItems: "center",
                             gap: "0.6rem",
                             fontSize: "0.9rem",
@@ -322,12 +324,13 @@ export function ProjectsPage() {
                             checked={isSelected}
                             onChange={() => toggleCreateRepo(repo.id)}
                           />
-                          <span style={{ fontWeight: 600 }}>{repo.fullName}</span>
+                          <span style={{ fontWeight: 600, wordBreak: "break-all" }}>{repo.fullName}</span>
                           <span
                             style={{
                               fontSize: "0.75rem",
                               color: "var(--text-secondary, #94a3b8)",
                               marginLeft: "auto",
+                              flexShrink: 0,
                             }}
                           >
                             {repo.visibility}
@@ -336,7 +339,7 @@ export function ProjectsPage() {
 
                         {/* Lead assignment remains repository-specific. */}
                         {isSelected && (
-                          <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem" }}>
+                          <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem", minWidth: 0 }}>
                             <RepoLeadManager
                               repositoryId={repo.id}
                               repositoryName={repo.fullName}
@@ -383,6 +386,8 @@ export function ProjectsPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "1.25rem",
+                  boxSizing: "border-box",
+                  minWidth: 0,
                 }}
               >
               {isManager && editingId === project.id ? (
@@ -437,11 +442,13 @@ export function ProjectsPage() {
                               borderRadius: "6px",
                               backgroundColor: isSelected ? "rgba(99, 102, 241, 0.06)" : "transparent",
                               border: `1px solid ${isSelected ? "rgba(99, 102, 241, 0.3)" : "transparent"}`,
+                              minWidth: 0,
                             }}
                           >
                             <label
                               style={{
                                 display: "flex",
+                                flexWrap: "wrap",
                                 alignItems: "center",
                                 gap: "0.6rem",
                                 fontSize: "0.9rem",
@@ -453,12 +460,13 @@ export function ProjectsPage() {
                                 checked={isSelected}
                                 onChange={() => toggleEditRepo(repo.id)}
                               />
-                              <span style={{ fontWeight: 600 }}>{repo.fullName}</span>
+                              <span style={{ fontWeight: 600, wordBreak: "break-all" }}>{repo.fullName}</span>
                               <span
                                 style={{
                                   fontSize: "0.75rem",
                                   color: "var(--text-secondary, #94a3b8)",
                                   marginLeft: "auto",
+                                  flexShrink: 0,
                                 }}
                               >
                                 {repo.visibility}
@@ -467,7 +475,7 @@ export function ProjectsPage() {
 
                             {/* Lead assignment remains repository-specific. */}
                             {isSelected && (
-                              <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem" }}>
+                              <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem", minWidth: 0 }}>
                                 <RepoLeadManager
                                   repositoryId={repo.id}
                                   repositoryName={repo.fullName}
@@ -492,21 +500,22 @@ export function ProjectsPage() {
                 </form>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
-                    <div>
-                      <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 600 }}>{project.name}</h2>
+                  <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+                    <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                      <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: 600, wordBreak: "break-word" }}>{project.name}</h2>
                       {project.description && (
-                        <p style={{ margin: "0.35rem 0 0 0", color: "var(--text-secondary, #94a3b8)", fontSize: "0.9rem" }}>
+                        <p style={{ margin: "0.35rem 0 0 0", color: "var(--text-secondary, #94a3b8)", fontSize: "0.9rem", wordBreak: "break-word" }}>
                           {project.description}
                         </p>
                       )}
                     </div>
                     {isManager && (
-                    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center", flexShrink: 0 }}>
                       <button
                         type="button"
                         className="button-link"
                         onClick={() => beginEdit(project)}
+                        style={{ whiteSpace: "nowrap" }}
                       >
                         Edit project
                       </button>
@@ -514,7 +523,7 @@ export function ProjectsPage() {
                         type="button"
                         className="danger-button"
                         onClick={() => void handleDelete(project.id)}
-                        style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem" }}
+                        style={{ fontSize: "0.85rem", padding: "0.35rem 0.75rem", whiteSpace: "nowrap" }}
                       >
                         Delete
                       </button>
@@ -575,9 +584,12 @@ export function ProjectsPage() {
                               display: "flex",
                               flexDirection: "column",
                               gap: "0.65rem",
+                              minWidth: 0,
+                              maxWidth: "100%",
+                              boxSizing: "border-box",
                             }}
                           >
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
                               <span
                                 style={{
                                   display: "inline-flex",
@@ -586,12 +598,14 @@ export function ProjectsPage() {
                                   color: "var(--primary-light, #818cf8)",
                                   fontWeight: 600,
                                   fontSize: "0.95rem",
+                                  minWidth: 0,
+                                  flex: "1 1 auto",
                                 }}
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                                   <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                                 </svg>
-                                {repo.fullName}
+                                <span style={{ wordBreak: "break-all" }}>{repo.fullName}</span>
                               </span>
                               <span
                                 style={{
@@ -601,6 +615,8 @@ export function ProjectsPage() {
                                   backgroundColor: repo.trackingEnabled ? "rgba(34, 197, 94, 0.15)" : "rgba(148, 163, 184, 0.15)",
                                   color: repo.trackingEnabled ? "#22c55e" : "var(--text-secondary, #94a3b8)",
                                   fontWeight: 600,
+                                  flexShrink: 0,
+                                  whiteSpace: "nowrap",
                                 }}
                               >
                                 {repo.trackingEnabled ? "Tracked" : "Untracked"}

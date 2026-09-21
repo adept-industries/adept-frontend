@@ -61,6 +61,14 @@ async function waitForJiraProjectSync(
   return null;
 }
 
+function isRepoDeletedFromGithub(repo: RepositoryResponse, githubLastSyncedAt?: string): boolean {
+  return Boolean(
+    githubLastSyncedAt &&
+      !repo.trackingEnabled &&
+      (!repo.lastSyncedAt || new Date(repo.lastSyncedAt).getTime() < new Date(githubLastSyncedAt).getTime())
+  );
+}
+
 export function IntegrationsPage() {
   const { state: authState } = useAuth();
   const workspaceTimezone = authState.status === "authenticated" ? authState.currentMembership.timezone : "UTC";
@@ -241,14 +249,24 @@ export function IntegrationsPage() {
     }
   };
 
-  const filteredRepos = repositories.filter((repo) => {
-    const matchesSearch =
-      repo.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      repo.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter =
-      trackingFilter === "ALL" || (trackingFilter === "TRACKED" && repo.trackingEnabled);
-    return matchesSearch && matchesFilter;
-  });
+  const filteredRepos = repositories
+    .filter((repo) => {
+      const matchesSearch =
+        repo.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        repo.name.toLowerCase().includes(search.toLowerCase());
+      const matchesFilter =
+        trackingFilter === "ALL" || (trackingFilter === "TRACKED" && repo.trackingEnabled);
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      const aUnavailable = a.archived || isRepoDeletedFromGithub(a, github?.lastSyncedAt);
+      const bUnavailable = b.archived || isRepoDeletedFromGithub(b, github?.lastSyncedAt);
+
+      if (aUnavailable !== bUnavailable) {
+        return aUnavailable ? 1 : -1;
+      }
+      return a.fullName.localeCompare(b.fullName);
+    });
 
   return (
     <AppShell>
@@ -553,15 +571,34 @@ export function IntegrationsPage() {
 
         {/* Repository Catalog Section */}
         <section style={{ backgroundColor: "var(--card-bg, #161622)", border: "1px solid var(--border-color, #272738)", borderRadius: "10px", padding: "1.5rem" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginBottom: "1.25rem" }}>
-            <div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "1rem",
+              marginBottom: "1rem",
+            }}
+          >
+            <div style={{ flex: "1 1 280px", minWidth: 0 }}>
               <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Repository Catalog</h2>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)", display: "block" }}>
                 Enable tracking to calculate DORA metrics and ingest deployment workflows.
               </span>
             </div>
 
-            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "0.75rem",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                flex: "0 1 auto",
+                maxWidth: "100%",
+              }}
+            >
               <input
                 type="text"
                 value={search}
@@ -574,10 +611,22 @@ export function IntegrationsPage() {
                   border: "1px solid var(--border-color, #3b3b54)",
                   color: "var(--text-primary, #ffffff)",
                   fontSize: "0.85rem",
-                  minWidth: "200px",
+                  width: "180px",
+                  maxWidth: "100%",
+                  boxSizing: "border-box",
                 }}
               />
-              <div style={{ display: "flex", backgroundColor: "var(--input-bg, #242436)", borderRadius: "6px", padding: "2px", border: "1px solid var(--border-color, #3b3b54)" }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  flexShrink: 0,
+                  backgroundColor: "var(--input-bg, #242436)",
+                  borderRadius: "6px",
+                  padding: "2px",
+                  border: "1px solid var(--border-color, #3b3b54)",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => setTrackingFilter("ALL")}
@@ -589,6 +638,7 @@ export function IntegrationsPage() {
                     fontSize: "0.75rem",
                     color: "var(--text-primary, #ffffff)",
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   All
@@ -604,12 +654,34 @@ export function IntegrationsPage() {
                     fontSize: "0.75rem",
                     color: "var(--text-primary, #ffffff)",
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   Tracked Only
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Quick Tip for Adding/Removing Repositories */}
+          <div
+            style={{
+              marginBottom: "1.25rem",
+              padding: "0.55rem 0.85rem",
+              borderRadius: "6px",
+              backgroundColor: "rgba(99, 102, 241, 0.08)",
+              border: "1px solid rgba(99, 102, 241, 0.2)",
+              fontSize: "0.8rem",
+              color: "var(--text-secondary, #94a3b8)",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.45rem",
+            }}
+          >
+            <strong style={{ color: "var(--primary-light, #818cf8)" }}>Tip:</strong>
+            <span>
+              To add or remove repositories, update access in <strong>GitHub Settings &rarr; GitHub Apps &rarr; Adept</strong>, then click <strong>Sync Repositories</strong>.
+            </span>
           </div>
 
           {loading ? (
@@ -634,90 +706,146 @@ export function IntegrationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRepos.map((repo) => (
-                    <tr
-                      key={repo.id}
-                      style={{
-                        borderBottom: "1px solid var(--border-color, #272738)",
-                        transition: "background-color 0.15s ease",
-                      }}
-                    >
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <input
-                          type="checkbox"
-                          checked={repo.trackingEnabled}
-                          onChange={() => void handleToggleRepoTracking(repo)}
-                          disabled={isPending}
-                          style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer" }}
-                        />
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <div style={{ fontWeight: 600, color: "var(--text-primary, #ffffff)" }}>
-                          {repo.fullName}
-                        </div>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <span
-                          style={{
-                            padding: "0.2rem 0.5rem",
-                            borderRadius: "4px",
-                            backgroundColor: "rgba(255, 255, 255, 0.06)",
-                            fontFamily: "monospace",
-                            fontSize: "0.75rem",
-                          }}
-                        >
-                          {repo.defaultBranch}
-                        </span>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
-                          {repo.visibility}
-                        </span>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <span
-                          style={{
-                            padding: "0.2rem 0.5rem",
-                            borderRadius: "4px",
-                            fontSize: "0.75rem",
-                            fontWeight: 500,
-                            backgroundColor: "rgba(99, 102, 241, 0.12)",
-                            color: "var(--primary-light, #818cf8)",
-                          }}
-                        >
-                          {repo.settings?.deploymentSignal ?? "WORKFLOW_RUN"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.5rem" }}>
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-                          <button
-                            type="button"
-                            className="button-link"
-                            onClick={() => void handleRebuildRepoData(repo)}
-                            disabled={repo.archived || !repo.trackingEnabled || rebuildingRepositoryId !== null}
+                  {filteredRepos.map((repo) => {
+                    const isDeletedFromGithub = isRepoDeletedFromGithub(repo, github?.lastSyncedAt);
+                    const isUnavailable = repo.archived || isDeletedFromGithub;
+
+                    return (
+                      <tr
+                        key={repo.id}
+                        style={{
+                          borderBottom: "1px solid var(--border-color, #272738)",
+                          transition: "background-color 0.15s ease",
+                          opacity: isUnavailable ? 0.45 : 1,
+                          backgroundColor: isUnavailable ? "rgba(255, 255, 255, 0.02)" : undefined,
+                        }}
+                      >
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <input
+                            type="checkbox"
+                            checked={repo.trackingEnabled}
+                            onChange={() => void handleToggleRepoTracking(repo)}
+                            disabled={isPending || isUnavailable}
                             title={
                               repo.archived
-                                ? "Archived repositories cannot be rebuilt"
-                                : !repo.trackingEnabled
-                                  ? "Enable tracking before rebuilding DORA data"
-                                  : "Rebuild DORA data using saved settings"
+                                ? "Archived repositories cannot be tracked"
+                                : isDeletedFromGithub
+                                  ? "Repository was deleted or removed on GitHub"
+                                  : undefined
                             }
-                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                            style={{
+                              width: "1.1rem",
+                              height: "1.1rem",
+                              cursor: isUnavailable ? "not-allowed" : "pointer",
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                            <span style={{ fontWeight: 600, color: isUnavailable ? "var(--text-secondary, #94a3b8)" : "var(--text-primary, #ffffff)" }}>
+                              {repo.fullName}
+                            </span>
+                            {repo.archived && (
+                              <span
+                                style={{
+                                  fontSize: "0.7rem",
+                                  padding: "0.15rem 0.45rem",
+                                  borderRadius: "4px",
+                                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                                  color: "var(--text-secondary, #94a3b8)",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                ARCHIVED
+                              </span>
+                            )}
+                            {isDeletedFromGithub && (
+                              <span
+                                style={{
+                                  fontSize: "0.7rem",
+                                  padding: "0.15rem 0.45rem",
+                                  borderRadius: "4px",
+                                  backgroundColor: "rgba(239, 68, 68, 0.12)",
+                                  color: "#f87171",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                DELETED ON GITHUB
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <span
+                            style={{
+                              padding: "0.2rem 0.5rem",
+                              borderRadius: "4px",
+                              backgroundColor: "rgba(255, 255, 255, 0.06)",
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
+                              color: isUnavailable ? "var(--text-secondary, #94a3b8)" : undefined,
+                            }}
                           >
-                            {rebuildingRepositoryId === repo.id ? "Queuing..." : "Rebuild DORA"}
-                          </button>
-                          <button
-                            type="button"
-                            className="button-link"
-                            onClick={() => setSelectedRepoForSettings(repo)}
-                            style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                            {repo.defaultBranch}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
+                            {repo.visibility}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <span
+                            style={{
+                              padding: "0.2rem 0.5rem",
+                              borderRadius: "4px",
+                              fontSize: "0.75rem",
+                              fontWeight: 500,
+                              backgroundColor: isUnavailable ? "rgba(255, 255, 255, 0.05)" : "rgba(99, 102, 241, 0.12)",
+                              color: isUnavailable ? "var(--text-secondary, #94a3b8)" : "var(--primary-light, #818cf8)",
+                            }}
                           >
-                            Settings
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {repo.settings?.deploymentSignal ?? "WORKFLOW_RUN"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 0.5rem" }}>
+                          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+                            <button
+                              type="button"
+                              className="button-link"
+                              onClick={() => void handleRebuildRepoData(repo)}
+                              disabled={isUnavailable || !repo.trackingEnabled || rebuildingRepositoryId !== null}
+                              title={
+                                repo.archived
+                                  ? "Archived repositories cannot be rebuilt"
+                                  : isDeletedFromGithub
+                                    ? "Repository was deleted or removed on GitHub"
+                                    : !repo.trackingEnabled
+                                      ? "Enable tracking before rebuilding DORA data"
+                                      : "Rebuild DORA data using saved settings"
+                              }
+                              style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
+                            >
+                              {rebuildingRepositoryId === repo.id ? "Queuing..." : "Rebuild DORA"}
+                            </button>
+                            <button
+                              type="button"
+                              className="button-link"
+                              onClick={() => setSelectedRepoForSettings(repo)}
+                              disabled={isUnavailable}
+                              style={{
+                                fontSize: "0.75rem",
+                                padding: "0.3rem 0.6rem",
+                                cursor: isUnavailable ? "not-allowed" : "pointer",
+                              }}
+                            >
+                              Settings
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
