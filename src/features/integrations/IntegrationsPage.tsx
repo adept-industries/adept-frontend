@@ -69,6 +69,20 @@ function isRepoDeletedFromGithub(repo: RepositoryResponse, githubLastSyncedAt?: 
   );
 }
 
+function isRepoConfigurationNeeded(repo: RepositoryResponse): boolean {
+  if (!repo.settings) return true;
+  const signal = repo.settings.deploymentSignal ?? "WORKFLOW_RUN";
+  if (signal === "WORKFLOW_RUN") {
+    const workflows = repo.settings.deploymentWorkflowNamePatterns;
+    return !workflows || workflows.length === 0;
+  }
+  if (signal === "DEPLOYMENT") {
+    const envs = repo.settings.productionEnvironmentPatterns;
+    return !envs || envs.length === 0;
+  }
+  return false;
+}
+
 export function IntegrationsPage() {
   const { state: authState } = useAuth();
   const workspaceTimezone = authState.status === "authenticated" ? authState.currentMembership.timezone : "UTC";
@@ -82,6 +96,7 @@ export function IntegrationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [trackingFilter, setTrackingFilter] = useState<"ALL" | "TRACKED">("ALL");
+  const [glowingRepoId, setGlowingRepoId] = useState<string | null>(null);
 
   const [selectedRepoForSettings, setSelectedRepoForSettings] = useState<RepositoryResponse | null>(null);
 
@@ -200,6 +215,10 @@ export function IntegrationsPage() {
   };
 
   const handleToggleRepoTracking = async (repo: RepositoryResponse) => {
+    if (!repo.trackingEnabled && isRepoConfigurationNeeded(repo)) {
+      setGlowingRepoId(repo.id);
+      return;
+    }
     const nextState = !repo.trackingEnabled;
     startTransition(async () => {
       try {
@@ -219,6 +238,7 @@ export function IntegrationsPage() {
     setRepositories((prev) =>
       prev.map((r) => (r.id === selectedRepoForSettings.id ? updated : r))
     );
+    setGlowingRepoId(null);
     setSelectedRepoForSettings(null);
   };
 
@@ -731,7 +751,9 @@ export function IntegrationsPage() {
                                 ? "Archived repositories cannot be tracked"
                                 : isDeletedFromGithub
                                   ? "Repository was deleted or removed on GitHub"
-                                  : undefined
+                                  : !repo.trackingEnabled && isRepoConfigurationNeeded(repo)
+                                    ? "Configure in Settings before enabling tracking"
+                                    : undefined
                             }
                             style={{
                               width: "1.1rem",
@@ -809,12 +831,12 @@ export function IntegrationsPage() {
                           </span>
                         </td>
                         <td style={{ padding: "0.75rem 0.5rem" }}>
-                          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+                          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.5rem", position: "relative" }}>
                             <button
                               type="button"
                               className="button-link"
                               onClick={() => void handleRebuildRepoData(repo)}
-                              disabled={isUnavailable || !repo.trackingEnabled || rebuildingRepositoryId !== null}
+                              disabled={isUnavailable || !repo.trackingEnabled || isRepoConfigurationNeeded(repo) || rebuildingRepositoryId !== null}
                               title={
                                 repo.archived
                                   ? "Archived repositories cannot be rebuilt"
@@ -822,25 +844,81 @@ export function IntegrationsPage() {
                                     ? "Repository was deleted or removed on GitHub"
                                     : !repo.trackingEnabled
                                       ? "Enable tracking before rebuilding DORA data"
-                                      : "Rebuild DORA data using saved settings"
+                                      : isRepoConfigurationNeeded(repo)
+                                        ? "Configure deployment workflow/environment patterns in Settings first"
+                                        : "Rebuild DORA data using saved settings"
                               }
                               style={{ fontSize: "0.75rem", padding: "0.3rem 0.6rem" }}
                             >
                               {rebuildingRepositoryId === repo.id ? "Queuing..." : "Rebuild DORA"}
                             </button>
-                            <button
-                              type="button"
-                              className="button-link"
-                              onClick={() => setSelectedRepoForSettings(repo)}
-                              disabled={isUnavailable}
-                              style={{
-                                fontSize: "0.75rem",
-                                padding: "0.3rem 0.6rem",
-                                cursor: isUnavailable ? "not-allowed" : "pointer",
-                              }}
-                            >
-                              Settings
-                            </button>
+
+                            <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                              {glowingRepoId === repo.id && (
+                                <div
+                                  role="tooltip"
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "calc(100% + 8px)",
+                                    right: 0,
+                                    zIndex: 20,
+                                    backgroundColor: "rgba(239, 68, 68, 0.15)",
+                                    border: "1px solid #ef4444",
+                                    backdropFilter: "blur(8px)",
+                                    borderRadius: "6px",
+                                    padding: "0.4rem 0.65rem",
+                                    fontSize: "0.75rem",
+                                    fontWeight: 500,
+                                    color: "#fca5a5",
+                                    whiteSpace: "nowrap",
+                                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.5)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.35rem",
+                                  }}
+                                >
+                                  <span>Please configure &quot;{repo.fullName}&quot; in Settings before enabling tracking</span>
+                                  {/* Tooltip downward arrow pointing to the button */}
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      top: "100%",
+                                      right: "1.2rem",
+                                      width: 0,
+                                      height: 0,
+                                      borderLeft: "5px solid transparent",
+                                      borderRight: "5px solid transparent",
+                                      borderTop: "6px solid #ef4444",
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                className="button-link"
+                                onClick={() => {
+                                  setGlowingRepoId(null);
+                                  setSelectedRepoForSettings(repo);
+                                }}
+                                disabled={isUnavailable}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  padding: "0.3rem 0.6rem",
+                                  cursor: isUnavailable ? "not-allowed" : "pointer",
+                                  ...(glowingRepoId === repo.id
+                                    ? {
+                                        boxShadow: "0 0 12px 2px rgba(239, 68, 68, 0.8)",
+                                        borderColor: "#ef4444",
+                                        color: "#fca5a5",
+                                        fontWeight: 700,
+                                        animation: "pulse 1.5s infinite",
+                                      }
+                                    : {}),
+                                }}
+                              >
+                                Settings
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>

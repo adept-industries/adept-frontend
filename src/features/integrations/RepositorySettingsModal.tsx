@@ -39,13 +39,13 @@ export function RepositorySettingsModal({
     current?.deploymentSignal ?? "WORKFLOW_RUN"
   );
   const [productionBranchPatterns, setProductionBranchPatterns] = useState<string[]>(
-    current?.productionBranchPatterns ?? ["main", "master", "release/*"]
+    current?.productionBranchPatterns ?? []
   );
   const [productionEnvironmentPatterns, setProductionEnvironmentPatterns] = useState<string[]>(
-    current?.productionEnvironmentPatterns ?? ["production", "prod", "live"]
+    current?.productionEnvironmentPatterns ?? []
   );
   const [deploymentWorkflowNamePatterns, setDeploymentWorkflowNamePatterns] = useState<string[]>(
-    current?.deploymentWorkflowNamePatterns ?? ["*deploy*", "*production*", "*release*"]
+    current?.deploymentWorkflowNamePatterns ?? []
   );
   const [incidentSource, setIncidentSource] = useState<"GITHUB" | "JIRA" | "MANUAL" | "BOTH">(
     current?.incidentSource ?? "GITHUB"
@@ -59,8 +59,21 @@ export function RepositorySettingsModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setError(null);
+
+    // Option A: Prevent saving empty patterns if repository is tracked
+    if (repository.trackingEnabled) {
+      if (deploymentSignal === "WORKFLOW_RUN" && (!deploymentWorkflowNamePatterns || deploymentWorkflowNamePatterns.length === 0)) {
+        setError("Tracked repositories require at least one deployment workflow pattern.");
+        return;
+      }
+      if (deploymentSignal === "DEPLOYMENT" && (!productionEnvironmentPatterns || productionEnvironmentPatterns.length === 0)) {
+        setError("Tracked repositories require at least one production environment pattern.");
+        return;
+      }
+    }
+
+    setSaving(true);
 
     const parseList = (val: string) =>
       val
@@ -139,22 +152,7 @@ export function RepositorySettingsModal({
           </button>
         </div>
 
-        {error && (
-          <div
-            role="alert"
-            style={{
-              padding: "0.75rem",
-              backgroundColor: "rgba(239, 68, 68, 0.1)",
-              border: "1px solid #ef4444",
-              borderRadius: "6px",
-              color: "#f87171",
-              fontSize: "0.85rem",
-              marginBottom: "1rem",
-            }}
-          >
-            {error}
-          </div>
-        )}
+        
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
@@ -186,7 +184,7 @@ export function RepositorySettingsModal({
           </div>
 
           <p style={helpTextStyle}>
-            Choose GitHub names or add custom patterns, e.g. <code>release/*</code>. Matching ignores case.
+            Choose GitHub names or add custom patterns, e.g. <code>release/*</code>. Matching ignores case. If no production branch patterns are specified, it automatically falls back to the default branch (<code>{repository.defaultBranch}</code>).
           </p>
 
           {incompleteOptions && <p style={helpTextStyle}>
@@ -209,7 +207,7 @@ export function RepositorySettingsModal({
               help="Choose environments that represent production, e.g. production."
               placeholder="Search environments or type a pattern" value={productionEnvironmentPatterns}
               onChange={setProductionEnvironmentPatterns} options={discovery.data?.environments}
-              loading={discovery.isFetching} disabled={saving} />
+              loading={discovery.isFetching} disabled={saving} required />
           )}
 
           {deploymentSignal === "WORKFLOW_RUN" && (
@@ -218,7 +216,7 @@ export function RepositorySettingsModal({
                 help="Choose the workflow name, not a job or step name. Only select workflows that deploy to production."
                 placeholder="Search workflows or type *deploy*" value={deploymentWorkflowNamePatterns}
                 onChange={setDeploymentWorkflowNamePatterns} options={discovery.data?.workflows}
-                loading={discovery.isFetching} disabled={saving} />
+                loading={discovery.isFetching} disabled={saving} required />
               <details style={helpTextStyle}>
                 <summary style={{ cursor: "pointer", color: "var(--text-primary, #ffffff)" }}>See example</summary>
                 <p style={helpTextStyle}>
@@ -323,24 +321,46 @@ export function RepositorySettingsModal({
               ? "Saving changes automatically queues a DORA rebuild."
               : "History imports when the repository is tracked and not archived."}
           </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
-            <button
-              type="button"
-              className="button-link"
-              onClick={onClose}
-              disabled={saving}
-              style={{ padding: "0.5rem 1rem" }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={saving}
-              style={{ padding: "0.5rem 1.25rem" }}
-            >
-              {saving ? "Saving..." : "Save Settings"}
-            </button>
+          <div style={{ marginTop: "1rem" }}>
+            {error && (
+              <div
+                role="alert"
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  backgroundColor: "rgba(239, 68, 68, 0.12)",
+                  border: "1px solid #ef4444",
+                  borderRadius: "6px",
+                  color: "#fca5a5",
+                  fontSize: "0.8rem",
+                  marginBottom: "0.75rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                }}
+              >
+                {error}
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <button
+                type="button"
+                className="button-link"
+                onClick={onClose}
+                disabled={saving}
+                style={{ padding: "0.5rem 1rem" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={saving}
+                style={{ padding: "0.5rem 1.25rem" }}
+              >
+                {saving ? "Saving..." : "Save Settings"}
+              </button>
+            </div>
           </div>
         </form>
       </div>
