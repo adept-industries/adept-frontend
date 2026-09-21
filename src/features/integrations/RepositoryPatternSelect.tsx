@@ -13,9 +13,10 @@ interface Props {
   options?: RepositorySettingsOptions;
   loading: boolean;
   disabled?: boolean;
+  required?: boolean;
 }
 
-export function RepositoryPatternSelect({ id, label, help, placeholder, value, onChange, options, loading, disabled }: Props) {
+export function RepositoryPatternSelect({ id, label, help, placeholder, value, onChange, options, loading, disabled, required }: Props) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +63,12 @@ export function RepositoryPatternSelect({ id, label, help, placeholder, value, o
 
   return (
     <div className="repository-pattern-select" ref={root} role="group" aria-labelledby={`${id}-label`}
-      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}
+      onBlur={(event) => {
+        // Only close on blur if the focus left the entire component and is not inside root
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
+          setOpen(false);
+        }
+      }}
       onKeyDown={(event) => {
         if (event.key === "Escape" && open) {
           event.preventDefault();
@@ -71,7 +77,10 @@ export function RepositoryPatternSelect({ id, label, help, placeholder, value, o
           trigger.current?.focus();
         }
       }}>
-      <label id={`${id}-label`} htmlFor={id}>{label}</label>
+      <label id={`${id}-label`} htmlFor={id}>
+        {label}
+        {required && <span style={{ color: "#f87171", marginLeft: "0.25rem" }} aria-hidden="true">*</span>}
+      </label>
       <button type="button" id={id} ref={trigger} className="repository-pattern-trigger"
         aria-labelledby={`${id}-label`} aria-describedby={`${id}-help`} aria-expanded={open}
         aria-controls={open ? `${id}-panel` : undefined} disabled={disabled}
@@ -92,7 +101,7 @@ export function RepositoryPatternSelect({ id, label, help, placeholder, value, o
       )}
       <p id={`${id}-help`} className="repository-pattern-help">{help}</p>
       {open && (
-        <div id={`${id}-panel`} className="repository-pattern-panel">
+        <div id={`${id}-panel`} className="repository-pattern-panel" onPointerDown={(e) => e.stopPropagation()}>
           <input ref={input} aria-label={`Search ${label}`} value={search} disabled={disabled}
             placeholder={placeholder} onChange={(event) => { setSearch(event.target.value); setError(null); }}
             onKeyDown={(event) => {
