@@ -496,4 +496,58 @@ describe("IntegrationsPage", () => {
     expect(savedSettings?.doraExclusions).toEqual(["*preview*", "*staging*"]);
     expect(backfillRequests).toBe(1);
   });
+
+  it("renders tip for adding/removing repos and places deleted repositories at the bottom", async () => {
+    server.use(
+      http.get("/api/v1/integrations/github", () =>
+        HttpResponse.json({
+          id: "gh-1",
+          workspaceId: "ws-1",
+          installationId: 12345,
+          accountLogin: "acme-org",
+          accountType: "ORGANIZATION",
+          repositorySelection: "ALL",
+          status: "ACTIVE",
+          lastSyncedAt: "2026-08-29T12:00:00Z",
+          repositoryCount: 1,
+        })
+      ),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([
+          {
+            ...repository("repo-1", "zebra-service"),
+            fullName: "acme-org/zebra-service",
+            trackingEnabled: true,
+            lastSyncedAt: "2026-08-29T12:00:00Z",
+          },
+          {
+            ...repository("repo-2", "aaa-deleted-repo"),
+            fullName: "acme-org/aaa-deleted-repo",
+            trackingEnabled: false,
+            lastSyncedAt: "2026-08-28T00:00:00Z",
+          },
+        ])
+      ),
+    );
+
+    renderPage();
+
+    expect(screen.getByText(/To add or remove repositories, update access in/)).toBeInTheDocument();
+    expect(await screen.findByText("DELETED ON GITHUB")).toBeInTheDocument();
+
+    const rows = screen.getAllByRole("row");
+    // Row 0 is the table header; row 1 is zebra-service (active); row 2 is aaa-deleted-repo (deleted at bottom)
+    expect(rows[1]).toHaveTextContent("acme-org/zebra-service");
+    expect(rows[2]).toHaveTextContent("acme-org/aaa-deleted-repo");
+
+    const checkboxes = screen.getAllByRole("checkbox");
+    const deletedCheckbox = checkboxes[1];
+    expect(deletedCheckbox).toBeDisabled();
+    expect(deletedCheckbox).toHaveAttribute(
+      "title",
+      "Repository was deleted or removed on GitHub",
+    );
+  });
 });

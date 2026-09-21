@@ -153,8 +153,8 @@ export function RepoLeadManager({
       {errorMessage && <InlineAlert message={errorMessage} kind="error" />}
 
       {/* Current Assignments Display */}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem" }}>
-        <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--text-secondary, #94a3b8)" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "0.5rem", maxWidth: "100%" }}>
+        <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--text-secondary, #94a3b8)", flexShrink: 0 }}>
           Leads:
         </span>
         {loadingAssignments ? (
@@ -169,6 +169,7 @@ export function RepoLeadManager({
               key={assignment.assignmentId}
               style={{
                 display: "inline-flex",
+                flexWrap: "wrap",
                 alignItems: "center",
                 gap: "0.35rem",
                 padding: "0.2rem 0.5rem",
@@ -177,9 +178,11 @@ export function RepoLeadManager({
                 border: `1px solid ${assignment.status === "PENDING" ? "rgba(245, 158, 11, 0.3)" : "rgba(34, 197, 94, 0.3)"}`,
                 fontSize: "0.78rem",
                 color: "var(--text-primary)",
+                maxWidth: "100%",
+                boxSizing: "border-box",
               }}
             >
-              <strong>{assignment.email}</strong>
+              <strong style={{ wordBreak: "break-all" }}>{assignment.email}</strong>
               <span
                 style={{
                   fontSize: "0.7rem",
@@ -188,6 +191,7 @@ export function RepoLeadManager({
                   backgroundColor: assignment.status === "PENDING" ? "rgba(245, 158, 11, 0.25)" : "rgba(34, 197, 94, 0.25)",
                   color: assignment.status === "PENDING" ? "#f59e0b" : "#22c55e",
                   fontWeight: 600,
+                  whiteSpace: "nowrap",
                 }}
               >
                 {assignment.status === "PENDING" ? "Pending Invite" : "Active Lead"}
@@ -207,6 +211,7 @@ export function RepoLeadManager({
                     padding: "0.05rem 0.35rem",
                     fontSize: "0.7rem",
                     fontWeight: 500,
+                    whiteSpace: "nowrap",
                   }}
                   title="Resend invitation email"
                 >
@@ -225,6 +230,7 @@ export function RepoLeadManager({
                   padding: "0 0.15rem",
                   fontSize: "0.85rem",
                   lineHeight: 1,
+                  flexShrink: 0,
                 }}
                 title="Unassign lead"
               >
@@ -249,6 +255,9 @@ export function RepoLeadManager({
             display: "inline-flex",
             alignItems: "center",
             gap: "0.25rem",
+            maxWidth: "100%",
+            whiteSpace: "nowrap",
+            boxSizing: "border-box",
           }}
         >
           + Add / Invite Lead
@@ -343,6 +352,7 @@ export function RepoLeadManager({
                       key={c.githubUserId}
                       style={{
                         display: "flex",
+                        flexWrap: "wrap",
                         alignItems: "center",
                         justifyContent: "space-between",
                         padding: "0.45rem 0.65rem",
@@ -350,9 +360,10 @@ export function RepoLeadManager({
                         backgroundColor: "var(--card-bg, #1a1a2e)",
                         border: "1px solid var(--border-color, #2d2d42)",
                         fontSize: "0.85rem",
+                        gap: "0.5rem",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                         {c.avatarUrl && (
                           <img
                             src={c.avatarUrl}
@@ -392,7 +403,7 @@ export function RepoLeadManager({
                           {submitting ? "Inviting…" : "Assign as Lead"}
                         </button>
                       ) : (
-                        <div style={{ display: "flex", gap: "0.3rem", alignItems: "center" }}>
+                        <div style={{ display: "flex", gap: "0.3rem", alignItems: "center", flexWrap: "wrap" }}>
                           <input
                             type="email"
                             placeholder="Enter work email…"
@@ -430,8 +441,8 @@ export function RepoLeadManager({
           {/* Tab 2: Work Email */}
           {activeTab === "email" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-              <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", flexWrap: "wrap" }}>
+                <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                   <FormField
                     id={`lead-email-${repositoryId}`}
                     label="Lead Work Email"
