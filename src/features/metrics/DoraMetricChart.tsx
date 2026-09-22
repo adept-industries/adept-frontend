@@ -30,13 +30,37 @@ function getDayLetter(date: Date, timeZone?: string): string {
   }
 }
 
+function formatDate(dateStr: string | undefined, timeZone?: string, fallbackDaysAgo?: number): string {
+  if (dateStr) {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      try {
+        const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+          timeZone: tz,
+        }).format(d);
+      } catch {
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+      }
+    }
+  }
+  if (fallbackDaysAgo !== undefined) {
+    const d = new Date();
+    d.setDate(d.getDate() - fallbackDaysAgo);
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
+  return "";
+}
+
 /**
  * Lightweight SVG sparkline chart for a single DORA metric time series.
  * Features:
  * - 2x2 expanded dimensions
- * - 7d: Timezone-aware day of week labels (e.g. T, W, T, F, S, S, M, T)
- * - 30d: 4 equally divided weeks (W1, W2, W3, W4) with clean vertical dividers
- * - 90d: Equal 3-week intervals (W1, W4, W7, W10, W13) with dividers
+ * - 7d: Timezone-aware day of week initials (e.g. T, W, T, F, S, S, M, T)
+ * - 30d: Date labels (e.g. Aug 24 -> Aug 31 -> Sep 8 -> Sep 15 -> Today) with dividers
+ * - 90d: Date labels (e.g. Jun 30 -> Jul 28 -> Aug 25 -> Today) with dividers
  */
 export function DoraMetricChart({ series, color, label, preset, timezone }: DoraMetricChartProps) {
   if (series.length < 2) {
@@ -82,25 +106,56 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
   // 1. "7d": Fallback weekday letters
   const fallbackWeek = ["M", "T", "W", "T", "F", "S", "S"];
 
-  // 2. "30d": 4 equal week quarters across the month
-  const qWidth30 = (W - PAD_X * 2) / 4;
-  const quarters30d = [0, 1, 2, 3].map((q) => ({
-    label: `W${q + 1}`,
-    centerX: PAD_X + (q + 0.5) * qWidth30,
-    dividerX: q > 0 ? PAD_X + q * qWidth30 : null,
-  }));
+  // 2. "30d": 5 date labels (Start, 25%, 50%, 75%, Today)
+  interface DateMarker {
+    x: number;
+    label: string;
+    anchor: "start" | "middle" | "end";
+    isDivider: boolean;
+  }
 
-  // 3. "90d": Equal 3-week intervals (W1, W4, W7, W10, W13)
-  const weekBoundaries90d: { x: number; label: string; isDivider: boolean }[] = [];
-  if (effectivePreset === "90d") {
-    const step = 3;
-    for (let i = 0; i < series.length; i += step) {
-      weekBoundaries90d.push({
-        x: toX(i),
-        label: `W${i + 1}`,
-        isDivider: i > 0,
-      });
-    }
+  const dateMarkers30d: DateMarker[] = [];
+  if (effectivePreset === "30d" && series.length >= 2) {
+    const lastIdx = series.length - 1;
+    const indices = [
+      0,
+      Math.round(lastIdx * 0.25),
+      Math.round(lastIdx * 0.5),
+      Math.round(lastIdx * 0.75),
+      lastIdx,
+    ];
+    indices.forEach((idx, step) => {
+      const isFirst = step === 0;
+      const isLast = step === indices.length - 1;
+      const anchor: "start" | "middle" | "end" = isFirst ? "start" : isLast ? "end" : "middle";
+      const x = isFirst ? PAD_X : isLast ? W - PAD_X : toX(idx);
+      const markerLabel = isLast
+        ? "Today"
+        : formatDate(series[idx].periodStart, timezone, Math.round(30 * (1 - step / 4)));
+      dateMarkers30d.push({ x, label: markerLabel, anchor, isDivider: !isFirst && !isLast });
+    });
+  }
+
+  // 3. "90d": 4 date labels (Start, ~33%, ~66%, Today)
+  const dateMarkers90d: DateMarker[] = [];
+  if (effectivePreset === "90d" && series.length >= 2) {
+    const lastIdx = series.length - 1;
+    const indices = [
+      0,
+      Math.round(lastIdx / 3),
+      Math.round((2 * lastIdx) / 3),
+      lastIdx,
+    ];
+    indices.forEach((idx, step) => {
+      const isFirst = step === 0;
+      const isLast = step === indices.length - 1;
+      const anchor: "start" | "middle" | "end" = isFirst ? "start" : isLast ? "end" : "middle";
+      const x = isFirst ? PAD_X : isLast ? W - PAD_X : toX(idx);
+      const markerLabel = isLast
+        ? "Today"
+        : formatDate(series[idx].periodStart, timezone, Math.round(90 * (1 - step / 3)));
+      dateMarkers90d.push({ x, label: markerLabel, anchor, isDivider: !isFirst && !isLast });
+    });
   }
 
   return (
@@ -119,24 +174,24 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
         </linearGradient>
       </defs>
 
-      {/* Vertical week boundary divider lines for 30d (equal 4 quarters) */}
+      {/* Vertical divider lines for 30d */}
       {effectivePreset === "30d" &&
-        quarters30d.map(
-          (q, i) =>
-            q.dividerX !== null && (
-              <g key={`wb-div-${i}`}>
+        dateMarkers30d.map(
+          (m, i) =>
+            m.isDivider && (
+              <g key={`div30-${i}`}>
                 <line
-                  x1={q.dividerX}
+                  x1={m.x}
                   y1={PAD_TOP}
-                  x2={q.dividerX}
+                  x2={m.x}
                   y2={BASELINE_Y}
                   stroke="rgba(255, 255, 255, 0.08)"
                   strokeDasharray="2 2"
                 />
                 <line
-                  x1={q.dividerX}
+                  x1={m.x}
                   y1={BASELINE_Y - 3}
-                  x2={q.dividerX}
+                  x2={m.x}
                   y2={BASELINE_Y + 3}
                   stroke="rgba(255, 255, 255, 0.25)"
                   strokeWidth="1"
@@ -145,24 +200,24 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
             )
         )}
 
-      {/* Vertical week boundary divider lines for 90d (equal 3-week intervals) */}
+      {/* Vertical divider lines for 90d */}
       {effectivePreset === "90d" &&
-        weekBoundaries90d.map(
-          (wb, i) =>
-            wb.isDivider && (
-              <g key={`wb90-div-${i}`}>
+        dateMarkers90d.map(
+          (m, i) =>
+            m.isDivider && (
+              <g key={`div90-${i}`}>
                 <line
-                  x1={wb.x}
+                  x1={m.x}
                   y1={PAD_TOP}
-                  x2={wb.x}
+                  x2={m.x}
                   y2={BASELINE_Y}
                   stroke="rgba(255, 255, 255, 0.08)"
                   strokeDasharray="2 2"
                 />
                 <line
-                  x1={wb.x}
+                  x1={m.x}
                   y1={BASELINE_Y - 3}
-                  x2={wb.x}
+                  x2={m.x}
                   y2={BASELINE_Y + 3}
                   stroke="rgba(255, 255, 255, 0.25)"
                   strokeWidth="1"
@@ -250,35 +305,35 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           );
         })}
 
-      {/* 30d: 4 equal weeks (W1, W2, W3, W4) centered in each quarter */}
+      {/* 30d: Date labels (e.g. Aug 24 -> Aug 31 -> Sep 8 -> Sep 15 -> Today) */}
       {effectivePreset === "30d" &&
-        quarters30d.map((q, i) => (
+        dateMarkers30d.map((m, i) => (
           <text
-            key={`w-lbl-${i}`}
-            x={q.centerX}
+            key={`d30-lbl-${i}`}
+            x={m.x}
             y={LABEL_Y}
-            textAnchor="middle"
-            fontSize="9"
+            textAnchor={m.anchor}
+            fontSize="8.5"
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
-            {q.label}
+            {m.label}
           </text>
         ))}
 
-      {/* 90d: Equal 3-week intervals (W1, W4, W7, W10, W13) */}
+      {/* 90d: Date labels (e.g. Jun 30 -> Jul 28 -> Aug 25 -> Today) */}
       {effectivePreset === "90d" &&
-        weekBoundaries90d.map((wb, i) => (
+        dateMarkers90d.map((m, i) => (
           <text
-            key={`w90-lbl-${i}`}
-            x={wb.x}
+            key={`d90-lbl-${i}`}
+            x={m.x}
             y={LABEL_Y}
-            textAnchor="middle"
-            fontSize="9"
+            textAnchor={m.anchor}
+            fontSize="8.5"
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
-            {wb.label}
+            {m.label}
           </text>
         ))}
     </svg>
