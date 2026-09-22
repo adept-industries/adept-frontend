@@ -30,23 +30,13 @@ function getDayLetter(date: Date, timeZone?: string): string {
   }
 }
 
-function isMonday(date: Date, timeZone?: string): boolean {
-  try {
-    const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz }).format(date);
-    return weekday === "Mon";
-  } catch {
-    return date.getDay() === 1;
-  }
-}
-
 /**
  * Lightweight SVG sparkline chart for a single DORA metric time series.
  * Features:
  * - 2x2 expanded dimensions
- * - 7d: Day of week labels (M, T, W, T, F, S, S)
- * - 30d: Week boundary divider lines and week labels (W1, W2, ...)
- * - 90d: Week boundary ticks and week labels (W1, W3, ...)
+ * - 7d: Timezone-aware day of week labels (e.g. T, W, T, F, S, S, M, T)
+ * - 30d: 4 equally divided weeks (W1, W2, W3, W4) with clean vertical dividers
+ * - 90d: Equal 3-week intervals (W1, W4, W7, W10, W13) with dividers
  */
 export function DoraMetricChart({ series, color, label, preset, timezone }: DoraMetricChartProps) {
   if (series.length < 2) {
@@ -89,40 +79,28 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
     `${toX(series.length - 1)},${BASELINE_Y}`,
   ].join(" ");
 
-  // 1. "7d": Weekday letter for each day
+  // 1. "7d": Fallback weekday letters
   const fallbackWeek = ["M", "T", "W", "T", "F", "S", "S"];
 
-  // 2. "30d": Week boundaries (Monday starts or every 7 days)
-  const weekBoundaries30d: { index: number; label: string }[] = [];
-  if (effectivePreset === "30d") {
-    let weekCount = 1;
-    series.forEach((s, i) => {
-      let isBoundary = false;
-      if (i === 0) {
-        isBoundary = true;
-      } else if (s.periodStart) {
-        const d = new Date(s.periodStart);
-        if (!isNaN(d.getTime()) && isMonday(d, timezone)) {
-          isBoundary = true;
-        }
-      } else if (i % 7 === 0) {
-        isBoundary = true;
-      }
+  // 2. "30d": 4 equal week quarters across the month
+  const qWidth30 = (W - PAD_X * 2) / 4;
+  const quarters30d = [0, 1, 2, 3].map((q) => ({
+    label: `W${q + 1}`,
+    centerX: PAD_X + (q + 0.5) * qWidth30,
+    dividerX: q > 0 ? PAD_X + q * qWidth30 : null,
+  }));
 
-      if (isBoundary) {
-        weekBoundaries30d.push({ index: i, label: `W${weekCount++}` });
-      }
-    });
-  }
-
-  // 3. "90d": Week boundaries (series items are weeks)
-  const weekBoundaries90d: { index: number; label: string }[] = [];
+  // 3. "90d": Equal 3-week intervals (W1, W4, W7, W10, W13)
+  const weekBoundaries90d: { x: number; label: string; isDivider: boolean }[] = [];
   if (effectivePreset === "90d") {
-    series.forEach((_, i) => {
-      if (i === 0 || (i + 1) % 3 === 0 || i === series.length - 1) {
-        weekBoundaries90d.push({ index: i, label: `W${i + 1}` });
-      }
-    });
+    const step = 3;
+    for (let i = 0; i < series.length; i += step) {
+      weekBoundaries90d.push({
+        x: toX(i),
+        label: `W${i + 1}`,
+        isDivider: i > 0,
+      });
+    }
   }
 
   return (
@@ -141,33 +119,57 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
         </linearGradient>
       </defs>
 
-      {/* Vertical week boundary divider lines for 30d */}
+      {/* Vertical week boundary divider lines for 30d (equal 4 quarters) */}
       {effectivePreset === "30d" &&
-        weekBoundaries30d.map((wb) => (
-          <line
-            key={`wb-line-${wb.index}`}
-            x1={toX(wb.index)}
-            y1={PAD_TOP}
-            x2={toX(wb.index)}
-            y2={BASELINE_Y}
-            stroke="rgba(255, 255, 255, 0.08)"
-            strokeDasharray="2 2"
-          />
-        ))}
+        quarters30d.map(
+          (q, i) =>
+            q.dividerX !== null && (
+              <g key={`wb-div-${i}`}>
+                <line
+                  x1={q.dividerX}
+                  y1={PAD_TOP}
+                  x2={q.dividerX}
+                  y2={BASELINE_Y}
+                  stroke="rgba(255, 255, 255, 0.08)"
+                  strokeDasharray="2 2"
+                />
+                <line
+                  x1={q.dividerX}
+                  y1={BASELINE_Y - 3}
+                  x2={q.dividerX}
+                  y2={BASELINE_Y + 3}
+                  stroke="rgba(255, 255, 255, 0.25)"
+                  strokeWidth="1"
+                />
+              </g>
+            )
+        )}
 
-      {/* Vertical week boundary lines for 90d */}
+      {/* Vertical week boundary divider lines for 90d (equal 3-week intervals) */}
       {effectivePreset === "90d" &&
-        series.map((_, i) => (
-          <line
-            key={`wb90-line-${i}`}
-            x1={toX(i)}
-            y1={BASELINE_Y - 4}
-            x2={toX(i)}
-            y2={BASELINE_Y + 2}
-            stroke="rgba(255, 255, 255, 0.18)"
-            strokeWidth="1"
-          />
-        ))}
+        weekBoundaries90d.map(
+          (wb, i) =>
+            wb.isDivider && (
+              <g key={`wb90-div-${i}`}>
+                <line
+                  x1={wb.x}
+                  y1={PAD_TOP}
+                  x2={wb.x}
+                  y2={BASELINE_Y}
+                  stroke="rgba(255, 255, 255, 0.08)"
+                  strokeDasharray="2 2"
+                />
+                <line
+                  x1={wb.x}
+                  y1={BASELINE_Y - 3}
+                  x2={wb.x}
+                  y2={BASELINE_Y + 3}
+                  stroke="rgba(255, 255, 255, 0.25)"
+                  strokeWidth="1"
+                />
+              </g>
+            )
+        )}
 
       {/* X-axis baseline */}
       <line
@@ -223,7 +225,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
       })}
 
       {/* ── X-axis Labels ── */}
-      {/* 7d: Day of week letters (M, T, W, T, F, S, S) */}
+      {/* 7d: Day of week letters (T, W, T, F, S, S, M, T) */}
       {effectivePreset === "7d" &&
         series.map((s, i) => {
           let letter = fallbackWeek[i % 7];
@@ -248,28 +250,28 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           );
         })}
 
-      {/* 30d: Week boundary labels (W1, W2, W3, ...) */}
+      {/* 30d: 4 equal weeks (W1, W2, W3, W4) centered in each quarter */}
       {effectivePreset === "30d" &&
-        weekBoundaries30d.map((wb) => (
+        quarters30d.map((q, i) => (
           <text
-            key={`w-lbl-${wb.index}`}
-            x={toX(wb.index)}
+            key={`w-lbl-${i}`}
+            x={q.centerX}
             y={LABEL_Y}
             textAnchor="middle"
             fontSize="9"
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
-            {wb.label}
+            {q.label}
           </text>
         ))}
 
-      {/* 90d: Week boundary labels (W1, W3, W6, ...) */}
+      {/* 90d: Equal 3-week intervals (W1, W4, W7, W10, W13) */}
       {effectivePreset === "90d" &&
-        weekBoundaries90d.map((wb) => (
+        weekBoundaries90d.map((wb, i) => (
           <text
-            key={`w90-lbl-${wb.index}`}
-            x={toX(wb.index)}
+            key={`w90-lbl-${i}`}
+            x={wb.x}
             y={LABEL_Y}
             textAnchor="middle"
             fontSize="9"
