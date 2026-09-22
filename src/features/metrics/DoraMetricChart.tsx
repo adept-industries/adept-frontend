@@ -7,6 +7,7 @@ interface DoraMetricChartProps {
   label: string;
   preset?: "7d" | "30d" | "90d";
   timezone?: string;
+  unit?: string;
 }
 
 const DAY_LETTERS: Record<string, string> = {
@@ -53,15 +54,30 @@ function formatDate(date: Date, timeZone?: string): string {
   }
 }
 
+function formatValue(v: number, unit?: string, preset?: "7d" | "30d" | "90d"): string {
+  if (unit === "percent" || unit === "%") {
+    return `${Math.round(v)}%`;
+  }
+  if (unit === "hours" || unit === "h") {
+    if (v >= 10 || v % 1 === 0) {
+      return `${Math.round(v)}h`;
+    }
+    return `${v.toFixed(1)}h`;
+  }
+  const rateSuffix = preset === "7d" ? "/d" : "/w";
+  const numStr = v % 1 === 0 ? String(Math.round(v)) : v.toFixed(1);
+  return `${numStr}${rateSuffix}`;
+}
+
 /**
  * Lightweight SVG sparkline chart for a single DORA metric time series.
  * Features:
- * - 2x2 expanded dimensions
+ * - 2x2 expanded dimensions with horizontal value axis (min, mid, max)
  * - 7d: Timezone-aware day of week initials (e.g. T, W, T, F, S, S, M, T)
  * - 30d: Vertical dashed lines for Mondays (dark & light mode visible) + date labels
  * - 90d: 1st of each month markers without dashed lines
  */
-export function DoraMetricChart({ series, color, label, preset, timezone }: DoraMetricChartProps) {
+export function DoraMetricChart({ series, color, label, preset, timezone, unit }: DoraMetricChartProps) {
   if (series.length < 2) {
     return (
       <div className="dora-chart-empty" aria-label={label}>
@@ -74,21 +90,29 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
     series.length <= 7 ? "7d" : series.length <= 35 ? "30d" : "90d"
   );
 
+  const effectiveUnit = unit ?? series[0]?.unit ?? (
+    label.toLowerCase().includes("failure") ? "percent" :
+    label.toLowerCase().includes("time") || label.toLowerCase().includes("lead") ? "hours" :
+    "deployments"
+  );
+
   const W = 360;
-  const H = 68;
-  const PAD_X = 10;
-  const PAD_TOP = 8;
-  const BASELINE_Y = 52;
-  const LABEL_Y = 64;
+  const H = 100;
+  const PAD_LEFT = 32;
+  const PAD_RIGHT = 10;
+  const PAD_TOP = 10;
+  const BASELINE_Y = 82;
+  const LABEL_Y = 95;
   const PLOT_H = BASELINE_Y - PAD_TOP;
 
   const values = series.map((s) => s.value);
-  const minVal = Math.min(...values);
-  const maxVal = Math.max(...values);
+  const dataMax = Math.max(...values);
+  const minVal = 0;
+  const maxVal = dataMax > 0 ? dataMax : (effectiveUnit === "percent" ? 100 : 1);
   const range = maxVal - minVal || 1;
 
   const toX = (i: number) =>
-    PAD_X + (i / (series.length - 1)) * (W - PAD_X * 2);
+    PAD_LEFT + (i / (series.length - 1)) * (W - PAD_LEFT - PAD_RIGHT);
   const toY = (v: number) =>
     BASELINE_Y - ((v - minVal) / range) * PLOT_H;
 
@@ -131,9 +155,9 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
 
     // Optional start label if first Monday is >= 35px from start
     const firstMon = mondays[0];
-    if (firstMon && firstMon.x >= PAD_X + 35 && series[0].periodStart) {
+    if (firstMon && firstMon.x >= PAD_LEFT + 35 && series[0].periodStart) {
       dateMarkers30d.push({
-        x: PAD_X,
+        x: PAD_LEFT,
         label: formatDate(new Date(series[0].periodStart), timezone),
         anchor: "start",
       });
@@ -141,16 +165,16 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
 
     // Monday labels
     mondays.forEach((m) => {
-      const isNearEnd = m.x >= W - PAD_X - 25;
-      const isNearStart = m.x <= PAD_X + 20;
+      const isNearEnd = m.x >= W - PAD_RIGHT - 25;
+      const isNearStart = m.x <= PAD_LEFT + 20;
       const anchor: "start" | "middle" | "end" = isNearStart ? "start" : isNearEnd ? "end" : "middle";
       dateMarkers30d.push({ x: m.x, label: m.date, anchor });
     });
 
     // "Today" label if last Monday is >= 35px from right edge
     const lastMon = mondays[mondays.length - 1];
-    if (!lastMon || (W - PAD_X) - lastMon.x >= 35) {
-      dateMarkers30d.push({ x: W - PAD_X, label: "Today", anchor: "end" });
+    if (!lastMon || (W - PAD_RIGHT) - lastMon.x >= 35) {
+      dateMarkers30d.push({ x: W - PAD_RIGHT, label: "Today", anchor: "end" });
     }
   }
 
@@ -168,7 +192,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
       const tStart = startDate.getTime();
       const tEnd = endDate.getTime();
       const timeToX = (t: number) =>
-        PAD_X + ((t - tStart) / (tEnd - tStart || 1)) * (W - PAD_X * 2);
+        PAD_LEFT + ((t - tStart) / (tEnd - tStart || 1)) * (W - PAD_LEFT - PAD_RIGHT);
 
       // Iterate through months between start and end
       const d = new Date(startDate);
@@ -190,11 +214,13 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
 
       // Add "Today" at the right edge if there is space
       const lastX = dateMarkers90d[dateMarkers90d.length - 1]?.x ?? 0;
-      if (W - PAD_X - lastX >= 40) {
-        dateMarkers90d.push({ x: W - PAD_X, label: "Today", anchor: "end" });
+      if (W - PAD_RIGHT - lastX >= 40) {
+        dateMarkers90d.push({ x: W - PAD_RIGHT, label: "Today", anchor: "end" });
       }
     }
   }
+
+  const midY = PAD_TOP + PLOT_H / 2;
 
   return (
     <svg
@@ -211,6 +237,69 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           <stop offset="100%" stopColor={color} stopOpacity="0.02" />
         </linearGradient>
       </defs>
+
+      {/* ── Horizontal Gridlines & Value Labels ── */}
+      {/* Top line (max value) */}
+      <line
+        x1={PAD_LEFT}
+        y1={PAD_TOP}
+        x2={W - PAD_RIGHT}
+        y2={PAD_TOP}
+        stroke="var(--text-secondary, #94a3b8)"
+        strokeOpacity="0.2"
+        strokeDasharray="2 2"
+      />
+      <text
+        x={PAD_LEFT - 5}
+        y={PAD_TOP + 3}
+        textAnchor="end"
+        fontSize="8"
+        fontWeight="500"
+        fill="var(--text-secondary, #94a3b8)"
+      >
+        {formatValue(maxVal, effectiveUnit, effectivePreset)}
+      </text>
+
+      {/* Middle line (mid value) */}
+      <line
+        x1={PAD_LEFT}
+        y1={midY}
+        x2={W - PAD_RIGHT}
+        y2={midY}
+        stroke="var(--text-secondary, #94a3b8)"
+        strokeOpacity="0.14"
+        strokeDasharray="2 2"
+      />
+      <text
+        x={PAD_LEFT - 5}
+        y={midY + 3}
+        textAnchor="end"
+        fontSize="8"
+        fontWeight="500"
+        fill="var(--text-secondary, #94a3b8)"
+      >
+        {formatValue(maxVal / 2, effectiveUnit, effectivePreset)}
+      </text>
+
+      {/* Baseline (0 value) */}
+      <line
+        x1={PAD_LEFT}
+        y1={BASELINE_Y}
+        x2={W - PAD_RIGHT}
+        y2={BASELINE_Y}
+        stroke="rgba(255, 255, 255, 0.14)"
+        strokeWidth="1"
+      />
+      <text
+        x={PAD_LEFT - 5}
+        y={BASELINE_Y + 3}
+        textAnchor="end"
+        fontSize="8"
+        fontWeight="500"
+        fill="var(--text-secondary, #94a3b8)"
+      >
+        {formatValue(0, effectiveUnit, effectivePreset)}
+      </text>
 
       {/* Vertical dashed lines for Mondays in 30d (visible in both dark and light modes) */}
       {effectivePreset === "30d" &&
@@ -236,16 +325,6 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
             />
           </g>
         ))}
-
-      {/* X-axis baseline */}
-      <line
-        x1={toX(0)}
-        y1={BASELINE_Y}
-        x2={toX(series.length - 1)}
-        y2={BASELINE_Y}
-        stroke="rgba(255, 255, 255, 0.14)"
-        strokeWidth="1"
-      />
 
       {/* X-axis baseline tick dots for each point */}
       {series.map((_, i) => (

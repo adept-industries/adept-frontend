@@ -184,7 +184,7 @@ export function DoraMetricCard({
 
       {/* Sparkline */}
       <div className="dora-card-chart">
-        <DoraMetricChart series={series} color={chartColor} label={`${title} trend`} preset={preset} timezone={timezone} />
+        <DoraMetricChart series={series} color={chartColor} label={`${title} trend`} preset={preset} timezone={timezone} unit={metric.unit} />
       </div>
     </div>
   );
