@@ -31,7 +31,8 @@ const RATING_COLOR: Record<MetricRating, string> = {
 
 // ── Value formatter ────────────────────────────────────────────────────────
 
-function formatValue(value: number, unit: string): string {
+function formatValue(value: number, unit: string, sampleSize?: number): string {
+  if (sampleSize === 0 && !unit.startsWith("deployments")) return "—";
   if (unit === "percent") return `${value.toFixed(1)}%`;
   if (unit.startsWith("deployments")) return `${value % 1 === 0 ? value : value.toFixed(1)}`;
   // hours
@@ -74,7 +75,7 @@ export function DoraMetricCard({
   const ratingClass = RATING_CLASS[metric.rating];
   const ratingLabel = RATING_LABEL[metric.rating];
   const chartColor = RATING_COLOR[metric.rating];
-  const formattedValue = formatValue(metric.value, metric.unit);
+  const formattedValue = formatValue(metric.value, metric.unit, metric.sampleSize);
 
   const hasPercentiles = showPercentiles && (
     metric.dimensions["p50"] !== undefined ||
@@ -92,7 +93,7 @@ export function DoraMetricCard({
       {/* Value */}
       <div className="dora-card-value-row">
         <span className="stat-card-value dora-card-value">{formattedValue}</span>
-        <span className="dora-card-unit">{metric.unit}</span>
+        {formattedValue !== "—" && <span className="dora-card-unit">{metric.unit}</span>}
       </div>
 
       {/* Title */}
