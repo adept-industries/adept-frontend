@@ -113,22 +113,9 @@ export function DoraMetricCard({
         </span>
       </div>
 
-      {/* Failure breakdown (Change Failure Rate) */}
-      {showFailureBreakdown && metric.dimensions["failed_deployments"] !== undefined && (
-        <div className="dora-card-breakdown">
-          <span className="dora-breakdown-failed">
-            {metric.dimensions["failed_deployments"]} failed
-          </span>
-          <span className="dora-breakdown-sep">/</span>
-          <span className="dora-breakdown-total">
-            {metric.dimensions["total_deployments"]} total
-          </span>
-        </div>
-      )}
-
-      {/* Percentile toggle (Change Lead Time) */}
-      {hasPercentiles && (
-        <div className="dora-card-percentiles-wrapper">
+      {/* Secondary info / action row (Percentile toggle, failure breakdown, or placeholder) */}
+      <div className="dora-card-action-slot">
+        {hasPercentiles ? (
           <button
             className="dora-percentile-toggle"
             aria-expanded={expanded}
@@ -151,35 +138,47 @@ export function DoraMetricCard({
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
-          {expanded && (
-            <dl id={`${cardId}-percentiles`} className="dora-percentiles-grid">
-              {metric.dimensions["mean"] !== undefined && (
-                <>
-                  <dt>Mean</dt>
-                  <dd>{metric.dimensions["mean"].toFixed(1)}h</dd>
-                </>
-              )}
-              {metric.dimensions["p50"] !== undefined && (
-                <>
-                  <dt>P50</dt>
-                  <dd>{metric.dimensions["p50"].toFixed(1)}h</dd>
-                </>
-              )}
-              {metric.dimensions["p75"] !== undefined && (
-                <>
-                  <dt>P75</dt>
-                  <dd>{metric.dimensions["p75"].toFixed(1)}h</dd>
-                </>
-              )}
-              {metric.dimensions["p90"] !== undefined && (
-                <>
-                  <dt>P90</dt>
-                  <dd>{metric.dimensions["p90"].toFixed(1)}h</dd>
-                </>
-              )}
-            </dl>
+        ) : showFailureBreakdown && metric.dimensions["failed_deployments"] !== undefined ? (
+          <div className="dora-card-breakdown">
+            <span className="dora-breakdown-failed">
+              {metric.dimensions["failed_deployments"]} failed
+            </span>
+            <span className="dora-breakdown-sep">/</span>
+            <span className="dora-breakdown-total">
+              {metric.dimensions["total_deployments"]} total
+            </span>
+          </div>
+        ) : null}
+      </div>
+
+      {/* Expanded percentiles drawer (Change Lead Time only) */}
+      {hasPercentiles && expanded && (
+        <dl id={`${cardId}-percentiles`} className="dora-percentiles-grid">
+          {metric.dimensions["mean"] !== undefined && (
+            <>
+              <dt>Mean</dt>
+              <dd>{metric.dimensions["mean"].toFixed(1)}h</dd>
+            </>
           )}
-        </div>
+          {metric.dimensions["p50"] !== undefined && (
+            <>
+              <dt>P50</dt>
+              <dd>{metric.dimensions["p50"].toFixed(1)}h</dd>
+            </>
+          )}
+          {metric.dimensions["p75"] !== undefined && (
+            <>
+              <dt>P75</dt>
+              <dd>{metric.dimensions["p75"].toFixed(1)}h</dd>
+            </>
+          )}
+          {metric.dimensions["p90"] !== undefined && (
+            <>
+              <dt>P90</dt>
+              <dd>{metric.dimensions["p90"].toFixed(1)}h</dd>
+            </>
+          )}
+        </dl>
       )}
 
       {/* Sparkline */}
