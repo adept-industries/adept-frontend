@@ -337,19 +337,29 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         />
       ))}
 
-      {/* 90d baseline ticks for 1st of each month */}
+      {/* Vertical dashed lines for 1st of each month in 90d (visible in both dark and light modes) */}
       {effectivePreset === "90d" &&
         monthFirstTicks90d.map((x, i) => (
-          <line
-            key={`m1st-tick-${i}`}
-            x1={x}
-            y1={BASELINE_Y - 3}
-            x2={x}
-            y2={BASELINE_Y + 3}
-            stroke="var(--text-secondary, #94a3b8)"
-            strokeOpacity="0.65"
-            strokeWidth="1.2"
-          />
+          <g key={`m1st-div-${i}`}>
+            <line
+              x1={x}
+              y1={PAD_TOP}
+              x2={x}
+              y2={BASELINE_Y}
+              stroke="var(--text-secondary, #94a3b8)"
+              strokeOpacity="0.4"
+              strokeDasharray="3 3"
+            />
+            <line
+              x1={x}
+              y1={BASELINE_Y - 3}
+              x2={x}
+              y2={BASELINE_Y + 3}
+              stroke="var(--text-secondary, #94a3b8)"
+              strokeOpacity="0.65"
+              strokeWidth="1.2"
+            />
+          </g>
         ))}
 
       {/* Area fill */}
