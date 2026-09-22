@@ -1704,7 +1704,7 @@ p {
 .dora-chart-svg {
   display: block;
   width: 100%;
-  height: 48px;
+  height: 64px;
   overflow: visible;
 }
 
@@ -1764,14 +1764,16 @@ p {
 }
 
 .dora-skel-chart {
-  height: 48px;
+  height: 64px;
   width: 100%;
   margin-top: 0.5rem;
 }
 
-/* ── Cards grid override — 4 col on desktop ── */
+/* ── Cards grid override — 2 by 2 on desktop ── */
 
 .dora-cards-grid {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
   margin-bottom: 0;
 }
 

@@ -140,6 +140,7 @@ export function DoraMetricsSection({
   ));
 
   const items = seriesData?.series ?? [];
+  const timezone = seriesData?.timezone;
 
   return (
     <section className="dora-section" aria-label="DORA Metrics">
@@ -224,6 +225,8 @@ export function DoraMetricsSection({
                 metric={summary.deploymentFrequency}
                 series={seriesFor(items, "DEPLOYMENT_FREQUENCY")}
                 icon={<IconRocket />}
+                preset={preset}
+                timezone={timezone}
               />
             </div>
 
@@ -237,6 +240,8 @@ export function DoraMetricsSection({
                 series={seriesFor(items, "CHANGE_LEAD_TIME_HOURS")}
                 icon={<IconClock />}
                 showPercentiles
+                preset={preset}
+                timezone={timezone}
               />
             </div>
 
@@ -249,6 +254,8 @@ export function DoraMetricsSection({
                 metric={summary.recoveryTime}
                 series={seriesFor(items, "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS")}
                 icon={<IconShield />}
+                preset={preset}
+                timezone={timezone}
               />
             </div>
 
@@ -262,6 +269,8 @@ export function DoraMetricsSection({
                 series={seriesFor(items, "CHANGE_FAILURE_RATE_PERCENT")}
                 icon={<IconPercent />}
                 showFailureBreakdown
+                preset={preset}
+                timezone={timezone}
               />
             </div>
           </>

@@ -57,6 +57,10 @@ interface DoraMetricCardProps {
   showPercentiles?: boolean;
   /** Show failed/total breakdown (Change Failure Rate only) */
   showFailureBreakdown?: boolean;
+  /** Time range preset */
+  preset?: "7d" | "30d" | "90d";
+  /** Workspace timezone */
+  timezone?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -70,6 +74,8 @@ export function DoraMetricCard({
   cardId,
   showPercentiles = false,
   showFailureBreakdown = false,
+  preset,
+  timezone,
 }: DoraMetricCardProps) {
   const [expanded, setExpanded] = useState(false);
   const ratingClass = RATING_CLASS[metric.rating];
@@ -178,7 +184,7 @@ export function DoraMetricCard({
 
       {/* Sparkline */}
       <div className="dora-card-chart">
-        <DoraMetricChart series={series} color={chartColor} label={`${title} trend`} />
+        <DoraMetricChart series={series} color={chartColor} label={`${title} trend`} preset={preset} timezone={timezone} />
       </div>
     </div>
   );
