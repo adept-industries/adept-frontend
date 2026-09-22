@@ -1775,6 +1775,7 @@ p {
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
   margin-bottom: 0;
+  align-items: start;
 }
 
 .dora-cards-grid > [role="listitem"] {
