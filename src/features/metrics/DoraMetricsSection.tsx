@@ -129,12 +129,15 @@ export function DoraMetricsSection({
 
   const isLoading = summaryLoading || seriesLoading;
   const metricsError = summaryQuery.error ?? seriesQuery.error;
-  const allEmpty = !summary || (
+  // When tracked repositories exist (repositoryCount > 0), show the DORA cards even if 0 deployments occurred.
+  // Only show the empty onboarding banner when no repositories are tracked or available.
+  const hasTrackedRepositories = (summary?.repositoryCount ?? 0) > 0 || repositories.length > 0;
+  const allEmpty = !summary || (!hasTrackedRepositories && (
     summary.deploymentFrequency.sampleSize === 0 &&
     summary.changeLeadTime.sampleSize === 0 &&
     summary.recoveryTime.sampleSize === 0 &&
     summary.changeFailureRate.sampleSize === 0
-  );
+  ));
 
   const items = seriesData?.series ?? [];
 

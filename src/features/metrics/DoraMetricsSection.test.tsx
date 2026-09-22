@@ -92,12 +92,22 @@ const SUMMARY_FIXTURE = {
   stale: false,
 };
 
-const EMPTY_SUMMARY_FIXTURE = {
+const NO_TRACKED_REPOS_SUMMARY_FIXTURE = {
   ...SUMMARY_FIXTURE,
-  deploymentFrequency: { ...SUMMARY_FIXTURE.deploymentFrequency, sampleSize: 0, value: 0 },
-  changeLeadTime:      { ...SUMMARY_FIXTURE.changeLeadTime,      sampleSize: 0, value: 0 },
-  recoveryTime:        { ...SUMMARY_FIXTURE.recoveryTime,        sampleSize: 0, value: 0 },
-  changeFailureRate:   { ...SUMMARY_FIXTURE.changeFailureRate,   sampleSize: 0, value: 0 },
+  repositoryCount: 0,
+  deploymentFrequency: { ...SUMMARY_FIXTURE.deploymentFrequency, sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  changeLeadTime:      { ...SUMMARY_FIXTURE.changeLeadTime,      sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  recoveryTime:        { ...SUMMARY_FIXTURE.recoveryTime,        sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  changeFailureRate:   { ...SUMMARY_FIXTURE.changeFailureRate,   sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+};
+
+const ZERO_DEPLOYMENTS_SUMMARY_FIXTURE = {
+  ...SUMMARY_FIXTURE,
+  repositoryCount: 2,
+  deploymentFrequency: { ...SUMMARY_FIXTURE.deploymentFrequency, sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  changeLeadTime:      { ...SUMMARY_FIXTURE.changeLeadTime,      sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  recoveryTime:        { ...SUMMARY_FIXTURE.recoveryTime,        sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
+  changeFailureRate:   { ...SUMMARY_FIXTURE.changeFailureRate,   sampleSize: 0, value: 0, rating: "UNKNOWN" as const },
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -163,9 +173,9 @@ describe("DoraMetricsSection", () => {
     expect(eliteBadge).toBeInTheDocument();
   });
 
-  it("shows a text-only empty state when all sampleSizes are 0", async () => {
+  it("shows a text-only empty state when there are no tracked repositories", async () => {
     server.use(
-      http.get(`${API}/metrics/summary`, () => HttpResponse.json(EMPTY_SUMMARY_FIXTURE)),
+      http.get(`${API}/metrics/summary`, () => HttpResponse.json(NO_TRACKED_REPOS_SUMMARY_FIXTURE)),
     );
 
     renderSection();
@@ -175,6 +185,21 @@ describe("DoraMetricsSection", () => {
     );
     expect(screen.queryByText("📊")).not.toBeInTheDocument();
     expect(screen.queryByText("Deployment Frequency")).not.toBeInTheDocument();
+  });
+
+  it("shows cards with 0 deployments/week and dashes when repositories are tracked but have 0 deployments", async () => {
+    server.use(
+      http.get(`${API}/metrics/summary`, () => HttpResponse.json(ZERO_DEPLOYMENTS_SUMMARY_FIXTURE)),
+    );
+
+    renderSection();
+
+    await waitFor(() => expect(screen.getByText("Deployment Frequency")).toBeInTheDocument());
+
+    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("deployments/week")).toBeInTheDocument();
+    // Lead time, recovery time, CFR show dash "—" when sampleSize is 0
+    expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2);
   });
 
   it("shows Change Lead Time percentile breakdown when expanded", async () => {
