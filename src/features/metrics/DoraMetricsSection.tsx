@@ -140,6 +140,7 @@ export function DoraMetricsSection({
   ));
 
   const items = seriesData?.series ?? [];
+  const timezone = seriesData?.timezone;
 
   return (
     <section className="dora-section" aria-label="DORA Metrics">
@@ -187,13 +188,17 @@ export function DoraMetricsSection({
       <div className="dash-stats-grid dora-cards-grid" role="list">
         {isLoading ? (
           <>
-            <SkeletonCard id="dora-skel-1" />
-            <SkeletonCard id="dora-skel-2" />
-            <SkeletonCard id="dora-skel-3" />
-            <SkeletonCard id="dora-skel-4" />
+            <div className="dora-cards-col">
+              <SkeletonCard id="dora-skel-1" />
+              <SkeletonCard id="dora-skel-3" />
+            </div>
+            <div className="dora-cards-col">
+              <SkeletonCard id="dora-skel-2" />
+              <SkeletonCard id="dora-skel-4" />
+            </div>
           </>
         ) : metricsError ? (
-          <div className="dora-empty dash-empty" role="alert" style={{ gridColumn: "1 / -1" }}>
+          <div className="dora-empty dash-empty" role="alert" style={{ width: "100%" }}>
             <h3 className="dash-empty-title">DORA metrics could not be loaded</h3>
             <p className="dash-empty-desc">{metricsError instanceof Error ? metricsError.message : "Please try again."}</p>
             <button
@@ -205,8 +210,8 @@ export function DoraMetricsSection({
             </button>
           </div>
         ) : allEmpty || !summary ? (
-          /* Empty state occupies the full 4-col row */
-          <div className="dora-empty dash-empty" style={{ gridColumn: "1 / -1" }}>
+          /* Empty state occupies the full width */
+          <div className="dora-empty dash-empty" style={{ width: "100%" }}>
             <h3 className="dash-empty-title">No deployments recorded in this period</h3>
             <p className="dash-empty-desc">
               Connect your GitHub workflow or webhook to begin tracking DORA metrics.
@@ -215,54 +220,62 @@ export function DoraMetricsSection({
           </div>
         ) : (
           <>
-            {/* 1. Deployment Frequency */}
-            <div role="listitem">
-              <DoraMetricCard
-                cardId="dora-card-df"
-                title="Deployment Frequency"
-                subtitle="How often code is deployed to production"
-                metric={summary.deploymentFrequency}
-                series={seriesFor(items, "DEPLOYMENT_FREQUENCY")}
-                icon={<IconRocket />}
-              />
+            {/* Column 1: Deployment Frequency & Recovery Time */}
+            <div className="dora-cards-col">
+              <div role="listitem">
+                <DoraMetricCard
+                  cardId="dora-card-df"
+                  title="Deployment Frequency"
+                  subtitle="How often code is deployed to production"
+                  metric={summary.deploymentFrequency}
+                  series={seriesFor(items, "DEPLOYMENT_FREQUENCY")}
+                  icon={<IconRocket />}
+                  preset={preset}
+                  timezone={timezone}
+                />
+              </div>
+              <div role="listitem">
+                <DoraMetricCard
+                  cardId="dora-card-rt"
+                  title="Recovery Time"
+                  subtitle="Median time to restore service"
+                  metric={summary.recoveryTime}
+                  series={seriesFor(items, "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS")}
+                  icon={<IconShield />}
+                  preset={preset}
+                  timezone={timezone}
+                />
+              </div>
             </div>
 
-            {/* 2. Change Lead Time */}
-            <div role="listitem">
-              <DoraMetricCard
-                cardId="dora-card-clt"
-                title="Change Lead Time"
-                subtitle="Time from commit to production"
-                metric={summary.changeLeadTime}
-                series={seriesFor(items, "CHANGE_LEAD_TIME_HOURS")}
-                icon={<IconClock />}
-                showPercentiles
-              />
-            </div>
-
-            {/* 3. Median Recovery Time */}
-            <div role="listitem">
-              <DoraMetricCard
-                cardId="dora-card-rt"
-                title="Recovery Time"
-                subtitle="Median time to restore service"
-                metric={summary.recoveryTime}
-                series={seriesFor(items, "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS")}
-                icon={<IconShield />}
-              />
-            </div>
-
-            {/* 4. Change Failure Rate */}
-            <div role="listitem">
-              <DoraMetricCard
-                cardId="dora-card-cfr"
-                title="Change Failure Rate"
-                subtitle="Percentage of deployments causing failures"
-                metric={summary.changeFailureRate}
-                series={seriesFor(items, "CHANGE_FAILURE_RATE_PERCENT")}
-                icon={<IconPercent />}
-                showFailureBreakdown
-              />
+            {/* Column 2: Change Lead Time & Change Failure Rate */}
+            <div className="dora-cards-col">
+              <div role="listitem">
+                <DoraMetricCard
+                  cardId="dora-card-clt"
+                  title="Change Lead Time"
+                  subtitle="Time from commit to production"
+                  metric={summary.changeLeadTime}
+                  series={seriesFor(items, "CHANGE_LEAD_TIME_HOURS")}
+                  icon={<IconClock />}
+                  showPercentiles
+                  preset={preset}
+                  timezone={timezone}
+                />
+              </div>
+              <div role="listitem">
+                <DoraMetricCard
+                  cardId="dora-card-cfr"
+                  title="Change Failure Rate"
+                  subtitle="Percentage of deployments causing failures"
+                  metric={summary.changeFailureRate}
+                  series={seriesFor(items, "CHANGE_FAILURE_RATE_PERCENT")}
+                  icon={<IconPercent />}
+                  showFailureBreakdown
+                  preset={preset}
+                  timezone={timezone}
+                />
+              </div>
             </div>
           </>
         )}

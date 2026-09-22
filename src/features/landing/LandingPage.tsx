@@ -274,47 +274,51 @@ export function LandingPage() {
               </div>
 
               <div className="dash-stats-grid dora-cards-grid adept-landing__dora-grid" role="list">
-                <div role="listitem">
-                  <DoraMetricCard
-                    cardId="preview-df"
-                    title="Deployment Frequency"
-                    subtitle="How often code is deployed to production"
-                    metric={dfMetric}
-                    series={dfSeries}
-                    icon={<IconRocket />}
-                  />
+                <div className="dora-cards-col">
+                  <div role="listitem">
+                    <DoraMetricCard
+                      cardId="preview-df"
+                      title="Deployment Frequency"
+                      subtitle="How often code is deployed to production"
+                      metric={dfMetric}
+                      series={dfSeries}
+                      icon={<IconRocket />}
+                    />
+                  </div>
+                  <div role="listitem">
+                    <DoraMetricCard
+                      cardId="preview-rt"
+                      title="Recovery Time"
+                      subtitle="Median time to restore service"
+                      metric={rtMetric}
+                      series={rtSeries}
+                      icon={<IconShield />}
+                    />
+                  </div>
                 </div>
-                <div role="listitem">
-                  <DoraMetricCard
-                    cardId="preview-clt"
-                    title="Change Lead Time"
-                    subtitle="Time from commit to production"
-                    metric={cltMetric}
-                    series={cltSeries}
-                    icon={<IconClock />}
-                    showPercentiles
-                  />
-                </div>
-                <div role="listitem">
-                  <DoraMetricCard
-                    cardId="preview-rt"
-                    title="Recovery Time"
-                    subtitle="Median time to restore service"
-                    metric={rtMetric}
-                    series={rtSeries}
-                    icon={<IconShield />}
-                  />
-                </div>
-                <div role="listitem">
-                  <DoraMetricCard
-                    cardId="preview-cfr"
-                    title="Change Failure Rate"
-                    subtitle="Percentage of deployments causing failures"
-                    metric={cfrMetric}
-                    series={cfrSeries}
-                    icon={<IconPercent />}
-                    showFailureBreakdown
-                  />
+                <div className="dora-cards-col">
+                  <div role="listitem">
+                    <DoraMetricCard
+                      cardId="preview-clt"
+                      title="Change Lead Time"
+                      subtitle="Time from commit to production"
+                      metric={cltMetric}
+                      series={cltSeries}
+                      icon={<IconClock />}
+                      showPercentiles
+                    />
+                  </div>
+                  <div role="listitem">
+                    <DoraMetricCard
+                      cardId="preview-cfr"
+                      title="Change Failure Rate"
+                      subtitle="Percentage of deployments causing failures"
+                      metric={cfrMetric}
+                      series={cfrSeries}
+                      icon={<IconPercent />}
+                      showFailureBreakdown
+                    />
+                  </div>
                 </div>
               </div>
             </div>
