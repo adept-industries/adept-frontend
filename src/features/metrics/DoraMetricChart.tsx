@@ -30,28 +30,27 @@ function getDayLetter(date: Date, timeZone?: string): string {
   }
 }
 
-function formatDate(dateStr: string | undefined, timeZone?: string, fallbackDaysAgo?: number): string {
-  if (dateStr) {
-    const d = new Date(dateStr);
-    if (!isNaN(d.getTime())) {
-      try {
-        const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-        return new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          timeZone: tz,
-        }).format(d);
-      } catch {
-        return `${d.getMonth() + 1}/${d.getDate()}`;
-      }
-    }
+function isMonday(date: Date, timeZone?: string): boolean {
+  try {
+    const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz }).format(date);
+    return weekday === "Mon";
+  } catch {
+    return date.getDay() === 1;
   }
-  if (fallbackDaysAgo !== undefined) {
-    const d = new Date();
-    d.setDate(d.getDate() - fallbackDaysAgo);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function formatDate(date: Date, timeZone?: string): string {
+  try {
+    const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: tz,
+    }).format(date);
+  } catch {
+    return `${date.getMonth() + 1}/${date.getDate()}`;
   }
-  return "";
 }
 
 /**
@@ -59,8 +58,8 @@ function formatDate(dateStr: string | undefined, timeZone?: string, fallbackDays
  * Features:
  * - 2x2 expanded dimensions
  * - 7d: Timezone-aware day of week initials (e.g. T, W, T, F, S, S, M, T)
- * - 30d: Date labels (e.g. Aug 24 -> Aug 31 -> Sep 8 -> Sep 15 -> Today) with dividers
- * - 90d: Date labels (e.g. Jun 30 -> Jul 28 -> Aug 25 -> Today) with dividers
+ * - 30d: Vertical dashed lines for Mondays (dark & light mode visible) + date labels
+ * - 90d: 1st of each month markers without dashed lines
  */
 export function DoraMetricChart({ series, color, label, preset, timezone }: DoraMetricChartProps) {
   if (series.length < 2) {
@@ -106,56 +105,95 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
   // 1. "7d": Fallback weekday letters
   const fallbackWeek = ["M", "T", "W", "T", "F", "S", "S"];
 
-  // 2. "30d": 5 date labels (Start, 25%, 50%, 75%, Today)
+  // 2. "30d": Mondays detection & date markers
   interface DateMarker {
     x: number;
     label: string;
     anchor: "start" | "middle" | "end";
-    isDivider: boolean;
   }
 
+  const mondayLines30d: number[] = [];
   const dateMarkers30d: DateMarker[] = [];
+
   if (effectivePreset === "30d" && series.length >= 2) {
-    const lastIdx = series.length - 1;
-    const indices = [
-      0,
-      Math.round(lastIdx * 0.25),
-      Math.round(lastIdx * 0.5),
-      Math.round(lastIdx * 0.75),
-      lastIdx,
-    ];
-    indices.forEach((idx, step) => {
-      const isFirst = step === 0;
-      const isLast = step === indices.length - 1;
-      const anchor: "start" | "middle" | "end" = isFirst ? "start" : isLast ? "end" : "middle";
-      const x = isFirst ? PAD_X : isLast ? W - PAD_X : toX(idx);
-      const markerLabel = isLast
-        ? "Today"
-        : formatDate(series[idx].periodStart, timezone, Math.round(30 * (1 - step / 4)));
-      dateMarkers30d.push({ x, label: markerLabel, anchor, isDivider: !isFirst && !isLast });
+    const mondays: { index: number; x: number; date: string }[] = [];
+    series.forEach((item, i) => {
+      if (item.periodStart) {
+        const d = new Date(item.periodStart);
+        if (!isNaN(d.getTime()) && isMonday(d, timezone)) {
+          mondays.push({ index: i, x: toX(i), date: formatDate(d, timezone) });
+        }
+      }
     });
+
+    // Collect Monday line coordinates
+    mondays.forEach((m) => mondayLines30d.push(m.x));
+
+    // Optional start label if first Monday is >= 35px from start
+    const firstMon = mondays[0];
+    if (firstMon && firstMon.x >= PAD_X + 35 && series[0].periodStart) {
+      dateMarkers30d.push({
+        x: PAD_X,
+        label: formatDate(new Date(series[0].periodStart), timezone),
+        anchor: "start",
+      });
+    }
+
+    // Monday labels
+    mondays.forEach((m) => {
+      const isNearEnd = m.x >= W - PAD_X - 25;
+      const isNearStart = m.x <= PAD_X + 20;
+      const anchor: "start" | "middle" | "end" = isNearStart ? "start" : isNearEnd ? "end" : "middle";
+      dateMarkers30d.push({ x: m.x, label: m.date, anchor });
+    });
+
+    // "Today" label if last Monday is >= 35px from right edge
+    const lastMon = mondays[mondays.length - 1];
+    if (!lastMon || (W - PAD_X) - lastMon.x >= 35) {
+      dateMarkers30d.push({ x: W - PAD_X, label: "Today", anchor: "end" });
+    }
   }
 
-  // 3. "90d": 4 date labels (Start, ~33%, ~66%, Today)
+  // 3. "90d": 1st of each month markers without dashed lines
   const dateMarkers90d: DateMarker[] = [];
+  const monthFirstTicks90d: number[] = [];
+
   if (effectivePreset === "90d" && series.length >= 2) {
-    const lastIdx = series.length - 1;
-    const indices = [
-      0,
-      Math.round(lastIdx / 3),
-      Math.round((2 * lastIdx) / 3),
-      lastIdx,
-    ];
-    indices.forEach((idx, step) => {
-      const isFirst = step === 0;
-      const isLast = step === indices.length - 1;
-      const anchor: "start" | "middle" | "end" = isFirst ? "start" : isLast ? "end" : "middle";
-      const x = isFirst ? PAD_X : isLast ? W - PAD_X : toX(idx);
-      const markerLabel = isLast
-        ? "Today"
-        : formatDate(series[idx].periodStart, timezone, Math.round(90 * (1 - step / 3)));
-      dateMarkers90d.push({ x, label: markerLabel, anchor, isDivider: !isFirst && !isLast });
-    });
+    const startDate = series[0].periodStart ? new Date(series[0].periodStart) : null;
+    const endDate = series[series.length - 1].periodStart
+      ? new Date(series[series.length - 1].periodStart)
+      : null;
+
+    if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+      const tStart = startDate.getTime();
+      const tEnd = endDate.getTime();
+      const timeToX = (t: number) =>
+        PAD_X + ((t - tStart) / (tEnd - tStart || 1)) * (W - PAD_X * 2);
+
+      // Iterate through months between start and end
+      const d = new Date(startDate);
+      d.setUTCDate(1);
+      d.setUTCHours(0, 0, 0, 0);
+
+      while (d <= endDate) {
+        if (d >= startDate) {
+          const x = timeToX(d.getTime());
+          monthFirstTicks90d.push(x);
+          dateMarkers90d.push({
+            x,
+            label: formatDate(d, timezone),
+            anchor: "middle",
+          });
+        }
+        d.setUTCMonth(d.getUTCMonth() + 1);
+      }
+
+      // Add "Today" at the right edge if there is space
+      const lastX = dateMarkers90d[dateMarkers90d.length - 1]?.x ?? 0;
+      if (W - PAD_X - lastX >= 40) {
+        dateMarkers90d.push({ x: W - PAD_X, label: "Today", anchor: "end" });
+      }
+    }
   }
 
   return (
@@ -174,57 +212,30 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
         </linearGradient>
       </defs>
 
-      {/* Vertical divider lines for 30d */}
+      {/* Vertical dashed lines for Mondays in 30d (visible in both dark and light modes) */}
       {effectivePreset === "30d" &&
-        dateMarkers30d.map(
-          (m, i) =>
-            m.isDivider && (
-              <g key={`div30-${i}`}>
-                <line
-                  x1={m.x}
-                  y1={PAD_TOP}
-                  x2={m.x}
-                  y2={BASELINE_Y}
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeDasharray="2 2"
-                />
-                <line
-                  x1={m.x}
-                  y1={BASELINE_Y - 3}
-                  x2={m.x}
-                  y2={BASELINE_Y + 3}
-                  stroke="rgba(255, 255, 255, 0.25)"
-                  strokeWidth="1"
-                />
-              </g>
-            )
-        )}
-
-      {/* Vertical divider lines for 90d */}
-      {effectivePreset === "90d" &&
-        dateMarkers90d.map(
-          (m, i) =>
-            m.isDivider && (
-              <g key={`div90-${i}`}>
-                <line
-                  x1={m.x}
-                  y1={PAD_TOP}
-                  x2={m.x}
-                  y2={BASELINE_Y}
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeDasharray="2 2"
-                />
-                <line
-                  x1={m.x}
-                  y1={BASELINE_Y - 3}
-                  x2={m.x}
-                  y2={BASELINE_Y + 3}
-                  stroke="rgba(255, 255, 255, 0.25)"
-                  strokeWidth="1"
-                />
-              </g>
-            )
-        )}
+        mondayLines30d.map((x, i) => (
+          <g key={`mon-div-${i}`}>
+            <line
+              x1={x}
+              y1={PAD_TOP}
+              x2={x}
+              y2={BASELINE_Y}
+              stroke="var(--text-secondary, #94a3b8)"
+              strokeOpacity="0.4"
+              strokeDasharray="3 3"
+            />
+            <line
+              x1={x}
+              y1={BASELINE_Y - 3}
+              x2={x}
+              y2={BASELINE_Y + 3}
+              stroke="var(--text-secondary, #94a3b8)"
+              strokeOpacity="0.65"
+              strokeWidth="1.2"
+            />
+          </g>
+        ))}
 
       {/* X-axis baseline */}
       <line
@@ -246,6 +257,21 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           fill="rgba(255, 255, 255, 0.28)"
         />
       ))}
+
+      {/* 90d baseline ticks for 1st of each month */}
+      {effectivePreset === "90d" &&
+        monthFirstTicks90d.map((x, i) => (
+          <line
+            key={`m1st-tick-${i}`}
+            x1={x}
+            y1={BASELINE_Y - 3}
+            x2={x}
+            y2={BASELINE_Y + 3}
+            stroke="var(--text-secondary, #94a3b8)"
+            strokeOpacity="0.65"
+            strokeWidth="1.2"
+          />
+        ))}
 
       {/* Area fill */}
       <polygon
@@ -305,7 +331,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           );
         })}
 
-      {/* 30d: Date labels (e.g. Aug 24 -> Aug 31 -> Sep 8 -> Sep 15 -> Today) */}
+      {/* 30d: Date labels with Mondays and Today */}
       {effectivePreset === "30d" &&
         dateMarkers30d.map((m, i) => (
           <text
@@ -321,7 +347,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone }: Dora
           </text>
         ))}
 
-      {/* 90d: Date labels (e.g. Jun 30 -> Jul 28 -> Aug 25 -> Today) */}
+      {/* 90d: 1st of each month labels (e.g. Jul 1, Aug 1, Sep 1, Today) */}
       {effectivePreset === "90d" &&
         dateMarkers90d.map((m, i) => (
           <text
