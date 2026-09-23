@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../../auth/AuthProvider.js";
 import { useDoraMetricsSummary, useDoraMetricsSeries } from "./useDoraMetrics.js";
 import { DoraMetricCard } from "./DoraMetricCard.js";
 import type { DoraMetricsFilters, MetricSeriesItemDto, MetricType } from "./types.js";
@@ -19,11 +20,70 @@ const PRESETS: Preset[] = [
   { label: "Last 90 Days", value: "90d", days: 90 },
 ];
 
-function presetToRange(preset: TimeRangePreset): { from: string; to: string } {
-  const to   = new Date();
-  const from = new Date(to);
+interface ZonedDateTimeParts {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+function zonedDateTimeParts(date: Date, timezone: string): ZonedDateTimeParts {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value);
+  return {
+    year: value("year"),
+    month: value("month"),
+    day: value("day"),
+    hour: value("hour"),
+    minute: value("minute"),
+    second: value("second"),
+  };
+}
+
+function zonedDateKey(date: Date, timezone: string): string {
+  const { year, month, day } = zonedDateTimeParts(date, timezone);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function zonedDateTimeToDate(parts: ZonedDateTimeParts, milliseconds: number, timezone: string): Date {
+  const target = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second, milliseconds);
+  let timestamp = target;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const actual = zonedDateTimeParts(new Date(timestamp), timezone);
+    const represented = Date.UTC(actual.year, actual.month - 1, actual.day, actual.hour, actual.minute, actual.second, milliseconds);
+    const adjustment = target - represented;
+    if (adjustment === 0) break;
+    timestamp += adjustment;
+  }
+
+  return new Date(timestamp);
+}
+
+function presetToRange(preset: TimeRangePreset, timezone: string, today: string): { from: string; to: string } {
+  const to = new Date();
+  const localNow = zonedDateTimeParts(to, timezone);
+  const [year, month, day] = today.split("-").map(Number);
   const days = PRESETS.find((p) => p.value === preset)?.days ?? 30;
-  from.setDate(from.getDate() - days);
+  const shiftedDate = new Date(Date.UTC(year, month - 1, day - days));
+  const from = zonedDateTimeToDate({
+    ...localNow,
+    year: shiftedDate.getUTCFullYear(),
+    month: shiftedDate.getUTCMonth() + 1,
+    day: shiftedDate.getUTCDate(),
+  }, to.getUTCMilliseconds(), timezone);
   return {
     from: from.toISOString(),
     to:   to.toISOString(),
@@ -100,12 +160,29 @@ export function DoraMetricsSection({
   selectedProjectId,
   repositories = [],
 }: DoraMetricsSectionProps) {
+  const { state } = useAuth();
+  const workspaceTimezone = state.status === "authenticated"
+    ? state.currentMembership.timezone
+    : Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [preset, setPreset] = useState<TimeRangePreset>("30d");
+  const [workspaceToday, setWorkspaceToday] = useState(() => zonedDateKey(new Date(), workspaceTimezone));
   const [repositorySelection, setRepositorySelection] = useState<RepositorySelection>({
     projectId: selectedProjectId ?? null,
     repositoryId: null,
   });
-  const range = useMemo(() => presetToRange(preset), [preset]);
+  useEffect(() => {
+    const updateWorkspaceToday = () => {
+      const nextToday = zonedDateKey(new Date(), workspaceTimezone);
+      setWorkspaceToday((currentToday) => currentToday === nextToday ? currentToday : nextToday);
+    };
+    updateWorkspaceToday();
+    const intervalId = window.setInterval(updateWorkspaceToday, 60_000);
+    return () => window.clearInterval(intervalId);
+  }, [workspaceTimezone]);
+  const range = useMemo(
+    () => presetToRange(preset, workspaceTimezone, workspaceToday),
+    [preset, workspaceTimezone, workspaceToday],
+  );
   const selectedRepositoryId = repositorySelection.projectId === (selectedProjectId ?? null)
     && repositories.some((repository) => repository.id === repositorySelection.repositoryId)
       ? repositorySelection.repositoryId
@@ -140,7 +217,7 @@ export function DoraMetricsSection({
   ));
 
   const items = seriesData?.series ?? [];
-  const timezone = seriesData?.timezone;
+  const timezone = seriesData?.timezone ?? workspaceTimezone;
 
   return (
     <section className="dora-section" aria-label="DORA Metrics">

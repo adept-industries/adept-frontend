@@ -10,48 +10,103 @@ interface DoraMetricChartProps {
   unit?: string;
 }
 
-const DAY_LETTERS: Record<string, string> = {
-  Sun: "S",
-  Mon: "M",
-  Tue: "T",
-  Wed: "W",
-  Thu: "T",
-  Fri: "F",
-  Sat: "S",
-};
-
-function getDayLetter(date: Date, timeZone?: string): string {
-  try {
-    const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz }).format(date);
-    return DAY_LETTERS[weekday] ?? weekday.charAt(0);
-  } catch {
-    const fallback = ["S", "M", "T", "W", "T", "F", "S"];
-    return fallback[date.getDay()];
-  }
+interface ChartPoint {
+  value: number;
+  dateKey: string;
 }
 
-function isMonday(date: Date, timeZone?: string): boolean {
+function workspaceDateKey(date: Date, timeZone?: string): string {
   try {
     const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: tz }).format(date);
-    return weekday === "Mon";
-  } catch {
-    return date.getDay() === 1;
-  }
-}
-
-function formatDate(date: Date, timeZone?: string): string {
-  try {
-    const tz = timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
+    const parts = new Intl.DateTimeFormat("en-US", {
       timeZone: tz,
-    }).format(date);
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "00";
+    return `${value("year")}-${value("month")}-${value("day")}`;
   } catch {
-    return `${date.getMonth() + 1}/${date.getDate()}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
+}
+
+function dateKeyWithOffset(dateKey: string, offset: number): string {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + offset));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+}
+
+function dateKeyAsUtcDate(dateKey: string): Date {
+  return new Date(`${dateKey}T00:00:00Z`);
+}
+
+function weekdayNumber(dateKey: string): number {
+  return dateKeyAsUtcDate(dateKey).getUTCDay();
+}
+
+function weekdayLetter(dateKey: string): string {
+  return ["S", "M", "T", "W", "T", "F", "S"][weekdayNumber(dateKey)];
+}
+
+function formatDateKey(dateKey: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(dateKeyAsUtcDate(dateKey));
+}
+
+function rollingDailySeries(
+  series: MetricSeriesItemDto[],
+  days: number,
+  today: string,
+  timeZone?: string,
+): ChartPoint[] {
+  const pointsByDate = new Map<string, MetricSeriesItemDto>();
+  for (const item of series) {
+    if (!item.periodStart) continue;
+    const date = new Date(item.periodStart);
+    if (!Number.isNaN(date.getTime())) {
+      pointsByDate.set(workspaceDateKey(date, timeZone), item);
+    }
+  }
+
+  return Array.from({ length: days + 1 }, (_, index) => {
+    const dateKey = dateKeyWithOffset(today, index - days);
+    const point = pointsByDate.get(dateKey);
+    return {
+      value: point?.value ?? 0,
+      dateKey,
+    };
+  });
+}
+
+function mondayDateKey(dateKey: string): string {
+  return dateKeyWithOffset(dateKey, -((weekdayNumber(dateKey) + 6) % 7));
+}
+
+function rollingWeeklySeries(series: MetricSeriesItemDto[], today: string, timeZone?: string): ChartPoint[] {
+  const pointsByWeek = new Map<string, MetricSeriesItemDto>();
+  for (const item of series) {
+    if (!item.periodStart) continue;
+    const date = new Date(item.periodStart);
+    if (!Number.isNaN(date.getTime())) {
+      pointsByWeek.set(workspaceDateKey(date, timeZone), item);
+    }
+  }
+
+  const firstWeek = mondayDateKey(dateKeyWithOffset(today, -90));
+  const currentWeek = mondayDateKey(today);
+  const weekCount = (dateKeyAsUtcDate(currentWeek).getTime() - dateKeyAsUtcDate(firstWeek).getTime()) / (7 * 24 * 60 * 60 * 1000);
+  return Array.from({ length: weekCount + 1 }, (_, index) => {
+    const weekStart = dateKeyWithOffset(firstWeek, index * 7);
+    const point = pointsByWeek.get(weekStart);
+    return {
+      value: point?.value ?? 0,
+      dateKey: weekStart === currentWeek ? today : weekStart,
+    };
+  });
 }
 
 function formatValue(v: number, unit?: string, preset?: "7d" | "30d" | "90d"): string {
@@ -73,22 +128,28 @@ function formatValue(v: number, unit?: string, preset?: "7d" | "30d" | "90d"): s
  * Lightweight SVG sparkline chart for a single DORA metric time series.
  * Features:
  * - 2x2 expanded dimensions with horizontal value axis (min, mid, max)
- * - 7d: Timezone-aware day of week initials (e.g. T, W, T, F, S, S, M, T)
+ * - 7d: Workspace-local weekday initials for the previous seven days through today
  * - 30d: Vertical dashed lines for Mondays (dark & light mode visible) + date labels
  * - 90d: 1st of each month markers without dashed lines
  */
 export function DoraMetricChart({ series, color, label, preset, timezone, unit }: DoraMetricChartProps) {
-  if (series.length < 2) {
+  const effectivePreset: "7d" | "30d" | "90d" = preset ?? (
+    series.length <= 7 ? "7d" : series.length <= 35 ? "30d" : "90d"
+  );
+  const todayKey = workspaceDateKey(new Date(), timezone);
+  const rangeDays = effectivePreset === "7d" ? 7 : effectivePreset === "30d" ? 30 : 90;
+  const chartRangeStartKey = dateKeyWithOffset(todayKey, -rangeDays);
+  const chartSeries = effectivePreset === "90d"
+    ? rollingWeeklySeries(series, todayKey, timezone)
+    : rollingDailySeries(series, rangeDays, todayKey, timezone);
+
+  if (chartSeries.length < 2) {
     return (
       <div className="dora-chart-empty" aria-label={label}>
         <span>Not enough data</span>
       </div>
     );
   }
-
-  const effectivePreset: "7d" | "30d" | "90d" = preset ?? (
-    series.length <= 7 ? "7d" : series.length <= 35 ? "30d" : "90d"
-  );
 
   const effectiveUnit = unit ?? series[0]?.unit ?? (
     label.toLowerCase().includes("failure") ? "percent" :
@@ -105,29 +166,32 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   const LABEL_Y = 95;
   const PLOT_H = BASELINE_Y - PAD_TOP;
 
-  const values = series.map((s) => s.value);
+  const values = chartSeries.map((s) => s.value);
   const dataMax = Math.max(...values);
   const minVal = 0;
   const maxVal = dataMax > 0 ? dataMax : (effectiveUnit === "percent" ? 100 : 1);
   const range = maxVal - minVal || 1;
 
-  const toX = (i: number) =>
-    PAD_LEFT + (i / (series.length - 1)) * (W - PAD_LEFT - PAD_RIGHT);
+  const rangeStartTime = dateKeyAsUtcDate(chartRangeStartKey).getTime();
+  const rangeEndTime = dateKeyAsUtcDate(todayKey).getTime();
+  const xForDateKey = (dateKey: string) => {
+    const fraction = (dateKeyAsUtcDate(dateKey).getTime() - rangeStartTime) / (rangeEndTime - rangeStartTime || 1);
+    const boundedFraction = Math.max(0, Math.min(1, fraction));
+    return PAD_LEFT + boundedFraction * (W - PAD_LEFT - PAD_RIGHT);
+  };
+  const toX = (i: number) => xForDateKey(chartSeries[i].dateKey);
   const toY = (v: number) =>
     BASELINE_Y - ((v - minVal) / range) * PLOT_H;
 
-  const points = series
+  const points = chartSeries
     .map((s, i) => `${toX(i)},${toY(s.value)}`)
     .join(" ");
 
   const areaPoints = [
     `${toX(0)},${BASELINE_Y}`,
-    ...series.map((s, i) => `${toX(i)},${toY(s.value)}`),
-    `${toX(series.length - 1)},${BASELINE_Y}`,
+    ...chartSeries.map((s, i) => `${toX(i)},${toY(s.value)}`),
+    `${toX(chartSeries.length - 1)},${BASELINE_Y}`,
   ].join(" ");
-
-  // 1. "7d": Fallback weekday letters
-  const fallbackWeek = ["M", "T", "W", "T", "F", "S", "S"];
 
   // 2. "30d": Mondays detection & date markers
   interface DateMarker {
@@ -139,29 +203,16 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   const mondayLines30d: number[] = [];
   const dateMarkers30d: DateMarker[] = [];
 
-  if (effectivePreset === "30d" && series.length >= 2) {
-    const mondays: { index: number; x: number; date: string }[] = [];
-    series.forEach((item, i) => {
-      if (item.periodStart) {
-        const d = new Date(item.periodStart);
-        if (!isNaN(d.getTime()) && isMonday(d, timezone)) {
-          mondays.push({ index: i, x: toX(i), date: formatDate(d, timezone) });
-        }
+  if (effectivePreset === "30d" && chartSeries.length >= 2) {
+    const mondays: { x: number; date: string }[] = [];
+    chartSeries.forEach((item, i) => {
+      if (weekdayNumber(item.dateKey) === 1) {
+        mondays.push({ x: toX(i), date: formatDateKey(item.dateKey) });
       }
     });
 
     // Collect Monday line coordinates
     mondays.forEach((m) => mondayLines30d.push(m.x));
-
-    // Optional start label if first Monday is >= 35px from start
-    const firstMon = mondays[0];
-    if (firstMon && firstMon.x >= PAD_LEFT + 35 && series[0].periodStart) {
-      dateMarkers30d.push({
-        x: PAD_LEFT,
-        label: formatDate(new Date(series[0].periodStart), timezone),
-        anchor: "start",
-      });
-    }
 
     // Monday labels
     mondays.forEach((m) => {
@@ -182,41 +233,25 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   const dateMarkers90d: DateMarker[] = [];
   const monthFirstTicks90d: number[] = [];
 
-  if (effectivePreset === "90d" && series.length >= 2) {
-    const startDate = series[0].periodStart ? new Date(series[0].periodStart) : null;
-    const endDate = series[series.length - 1].periodStart
-      ? new Date(series[series.length - 1].periodStart)
-      : null;
+  if (effectivePreset === "90d" && chartSeries.length >= 2) {
+    const [startYear, startMonth] = chartRangeStartKey.split("-").map(Number);
+    const monthStart = new Date(Date.UTC(startYear, startMonth - 1, 1));
+    const today = dateKeyAsUtcDate(todayKey);
 
-    if (startDate && endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-      const tStart = startDate.getTime();
-      const tEnd = endDate.getTime();
-      const timeToX = (t: number) =>
-        PAD_LEFT + ((t - tStart) / (tEnd - tStart || 1)) * (W - PAD_LEFT - PAD_RIGHT);
-
-      // Iterate through months between start and end
-      const d = new Date(startDate);
-      d.setUTCDate(1);
-      d.setUTCHours(0, 0, 0, 0);
-
-      while (d <= endDate) {
-        if (d >= startDate) {
-          const x = timeToX(d.getTime());
-          monthFirstTicks90d.push(x);
-          dateMarkers90d.push({
-            x,
-            label: formatDate(d, timezone),
-            anchor: "middle",
-          });
-        }
-        d.setUTCMonth(d.getUTCMonth() + 1);
+    while (monthStart <= today) {
+      const monthDateKey = `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, "0")}-${String(monthStart.getUTCDate()).padStart(2, "0")}`;
+      if (monthDateKey >= chartRangeStartKey) {
+        const x = xForDateKey(monthDateKey);
+        monthFirstTicks90d.push(x);
+        dateMarkers90d.push({ x, label: formatDateKey(monthDateKey), anchor: "middle" });
       }
+      monthStart.setUTCMonth(monthStart.getUTCMonth() + 1);
+    }
 
-      // Add "Today" at the right edge if there is space
-      const lastX = dateMarkers90d[dateMarkers90d.length - 1]?.x ?? 0;
-      if (W - PAD_RIGHT - lastX >= 40) {
-        dateMarkers90d.push({ x: W - PAD_RIGHT, label: "Today", anchor: "end" });
-      }
+    // Add "Today" at the right edge if there is space
+    const lastX = dateMarkers90d[dateMarkers90d.length - 1]?.x ?? PAD_LEFT;
+    if (W - PAD_RIGHT - lastX >= 40) {
+      dateMarkers90d.push({ x: W - PAD_RIGHT, label: "Today", anchor: "end" });
     }
   }
 
@@ -327,7 +362,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         ))}
 
       {/* X-axis baseline tick dots for each point */}
-      {series.map((_, i) => (
+      {chartSeries.map((_, i) => (
         <circle
           key={`tick-${i}`}
           cx={toX(i)}
@@ -379,8 +414,8 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
       />
 
       {/* Data point dots on the line */}
-      {series.map((s, i) => {
-        const isLast = i === series.length - 1;
+      {chartSeries.map((s, i) => {
+        const isLast = i === chartSeries.length - 1;
         return (
           <circle
             key={`pt-${i}`}
@@ -395,30 +430,21 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
       })}
 
       {/* ── X-axis Labels ── */}
-      {/* 7d: Day of week letters (T, W, T, F, S, S, M, T) */}
+      {/* 7d: Workspace-local weekday labels */}
       {effectivePreset === "7d" &&
-        series.map((s, i) => {
-          let letter = fallbackWeek[i % 7];
-          if (s.periodStart) {
-            const d = new Date(s.periodStart);
-            if (!isNaN(d.getTime())) {
-              letter = getDayLetter(d, timezone);
-            }
-          }
-          return (
-            <text
-              key={`day-lbl-${i}`}
-              x={toX(i)}
-              y={LABEL_Y}
-              textAnchor="middle"
-              fontSize="9"
-              fontWeight="500"
-              fill="var(--text-secondary, #94a3b8)"
-            >
-              {letter}
-            </text>
-          );
-        })}
+        chartSeries.map((point, i) => (
+          <text
+            key={`day-lbl-${i}`}
+            x={toX(i)}
+            y={LABEL_Y}
+            textAnchor="middle"
+            fontSize="9"
+            fontWeight="500"
+            fill="var(--text-secondary, #94a3b8)"
+          >
+            {weekdayLetter(point.dateKey)}
+          </text>
+        ))}
 
       {/* 30d: Date labels with Mondays and Today */}
       {effectivePreset === "30d" &&
