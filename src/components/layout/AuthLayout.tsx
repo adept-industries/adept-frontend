@@ -51,7 +51,7 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
       />
 
       {/* Top Left Text — hidden on mobile */}
-      <div style={{
+      <Link to="/" style={{
         position: "absolute",
         top: "2.5rem",
         left: "3rem",
@@ -60,6 +60,7 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         fontSize: "0.95rem",
         letterSpacing: "0.05em",
         color: "#ffffff",
+        textDecoration: "none",
         display: "flex",
         alignItems: "center",
         gap: "0.75rem"
@@ -67,7 +68,7 @@ export function AuthLayout({ title, description, children }: AuthLayoutProps) {
         <span style={{ fontWeight: 800, fontSize: "1.1rem" }}>Adept</span>
         <span style={{ color: "rgba(255,255,255,0.4)" }}>|</span>
         <span style={{ color: "rgba(255,255,255,0.7)" }}>From Insight to Impact</span>
-      </div>
+      </Link>
 
       {/* Left Side - Visuals & Logo — hidden on mobile via CSS */}
       <div 
