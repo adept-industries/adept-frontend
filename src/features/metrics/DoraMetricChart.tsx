@@ -1,3 +1,5 @@
+import { useState } from "react";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import type { MetricSeriesItemDto } from "./types.js";
 
 interface DoraMetricChartProps {
@@ -13,6 +15,8 @@ interface DoraMetricChartProps {
 interface ChartPoint {
   value: number;
   dateKey: string;
+  failedDeploymentCount?: number;
+  totalDeploymentCount?: number;
 }
 
 function workspaceDateKey(date: Date, timeZone?: string): string {
@@ -62,6 +66,7 @@ function rollingDailySeries(
   days: number,
   today: string,
   timeZone?: string,
+  isFailureRateChart = false,
 ): ChartPoint[] {
   const pointsByDate = new Map<string, MetricSeriesItemDto>();
   for (const item of series) {
@@ -75,10 +80,7 @@ function rollingDailySeries(
   return Array.from({ length: days + 1 }, (_, index) => {
     const dateKey = dateKeyWithOffset(today, index - days);
     const point = pointsByDate.get(dateKey);
-    return {
-      value: point?.value ?? 0,
-      dateKey,
-    };
+    return toChartPoint(point, dateKey, isFailureRateChart);
   });
 }
 
@@ -86,7 +88,12 @@ function mondayDateKey(dateKey: string): string {
   return dateKeyWithOffset(dateKey, -((weekdayNumber(dateKey) + 6) % 7));
 }
 
-function rollingWeeklySeries(series: MetricSeriesItemDto[], today: string, timeZone?: string): ChartPoint[] {
+function rollingWeeklySeries(
+  series: MetricSeriesItemDto[],
+  today: string,
+  timeZone?: string,
+  isFailureRateChart = false,
+): ChartPoint[] {
   const pointsByWeek = new Map<string, MetricSeriesItemDto>();
   for (const item of series) {
     if (!item.periodStart) continue;
@@ -102,10 +109,7 @@ function rollingWeeklySeries(series: MetricSeriesItemDto[], today: string, timeZ
   return Array.from({ length: weekCount + 1 }, (_, index) => {
     const weekStart = dateKeyWithOffset(firstWeek, index * 7);
     const point = pointsByWeek.get(weekStart);
-    return {
-      value: point?.value ?? 0,
-      dateKey: weekStart === currentWeek ? today : weekStart,
-    };
+    return toChartPoint(point, weekStart === currentWeek ? today : weekStart, isFailureRateChart);
   });
 }
 
@@ -124,6 +128,35 @@ function formatValue(v: number, unit?: string, preset?: "7d" | "30d" | "90d"): s
   return `${numStr}${rateSuffix}`;
 }
 
+function formatChartValue(v: number, unit: string | undefined, preset: "7d" | "30d" | "90d", label: string): string {
+  if (label.toLowerCase().includes("change failure rate")) {
+    return Number.isInteger(v) ? String(v) : v.toFixed(1);
+  }
+  const chartPreset = preset === "30d" && label.toLowerCase().includes("deployment frequency")
+    ? "7d"
+    : preset;
+  return formatValue(v, unit, chartPreset);
+}
+
+function getChangeFailureCounts(point: MetricSeriesItemDto): { failed: number; total: number } {
+  const total = point.dimensions["total_deployments"] ?? point.sampleSize;
+  const failed = point.dimensions["failed_deployments"] ?? Math.round((point.value * total) / 100);
+  return { failed, total };
+}
+
+function toChartPoint(point: MetricSeriesItemDto | undefined, dateKey: string, isFailureRateChart: boolean): ChartPoint {
+  if (!isFailureRateChart) return { value: point?.value ?? 0, dateKey };
+  if (!point) return { value: 0, dateKey, failedDeploymentCount: 0, totalDeploymentCount: 0 };
+
+  const counts = getChangeFailureCounts(point);
+  return {
+    value: counts.failed,
+    dateKey,
+    failedDeploymentCount: counts.failed,
+    totalDeploymentCount: counts.total,
+  };
+}
+
 /**
  * Lightweight SVG sparkline chart for a single DORA metric time series.
  * Features:
@@ -133,15 +166,18 @@ function formatValue(v: number, unit?: string, preset?: "7d" | "30d" | "90d"): s
  * - 90d: 1st of each month markers without dashed lines
  */
 export function DoraMetricChart({ series, color, label, preset, timezone, unit }: DoraMetricChartProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const effectivePreset: "7d" | "30d" | "90d" = preset ?? (
     series.length <= 7 ? "7d" : series.length <= 35 ? "30d" : "90d"
   );
   const todayKey = workspaceDateKey(new Date(), timezone);
   const rangeDays = effectivePreset === "7d" ? 7 : effectivePreset === "30d" ? 30 : 90;
   const chartRangeStartKey = dateKeyWithOffset(todayKey, -rangeDays);
+  const isFailureRateChart = label.toLowerCase().includes("change failure rate") ||
+    series.some((item) => item.metricType === "CHANGE_FAILURE_RATE_PERCENT");
   const chartSeries = effectivePreset === "90d"
-    ? rollingWeeklySeries(series, todayKey, timezone)
-    : rollingDailySeries(series, rangeDays, todayKey, timezone);
+    ? rollingWeeklySeries(series, todayKey, timezone, isFailureRateChart)
+    : rollingDailySeries(series, rangeDays, todayKey, timezone, isFailureRateChart);
 
   if (chartSeries.length < 2) {
     return (
@@ -169,7 +205,9 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   const values = chartSeries.map((s) => s.value);
   const dataMax = Math.max(...values);
   const minVal = 0;
-  const maxVal = dataMax > 0 ? dataMax : (effectiveUnit === "percent" ? 100 : 1);
+  const maxVal = isFailureRateChart
+    ? Math.max(2, Math.ceil(dataMax / 2) * 2)
+    : dataMax > 0 ? dataMax : (effectiveUnit === "percent" ? 100 : 1);
   const range = maxVal - minVal || 1;
 
   const rangeStartTime = dateKeyAsUtcDate(chartRangeStartKey).getTime();
@@ -182,6 +220,18 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   const toX = (i: number) => xForDateKey(chartSeries[i].dateKey);
   const toY = (v: number) =>
     BASELINE_Y - ((v - minVal) / range) * PLOT_H;
+
+  const handlePlotPointerMove = (event: ReactPointerEvent<SVGRectElement>) => {
+    const svg = event.currentTarget.ownerSVGElement;
+    const bounds = svg?.getBoundingClientRect();
+    if (!bounds || bounds.width === 0) return;
+
+    const pointerX = ((event.clientX - bounds.left) / bounds.width) * W;
+    const nearestIndex = chartSeries.reduce((closestIndex, point, index) =>
+      Math.abs(xForDateKey(point.dateKey) - pointerX) < Math.abs(toX(closestIndex) - pointerX) ? index : closestIndex,
+    0);
+    setHoveredIndex(nearestIndex);
+  };
 
   const points = chartSeries
     .map((s, i) => `${toX(i)},${toY(s.value)}`)
@@ -260,7 +310,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       aria-label={label}
       role="img"
       className="dora-chart-svg"
@@ -273,8 +323,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         </linearGradient>
       </defs>
 
-      {/* ── Horizontal Gridlines & Value Labels ── */}
-      {/* Top line (max value) */}
+      {/* ── Horizontal Gridlines ── */}
       <line
         x1={PAD_LEFT}
         y1={PAD_TOP}
@@ -292,10 +341,8 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
-        {formatValue(maxVal, effectiveUnit, effectivePreset)}
+        {formatChartValue(maxVal, effectiveUnit, effectivePreset, label)}
       </text>
-
-      {/* Middle line (mid value) */}
       <line
         x1={PAD_LEFT}
         y1={midY}
@@ -313,10 +360,8 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
-        {formatValue(maxVal / 2, effectiveUnit, effectivePreset)}
+        {formatChartValue(maxVal / 2, effectiveUnit, effectivePreset, label)}
       </text>
-
-      {/* Baseline (0 value) */}
       <line
         x1={PAD_LEFT}
         y1={BASELINE_Y}
@@ -333,9 +378,8 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
-        {formatValue(0, effectiveUnit, effectivePreset)}
+        {formatChartValue(0, effectiveUnit, effectivePreset, label)}
       </text>
-
       {/* Vertical dashed lines for Mondays in 30d (visible in both dark and light modes) */}
       {effectivePreset === "30d" &&
         mondayLines30d.map((x, i) => (
@@ -477,6 +521,66 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             {m.label}
           </text>
         ))}
+
+      <rect
+        x={PAD_LEFT}
+        y={PAD_TOP}
+        width={W - PAD_LEFT - PAD_RIGHT}
+        height={PLOT_H}
+        fill="transparent"
+        pointerEvents="all"
+        aria-hidden="true"
+        data-testid="chart-hover-area"
+        onPointerMove={handlePlotPointerMove}
+        onPointerLeave={() => setHoveredIndex(null)}
+      />
+
+      {hoveredIndex !== null && (() => {
+        const point = chartSeries[hoveredIndex];
+        if (!point) return null;
+
+        const pointLabel = isFailureRateChart
+          ? String(point.failedDeploymentCount ?? 0) + " failed / " + String(point.totalDeploymentCount ?? 0) +
+            (point.totalDeploymentCount === 1 ? " deployment" : " deployments")
+          : formatChartValue(point.value, effectiveUnit, effectivePreset, label);
+        const tooltipText = formatDateKey(point.dateKey) + " · " + pointLabel;
+        const tooltipWidth = Math.min(W - PAD_LEFT - PAD_RIGHT, Math.max(112, tooltipText.length * 5.2 + 16));
+        const tooltipHeight = 19;
+        const pointX = toX(hoveredIndex);
+        const pointY = toY(point.value);
+        const tooltipX = Math.max(PAD_LEFT, Math.min(pointX - tooltipWidth / 2, W - PAD_RIGHT - tooltipWidth));
+        const tooltipY = pointY - tooltipHeight - 5 >= PAD_TOP
+          ? pointY - tooltipHeight - 5
+          : pointY + 7;
+        return (
+          <g
+            className="dora-chart-tooltip"
+            role="tooltip"
+            pointerEvents="none"
+            transform={`translate(${tooltipX} ${tooltipY})`}
+          >
+            <rect
+              x="0"
+              y="0"
+              width={tooltipWidth}
+              height={tooltipHeight}
+              rx="3"
+              fill="var(--card-bg, #101010)"
+              stroke="var(--border-color, #414141)"
+            />
+            <text
+              x={tooltipWidth / 2}
+              y="12.5"
+              textAnchor="middle"
+              fontSize="9"
+              fontWeight="600"
+              fill="var(--text-primary, #f8fafc)"
+            >
+              {tooltipText}
+            </text>
+          </g>
+        );
+      })()}
     </svg>
   );
 }

@@ -196,7 +196,7 @@ describe("DoraMetricsSection", () => {
 
     await waitFor(() => expect(screen.getByText("Deployment Frequency")).toBeInTheDocument());
 
-    expect(screen.getByText("0")).toBeInTheDocument();
+    expect(screen.getByText("0", { selector: ".dora-card-value" })).toBeInTheDocument();
     expect(screen.getByText("deployments/week")).toBeInTheDocument();
     // Lead time, recovery time, CFR show dash "—" when sampleSize is 0
     expect(screen.getAllByText("—").length).toBeGreaterThanOrEqual(2);
