@@ -1,12 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { queryKeys } from "../../api/queryKeys.js";
-import { fetchDoraMetricsSummary, fetchDoraMetricsSeries } from "./api.js";
+import { fetchDoraMetricsSummary, fetchDoraMetricsSeries, fetchDeploymentFrequencyDetails } from "./api.js";
 import type {
   DoraMetricsFilters,
   DoraMetricsSeriesFilters,
   DoraMetricsSummaryResponse,
   DoraMetricsSeriesResponse,
+  DeploymentFrequencyDetailsResponse,
+  MetricDetailsFilters,
 } from "./types.js";
 
 /**
@@ -48,5 +50,24 @@ export function useDoraMetricsSeries(filters: DoraMetricsSeriesFilters) {
     queryFn: ({ signal }) => fetchDoraMetricsSeries(filters, signal),
     enabled: !!workspaceId,
     staleTime: 60 * 1000,
+  });
+}
+
+/**
+ * React Query hook for Deployment Frequency event drill-down details.
+ */
+export function useDeploymentFrequencyDetails(filters: MetricDetailsFilters) {
+  const { state } = useAuth();
+  const workspaceId = state.status === "authenticated"
+    ? state.currentMembership.workspaceId
+    : null;
+
+  return useQuery<DeploymentFrequencyDetailsResponse>({
+    queryKey: workspaceId
+      ? queryKeys.deploymentFrequencyDetails(workspaceId, filters)
+      : ["deployment-frequency-details-disabled"],
+    queryFn: ({ signal }) => fetchDeploymentFrequencyDetails(filters, signal),
+    enabled: !!workspaceId,
+    staleTime: 30 * 1000,
   });
 }

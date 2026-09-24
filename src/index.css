@@ -1596,6 +1596,38 @@ p {
   color: var(--text-secondary);
 }
 
+.dora-card-more-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-light, #818cf8);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  background: var(--primary-surface, rgba(99, 102, 241, 0.12));
+  border: 1px solid rgba(129, 140, 248, 0.35);
+  border-radius: 0.45rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.dora-card-more-link:hover {
+  text-decoration: none;
+  background: var(--primary-surface-hover, rgba(99, 102, 241, 0.25));
+  border-color: var(--primary-light, #818cf8);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.dora-card-more-arrow {
+  display: inline-block;
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
 /* ── Card value row ── */
 
 .dora-card-value-row {
@@ -2531,4 +2563,392 @@ button.alerts-status {
   .pr-risk-pagination > div {
     justify-content: space-between;
   }
+}
+
+/* ── Metric Details Page ─────────────────────────────────────────────────── */
+
+.metric-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-bottom: 3rem;
+}
+
+.metric-details-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+  width: fit-content;
+}
+
+.metric-details-back-link:hover {
+  color: var(--text-primary);
+}
+
+.metric-details-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.metric-details-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary-light, #818cf8);
+  margin: 0;
+}
+
+.metric-details-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.metric-details-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 48rem;
+  line-height: 1.5;
+}
+
+.metric-details-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--card-bg);
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.5rem;
+  padding: 0.25rem;
+  overflow-x: auto;
+  max-width: fit-content;
+}
+
+.metric-tab-button {
+  appearance: none !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.78rem !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 0.35rem !important;
+  min-height: unset !important;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.metric-tab-button:hover:not(:disabled):not(.metric-tab-button--active) {
+  background: var(--surface-muted) !important;
+  color: var(--text-primary) !important;
+}
+
+.metric-tab-button--active {
+  background: var(--primary-surface) !important;
+  color: var(--primary-light, #818cf8) !important;
+  font-weight: 600 !important;
+}
+
+.metric-details-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-card, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.65rem;
+}
+
+.metric-details-scope-info {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.metric-details-scope-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.125rem;
+  padding: 0 0.65rem;
+  background: var(--card-bg);
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.metric-details-repo-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.metric-details-repo-filter select {
+  min-width: 12rem;
+  max-width: 20rem;
+  height: 2.125rem;
+  padding: 0 1.75rem 0 0.65rem;
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  background: var(--card-bg);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  box-sizing: border-box;
+}
+
+.metric-details-controls-bar .dora-filter-bar {
+  height: 2.125rem;
+  padding: 0.2rem;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+}
+
+.metric-details-controls-bar .dora-filter-btn {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem !important;
+  font-size: 0.78rem !important;
+  box-sizing: border-box;
+}
+
+.metric-details-chart-panel {
+  background: var(--surface-card, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--stat-card-border);
+  border-radius: 0.65rem;
+  padding: 1.15rem 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metric-details-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.metric-details-chart-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.metric-details-chart-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metric-details-chart-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.metric-details-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.metric-details-stat-unit {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.metric-details-stat-sample {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  opacity: 0.85;
+  margin-left: 0.25rem;
+}
+
+.metric-details-chart-canvas {
+  width: 100%;
+  overflow: hidden;
+}
+
+.metric-details-table-panel {
+  background: var(--surface-card, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 0.65rem;
+  overflow-x: auto;
+}
+
+.metric-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  text-align: left;
+}
+
+.metric-details-table th {
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  background: var(--surface-muted, rgba(255, 255, 255, 0.02));
+}
+
+.metric-details-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.metric-details-table tr:last-child td {
+  border-bottom: none;
+}
+
+.metric-details-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.metric-env-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.metric-source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--surface-muted, rgba(255, 255, 255, 0.06));
+  color: var(--text-secondary);
+}
+
+.metric-commit-sha {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.76rem;
+  background: var(--surface-muted, rgba(255, 255, 255, 0.06));
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  color: var(--primary-light, #818cf8);
+}
+
+.metric-commit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-decoration: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.76rem;
+  background: var(--primary-surface, rgba(99, 102, 241, 0.1));
+  color: var(--primary-light, #818cf8);
+  padding: 0.18rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.metric-commit-link:hover {
+  text-decoration: none;
+  background: var(--primary-surface, rgba(99, 102, 241, 0.2));
+  border-color: var(--primary-light, #818cf8);
+  color: #fff;
+}
+
+.metric-commit-link code {
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.metric-commit-arrow {
+  font-size: 0.75rem;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.metric-details-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.metric-details-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.1rem;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.metric-details-pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-pagination-btn {
+  appearance: none;
+  background: var(--surface-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.metric-pagination-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.metric-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

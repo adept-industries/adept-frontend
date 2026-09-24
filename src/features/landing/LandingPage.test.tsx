@@ -59,6 +59,8 @@ describe("LandingPage", () => {
     expect(within(preview).queryByRole("combobox")).not.toBeInTheDocument();
     expect(within(preview).queryByRole("button", { name: "Last 30 Days" })).not.toBeInTheDocument();
     expect(screen.queryByText("Illustrative data, not live metrics")).not.toBeInTheDocument();
+    expect(within(preview).getAllByText("More")).toHaveLength(4);
+    expect(within(preview).queryByRole("link", { name: /View details for/i })).not.toBeInTheDocument();
   });
 
   it("shows a changing trend line for each example metric", () => {

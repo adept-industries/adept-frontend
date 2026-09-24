@@ -592,6 +592,46 @@ export interface paths {
         patch: operations["updateProjectTracking"];
         trace?: never;
     };
+    "/api/v1/metrics/deployment-frequency/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Deployment Frequency event details
+         * @description Returns paginated successful production deployments counted by Deployment Frequency.
+         */
+        get: operations["getDeploymentFrequencyDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/metrics/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get scoped DORA metric event details
+         * @description Returns paginated raw event records for a specific DORA metric.
+         */
+        get: operations["getDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics/series": {
         parameters: {
             query?: never;
@@ -1177,6 +1217,46 @@ export interface components {
         };
         DeleteWorkspaceRequest: {
             confirmationSlug: string;
+        };
+        DeploymentFrequencyDetailDto: {
+            commitSha?: string;
+            /** Format: date-time */
+            deployedAt?: string;
+            /** Format: int64 */
+            durationSeconds?: number;
+            environment?: string;
+            /** Format: uuid */
+            id?: string;
+            repositoryFullName?: string;
+            /** Format: uuid */
+            repositoryId?: string;
+            repositoryName?: string;
+            /** @enum {string} */
+            source?: "GITHUB_DEPLOYMENT" | "GITHUB_WORKFLOW" | "MANUAL";
+        };
+        DeploymentFrequencyDetailsResponse: {
+            items?: components["schemas"]["DeploymentFrequencyDetailDto"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: date-time */
+            rangeEnd?: string;
+            /** Format: date-time */
+            rangeStart?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            /** Format: int32 */
+            size?: number;
+            timezone?: string;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: uuid */
+            workspaceId?: string;
         };
         DoraMetricsSeriesResponse: {
             /** Format: date-time */
@@ -3633,6 +3713,66 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JiraProjectResponse"];
+                };
+            };
+        };
+    };
+    getDeploymentFrequencyDetails: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeploymentFrequencyDetailsResponse"];
+                };
+            };
+        };
+    };
+    getDetails: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                /** @description Metric type to fetch details for. */
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeploymentFrequencyDetailsResponse"];
                 };
             };
         };

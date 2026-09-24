@@ -287,6 +287,7 @@ export function LandingPage() {
                       metric={dfMetric}
                       series={dfSeries}
                       icon={<IconRocket />}
+                      showStaticMore
                     />
                   </div>
                   <div role="listitem">
@@ -297,6 +298,7 @@ export function LandingPage() {
                       metric={rtMetric}
                       series={rtSeries}
                       icon={<IconShield />}
+                      showStaticMore
                     />
                   </div>
                 </div>
@@ -310,6 +312,7 @@ export function LandingPage() {
                       series={cltSeries}
                       icon={<IconClock />}
                       showPercentiles
+                      showStaticMore
                     />
                   </div>
                   <div role="listitem">
@@ -321,6 +324,7 @@ export function LandingPage() {
                       series={cfrSeries}
                       icon={<IconPercent />}
                       showFailureBreakdown
+                      showStaticMore
                     />
                   </div>
                 </div>
