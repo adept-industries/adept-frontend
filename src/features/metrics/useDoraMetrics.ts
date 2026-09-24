@@ -1,13 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { queryKeys } from "../../api/queryKeys.js";
-import { fetchDoraMetricsSummary, fetchDoraMetricsSeries, fetchDeploymentFrequencyDetails } from "./api.js";
+import {
+  fetchDoraMetricsSummary,
+  fetchDoraMetricsSeries,
+  fetchDeploymentFrequencyDetails,
+  fetchChangeLeadTimeDetails,
+} from "./api.js";
 import type {
   DoraMetricsFilters,
   DoraMetricsSeriesFilters,
   DoraMetricsSummaryResponse,
   DoraMetricsSeriesResponse,
   DeploymentFrequencyDetailsResponse,
+  ChangeLeadTimeDetailsResponse,
   MetricDetailsFilters,
 } from "./types.js";
 
@@ -67,6 +73,25 @@ export function useDeploymentFrequencyDetails(filters: MetricDetailsFilters) {
       ? queryKeys.deploymentFrequencyDetails(workspaceId, filters)
       : ["deployment-frequency-details-disabled"],
     queryFn: ({ signal }) => fetchDeploymentFrequencyDetails(filters, signal),
+    enabled: !!workspaceId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * React Query hook for Change Lead Time event drill-down details.
+ */
+export function useChangeLeadTimeDetails(filters: MetricDetailsFilters) {
+  const { state } = useAuth();
+  const workspaceId = state.status === "authenticated"
+    ? state.currentMembership.workspaceId
+    : null;
+
+  return useQuery<ChangeLeadTimeDetailsResponse>({
+    queryKey: workspaceId
+      ? queryKeys.changeLeadTimeDetails(workspaceId, filters)
+      : ["change-lead-time-details-disabled"],
+    queryFn: ({ signal }) => fetchChangeLeadTimeDetails(filters, signal),
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
   });

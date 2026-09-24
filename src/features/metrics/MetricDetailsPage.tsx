@@ -5,12 +5,14 @@ import { AppShell } from "../../components/layout/AppShell.js";
 import { useContext } from "react";
 import { ProjectContext } from "../projects/ProjectContext.js";
 import {
+  useChangeLeadTimeDetails,
   useDeploymentFrequencyDetails,
   useDoraMetricsSeries,
   useDoraMetricsSummary,
 } from "./useDoraMetrics.js";
 import { DoraMetricChart } from "./DoraMetricChart.js";
 import type {
+  ChangeLeadTimeDetailDto,
   DeploymentFrequencyDetailDto,
   DoraMetricsFilters,
   MetricRating,
@@ -328,6 +330,20 @@ export function MetricDetailsPage() {
       : { projectId: null, repositoryId: null },
   );
 
+  // Fetch change lead time details when active
+  const changeLeadTimeQuery = useChangeLeadTimeDetails(
+    activeMetric === "CHANGE_LEAD_TIME_HOURS"
+      ? {
+          projectId: projectIdParam,
+          repositoryId: repositoryIdParam,
+          from: range.from,
+          to: range.to,
+          page,
+          size: 20,
+        }
+      : { projectId: null, repositoryId: null },
+  );
+
   const handleTabChange = (key: MetricTypeKey) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("metric", key);
@@ -629,8 +645,149 @@ export function MetricDetailsPage() {
               </>
             )}
           </div>
+        ) : activeMetric === "CHANGE_LEAD_TIME_HOURS" ? (
+          <div className="metric-details-table-panel">
+            {changeLeadTimeQuery.isLoading ? (
+              <div className="metric-details-empty" aria-busy="true">
+                <p>Loading pull request events&hellip;</p>
+              </div>
+            ) : changeLeadTimeQuery.error ? (
+              <div className="metric-details-empty" role="alert">
+                <h3>Pull request events could not be loaded</h3>
+                <p>
+                  {changeLeadTimeQuery.error instanceof Error
+                    ? changeLeadTimeQuery.error.message
+                    : "Please try again."}
+                </p>
+                <button
+                  type="button"
+                  className="dora-filter-btn"
+                  onClick={() => void changeLeadTimeQuery.refetch()}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : !changeLeadTimeQuery.data ||
+              changeLeadTimeQuery.data.items.length === 0 ? (
+              <div className="metric-details-empty">
+                <h3>No change lead time events</h3>
+                <p>
+                  There are no merged pull requests with a successful production deployment
+                  recorded in this time range for the selected repository scope.
+                </p>
+              </div>
+            ) : (
+              <>
+                <table
+                  className="metric-details-table"
+                  aria-label="Change lead time pull request events"
+                >
+                  <thead>
+                    <tr>
+                      <th scope="col">Pull Request</th>
+                      <th scope="col">Repository</th>
+                      <th scope="col">Author</th>
+                      <th scope="col">First Commit</th>
+                      <th scope="col">Merged</th>
+                      <th scope="col">Deployed</th>
+                      <th scope="col">Lead Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {changeLeadTimeQuery.data.items.map((item: ChangeLeadTimeDetailDto) => (
+                      <tr key={item.prId}>
+                        <td>
+                          {item.prUrl ? (
+                            <a
+                              href={item.prUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="metric-commit-link"
+                              title={`Open PR #${item.prNumber} on GitHub`}
+                            >
+                              <strong>#{item.prNumber}</strong>
+                              {" "}– {item.prTitle}
+                              <span className="metric-commit-arrow" aria-hidden="true">{"↗"}</span>
+                            </a>
+                          ) : (
+                            <span><strong>#{item.prNumber}</strong> – {item.prTitle}</span>
+                          )}
+                        </td>
+                        <td><strong>{item.repositoryFullName}</strong></td>
+                        <td>{item.authorLogin ?? <span className="metric-details-muted">&mdash;</span>}</td>
+                        <td>
+                          {item.firstCommitAt
+                            ? formatTimestamp(item.firstCommitAt, workspaceTimezone)
+                            : <span className="metric-details-muted">&mdash;</span>}
+                        </td>
+                        <td>
+                          {item.mergedAt
+                            ? formatTimestamp(item.mergedAt, workspaceTimezone)
+                            : <span className="metric-details-muted">&mdash;</span>}
+                        </td>
+                        <td>{formatTimestamp(item.deployedAt, workspaceTimezone)}</td>
+                        <td>
+                          <span
+                            className="metric-lead-time-cell"
+                            title={[
+                              item.codingTimeSeconds != null ? `Coding: ${formatDuration(item.codingTimeSeconds)}` : null,
+                              item.reviewTimeSeconds != null ? `Review: ${formatDuration(item.reviewTimeSeconds)}` : null,
+                              item.deployTimeSeconds != null ? `Deploy: ${formatDuration(item.deployTimeSeconds)}` : null,
+                            ].filter(Boolean).join(" · ") || undefined}
+                          >
+                            {item.leadTimeSeconds != null
+                              ? formatDuration(item.leadTimeSeconds)
+                              : <span className="metric-details-muted">&mdash;</span>}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Pagination */}
+                <div className="metric-details-pagination">
+                  <span>
+                    Showing{" "}
+                    {changeLeadTimeQuery.data.totalElements === 0
+                      ? 0
+                      : changeLeadTimeQuery.data.page * changeLeadTimeQuery.data.size + 1}
+                    –
+                    {Math.min(
+                      (changeLeadTimeQuery.data.page + 1) * changeLeadTimeQuery.data.size,
+                      changeLeadTimeQuery.data.totalElements,
+                    )}{" "}
+                    of {changeLeadTimeQuery.data.totalElements} pull requests
+                  </span>
+
+                  <div className="metric-details-pagination-buttons">
+                    <button
+                      type="button"
+                      className="metric-pagination-btn"
+                      onClick={() => handlePageChange(Math.max(0, page - 1))}
+                      disabled={page === 0}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {changeLeadTimeQuery.data.page + 1} of{" "}
+                      {Math.max(1, changeLeadTimeQuery.data.totalPages)}
+                    </span>
+                    <button
+                      type="button"
+                      className="metric-pagination-btn"
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page + 1 >= changeLeadTimeQuery.data.totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         ) : (
-          /* Placeholder for PR 2, 3, 4 rollout */
+          /* Placeholder for PR 3, 4 rollout */
           <div className="metric-details-table-panel">
             <div className="metric-details-empty">
               <h3>{activeTabConfig.label} drill-down coming soon</h3>
@@ -649,6 +806,7 @@ export function MetricDetailsPage() {
             </div>
           </div>
         )}
+
       </div>
     </AppShell>
   );

@@ -51,6 +51,10 @@ export const queryKeys = {
   deploymentFrequencyDetails: (workspaceId: string, filters: MetricDetailsFilters) =>
     [workspaceId, "metrics", "deployment-frequency", "details", filters] as const,
 
+  /** Change lead time details — workspace-scoped, filter-aware. */
+  changeLeadTimeDetails: (workspaceId: string, filters: MetricDetailsFilters) =>
+    [workspaceId, "metrics", "change-lead-time", "details", filters] as const,
+
   projectPullRequestRisks: (
     workspaceId: string,
     projectId: string,
