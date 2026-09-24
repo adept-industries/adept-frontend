@@ -220,21 +220,12 @@ export function RepoLeadManager({
               )}
               <button
                 type="button"
+                className="chip-remove-button"
                 aria-label={`Unassign ${assignment.email}`}
                 onClick={() => void handleUnassign(assignment.assignmentId, assignment.email)}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  color: "var(--text-secondary, #94a3b8)",
-                  cursor: "pointer",
-                  padding: "0 0.15rem",
-                  fontSize: "0.85rem",
-                  lineHeight: 1,
-                  flexShrink: 0,
-                }}
                 title="Unassign lead"
               >
-                ✕
+                ×
               </button>
             </span>
           ))

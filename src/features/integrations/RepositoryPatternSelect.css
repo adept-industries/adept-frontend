@@ -55,17 +55,6 @@
   overflow-wrap: anywhere;
 }
 
-.repository-pattern-chips button {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  flex-shrink: 0;
-  min-width: 28px;
-  min-height: 28px;
-  padding: 0;
-}
-
 .repository-pattern-help {
   font-size: 0.8rem;
   color: var(--text-secondary, #94a3b8);

@@ -171,6 +171,19 @@ button:disabled {
   padding: 0 !important;
 }
 
+button.chip-remove-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  line-height: 1;
+}
+
 .dashboard-header {
   border-bottom: 1px solid var(--dashboard-subtle-border);
   background: var(--dashboard-header-bg);

@@ -93,7 +93,7 @@ export function RepositoryPatternSelect({ id, label, help, placeholder, value, o
           {value.map((pattern) => (
             <li key={pattern}>
               <span title={pattern}>{displayName(pattern)}</span>
-              <button type="button" disabled={disabled} aria-label={`Remove ${displayName(pattern)}`}
+              <button type="button" className="chip-remove-button" disabled={disabled} aria-label={`Remove ${displayName(pattern)}`}
                 onClick={() => toggle(pattern)}>×</button>
             </li>
           ))}
