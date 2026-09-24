@@ -211,4 +211,43 @@ describe("DoraMetricChart rolling date ranges", () => {
       expectedDate + " · " + failed + " failed / " + total + " deployments",
     );
   });
+
+  it("renders with compact dimensions and smaller tooltip in details variant", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-22T12:00:00Z"));
+
+    render(
+      <DoraMetricChart
+        series={[seriesItem("2026-09-22", 4)]}
+        color="#4caf82"
+        label="Deployment Frequency trend"
+        preset="7d"
+        timezone="UTC"
+        variant="details"
+      />,
+    );
+
+    const chart = screen.getByRole("img", { name: "Deployment Frequency trend" });
+    expect(chart).toHaveAttribute("viewBox", "0 0 720 130");
+    expect(chart).toHaveClass("dora-chart-svg--details");
+
+    vi.spyOn(chart, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 720,
+      bottom: 130,
+      width: 720,
+      height: 130,
+      toJSON: () => ({}),
+    });
+    fireEvent.pointerMove(screen.getByTestId("chart-hover-area"), { clientX: 700, clientY: 50 });
+
+    const tooltip = screen.getByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Sep 22 · 4/d");
+    const rect = tooltip.querySelector("rect");
+    expect(rect).toHaveAttribute("rx", "2.5");
+    expect(Number(rect?.getAttribute("height"))).toBeLessThanOrEqual(14);
+  });
 });

@@ -1762,6 +1762,11 @@ p {
   overflow: visible;
 }
 
+.dora-chart-svg--details {
+  aspect-ratio: 720 / 130;
+  max-height: 180px;
+}
+
 .dora-chart-tooltip {
   transition: transform 140ms ease-out;
 }

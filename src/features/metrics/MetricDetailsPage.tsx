@@ -494,6 +494,7 @@ export function MetricDetailsPage() {
                 preset={activePreset}
                 timezone={seriesQuery.data?.timezone ?? workspaceTimezone}
                 unit={activeSummaryMetric?.unit}
+                variant="details"
               />
             )}
           </div>
