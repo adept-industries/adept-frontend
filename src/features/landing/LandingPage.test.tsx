@@ -61,6 +61,19 @@ describe("LandingPage", () => {
     expect(screen.queryByText("Illustrative data, not live metrics")).not.toBeInTheDocument();
   });
 
+  it("shows a changing trend line for each example metric", () => {
+    renderLanding();
+
+    const preview = screen.getByRole("figure", { name: "Example dashboard" });
+    for (const metric of ["Deployment Frequency", "Change Lead Time", "Recovery Time", "Change Failure Rate"]) {
+      const chart = within(preview).getByRole("img", { name: `${metric} trend` });
+      const points = chart.querySelector("polyline")?.getAttribute("points")?.split(" ") ?? [];
+      const yValues = new Set(points.map((point) => point.split(",")[1]));
+
+      expect(yValues.size).toBeGreaterThan(1);
+    }
+  });
+
   it("links anonymous visitors to login and signup", () => {
     renderLanding();
 

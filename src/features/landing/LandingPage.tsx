@@ -47,13 +47,17 @@ const cfrMetric: MetricSummaryDto = {
 };
 
 function createSeries(values: number[], metricType: MetricType, unit: string, sampleSize: number): MetricSeriesItemDto[] {
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+
   return values.map((value, i) => {
-    const day = String(i + 1).padStart(2, "0");
-    const date = `2026-08-${day}T00:00:00Z`;
+    const date = new Date(today);
+    date.setDate(today.getDate() + i - values.length + 1);
+    const period = date.toISOString();
     return {
-      date,
-      periodStart: date,
-      periodEnd: date,
+      date: period,
+      periodStart: period,
+      periodEnd: period,
       metricType,
       value,
       unit,
