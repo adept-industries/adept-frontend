@@ -408,6 +408,7 @@ describe("ProjectsPage with Lead Assignments", () => {
     expect(screen.getAllByText("acme/api-core").length).toBeGreaterThanOrEqual(1);
     expect(await screen.findByText("lead@example.com")).toBeInTheDocument();
     expect(screen.getByText("Active Lead")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unassign lead@example.com" })).toHaveClass("chip-remove-button");
   });
 
   it("allows assigning a lead by work email to an attached repository", async () => {

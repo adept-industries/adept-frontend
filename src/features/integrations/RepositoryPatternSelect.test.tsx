@@ -20,7 +20,7 @@ describe("RepositoryPatternSelect", () => {
   it("searches and selects multiple GitHub names without removing saved custom patterns", async () => {
     const user = userEvent.setup();
     render(<Harness />);
-    expect(screen.getByRole("button", { name: "Remove release/*" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove release/*" })).toHaveClass("chip-remove-button");
     await user.click(screen.getByRole("button", { name: "Branches" }));
     await user.type(screen.getByRole("textbox", { name: "Search Branches" }), "MAIN");
     expect(screen.queryByRole("checkbox", { name: "release/next" })).not.toBeInTheDocument();
