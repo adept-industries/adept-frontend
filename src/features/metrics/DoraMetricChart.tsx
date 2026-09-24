@@ -10,6 +10,8 @@ interface DoraMetricChartProps {
   preset?: "7d" | "30d" | "90d";
   timezone?: string;
   unit?: string;
+  /** "card" for dashboard cards (default, 360x100), "details" for full-width details page (720x130) */
+  variant?: "card" | "details";
 }
 
 interface ChartPoint {
@@ -165,7 +167,7 @@ function toChartPoint(point: MetricSeriesItemDto | undefined, dateKey: string, i
  * - 30d: Vertical dashed lines for Mondays (dark & light mode visible) + date labels
  * - 90d: 1st of each month markers without dashed lines
  */
-export function DoraMetricChart({ series, color, label, preset, timezone, unit }: DoraMetricChartProps) {
+export function DoraMetricChart({ series, color, label, preset, timezone, unit, variant = "card" }: DoraMetricChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const effectivePreset: "7d" | "30d" | "90d" = preset ?? (
     series.length <= 7 ? "7d" : series.length <= 35 ? "30d" : "90d"
@@ -193,13 +195,14 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
     "deployments"
   );
 
-  const W = 360;
-  const H = 100;
-  const PAD_LEFT = 32;
-  const PAD_RIGHT = 10;
-  const PAD_TOP = 10;
-  const BASELINE_Y = 82;
-  const LABEL_Y = 95;
+  const isDetails = variant === "details";
+  const W = isDetails ? 720 : 360;
+  const H = isDetails ? 130 : 100;
+  const PAD_LEFT = isDetails ? 42 : 32;
+  const PAD_RIGHT = isDetails ? 14 : 10;
+  const PAD_TOP = isDetails ? 12 : 10;
+  const BASELINE_Y = isDetails ? 104 : 82;
+  const LABEL_Y = isDetails ? 119 : 95;
   const PLOT_H = BASELINE_Y - PAD_TOP;
 
   const values = chartSeries.map((s) => s.value);
@@ -300,7 +303,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
 
     // Add "Today" at the right edge if there is space
     const lastX = dateMarkers90d[dateMarkers90d.length - 1]?.x ?? PAD_LEFT;
-    if (W - PAD_RIGHT - lastX >= 40) {
+    if (W - PAD_RIGHT - lastX >= (isDetails ? 65 : 40)) {
       dateMarkers90d.push({ x: W - PAD_RIGHT, label: "Today", anchor: "end" });
     }
   }
@@ -313,7 +316,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
       preserveAspectRatio="xMidYMid meet"
       aria-label={label}
       role="img"
-      className="dora-chart-svg"
+      className={`dora-chart-svg${isDetails ? " dora-chart-svg--details" : ""}`}
     >
       {/* Gradient fill under the line */}
       <defs>
@@ -337,7 +340,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         x={PAD_LEFT - 5}
         y={PAD_TOP + 3}
         textAnchor="end"
-        fontSize="8"
+        fontSize={isDetails ? "6.5" : "8"}
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
@@ -356,7 +359,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         x={PAD_LEFT - 5}
         y={midY + 3}
         textAnchor="end"
-        fontSize="8"
+        fontSize={isDetails ? "6.5" : "8"}
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
@@ -374,7 +377,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         x={PAD_LEFT - 5}
         y={BASELINE_Y + 3}
         textAnchor="end"
-        fontSize="8"
+        fontSize={isDetails ? "6.5" : "8"}
         fontWeight="500"
         fill="var(--text-secondary, #94a3b8)"
       >
@@ -411,7 +414,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
           key={`tick-${i}`}
           cx={toX(i)}
           cy={BASELINE_Y}
-          r={effectivePreset === "7d" ? "1.5" : "1"}
+          r={effectivePreset === "7d" ? (isDetails ? "1.2" : "1.5") : (isDetails ? "0.8" : "1")}
           fill="rgba(255, 255, 255, 0.28)"
         />
       ))}
@@ -452,7 +455,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
         points={points}
         fill="none"
         stroke={color}
-        strokeWidth="1.8"
+        strokeWidth={isDetails ? "1.4" : "1.8"}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -465,10 +468,10 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             key={`pt-${i}`}
             cx={toX(i)}
             cy={toY(s.value)}
-            r={isLast ? "3" : "1.8"}
+            r={isLast ? (isDetails ? "2.4" : "3") : (isDetails ? "1.4" : "1.8")}
             fill={isLast ? color : "#0f141c"}
             stroke={color}
-            strokeWidth={isLast ? "0" : "1.2"}
+            strokeWidth={isLast ? "0" : (isDetails ? "1" : "1.2")}
           />
         );
       })}
@@ -482,7 +485,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             x={toX(i)}
             y={LABEL_Y}
             textAnchor="middle"
-            fontSize="9"
+            fontSize={isDetails ? "6.8" : "9"}
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
@@ -498,7 +501,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             x={m.x}
             y={LABEL_Y}
             textAnchor={m.anchor}
-            fontSize="8.5"
+            fontSize={isDetails ? "6.5" : "8.5"}
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
@@ -514,7 +517,7 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             x={m.x}
             y={LABEL_Y}
             textAnchor={m.anchor}
-            fontSize="8.5"
+            fontSize={isDetails ? "6.5" : "8.5"}
             fontWeight="500"
             fill="var(--text-secondary, #94a3b8)"
           >
@@ -544,14 +547,21 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
             (point.totalDeploymentCount === 1 ? " deployment" : " deployments")
           : formatChartValue(point.value, effectiveUnit, effectivePreset, label);
         const tooltipText = formatDateKey(point.dateKey) + " · " + pointLabel;
-        const tooltipWidth = Math.min(W - PAD_LEFT - PAD_RIGHT, Math.max(112, tooltipText.length * 5.2 + 16));
-        const tooltipHeight = 19;
+        const fontSz = isDetails ? 7.6 : 7.5;
+        const charW = isDetails ? 4.4 : 4.4;
+        const padX = isDetails ? 14 : 12;
+        const tooltipWidth = Math.min(
+          W - PAD_LEFT - PAD_RIGHT,
+          Math.max(isDetails ? 62 : 58, tooltipText.length * charW + padX),
+        );
+        const tooltipHeight = isDetails ? 16 : 16;
+        const textY = isDetails ? 11.2 : 11.2;
         const pointX = toX(hoveredIndex);
         const pointY = toY(point.value);
         const tooltipX = Math.max(PAD_LEFT, Math.min(pointX - tooltipWidth / 2, W - PAD_RIGHT - tooltipWidth));
         const tooltipY = pointY - tooltipHeight - 5 >= PAD_TOP
           ? pointY - tooltipHeight - 5
-          : pointY + 7;
+          : pointY + 6;
         return (
           <g
             className="dora-chart-tooltip"
@@ -567,12 +577,13 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit }
               rx="3"
               fill="var(--card-bg, #101010)"
               stroke="var(--border-color, #414141)"
+              strokeWidth="1"
             />
             <text
               x={tooltipWidth / 2}
-              y="12.5"
+              y={textY}
               textAnchor="middle"
-              fontSize="9"
+              fontSize={fontSz}
               fontWeight="600"
               fill="var(--text-primary, #f8fafc)"
             >

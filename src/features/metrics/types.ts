@@ -4,6 +4,7 @@ type GeneratedMetricSummary = components["schemas"]["MetricSummaryDto"];
 type GeneratedMetricSeriesItem = components["schemas"]["MetricSeriesItemDto"];
 type GeneratedSummaryResponse = components["schemas"]["DoraMetricsSummaryResponse"];
 type GeneratedSeriesResponse = components["schemas"]["DoraMetricsSeriesResponse"];
+type GeneratedDeploymentFrequencyDetail = components["schemas"]["DeploymentFrequencyDetailDto"];
 
 type RequiredGenerated<T> = {
   [K in keyof T]-?: NonNullable<T[K]>;
@@ -60,4 +61,37 @@ export interface DoraMetricsFilters {
 export interface DoraMetricsSeriesFilters extends DoraMetricsFilters {
   metricType?: MetricType | null;
   granularity?: MetricGranularity;
+}
+
+export interface DeploymentFrequencyDetailDto {
+  id: string;
+  repositoryId: string;
+  repositoryName: string;
+  repositoryFullName: string;
+  deployedAt: string;
+  environment: string;
+  source: NonNullable<GeneratedDeploymentFrequencyDetail["source"]>;
+  commitSha: string;
+  durationSeconds?: number | null;
+}
+
+export interface DeploymentFrequencyDetailsResponse {
+  workspaceId: string;
+  projectId: string | null;
+  repositoryId: string | null;
+  repositoryCount: number;
+  rangeStart: string;
+  rangeEnd: string;
+  timezone: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  items: DeploymentFrequencyDetailDto[];
+}
+
+export interface MetricDetailsFilters extends DoraMetricsFilters {
+  metricType?: MetricType | string | null;
+  page?: number;
+  size?: number;
 }

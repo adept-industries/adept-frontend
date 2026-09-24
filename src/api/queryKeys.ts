@@ -6,7 +6,7 @@
  * This convention must be followed by every future workspace-scoped query.
  */
 
-import type { DoraMetricsFilters, DoraMetricsSeriesFilters } from "../features/metrics/types.js";
+import type { DoraMetricsFilters, DoraMetricsSeriesFilters, MetricDetailsFilters } from "../features/metrics/types.js";
 import type { ProjectPullRequestRiskFilters } from "../features/pullRequests/api.js";
 import type { ProjectIssuePageRequest } from "../features/issues/api.js";
 
@@ -46,6 +46,10 @@ export const queryKeys = {
   /** DORA metrics time series — workspace-scoped, filter-aware. */
   doraMetricsSeries: (workspaceId: string, filters: DoraMetricsSeriesFilters) =>
     [workspaceId, "metrics", "series", filters] as const,
+
+  /** Deployment frequency details — workspace-scoped, filter-aware. */
+  deploymentFrequencyDetails: (workspaceId: string, filters: MetricDetailsFilters) =>
+    [workspaceId, "metrics", "deployment-frequency", "details", filters] as const,
 
   projectPullRequestRisks: (
     workspaceId: string,

@@ -23,6 +23,7 @@ import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { AlertsPage } from "../features/alerts/AlertsPage";
 import { useProjects } from "../features/projects/useProjects";
 import { DoraMetricsSection } from "../features/metrics/DoraMetricsSection";
+import { MetricDetailsPage } from "../features/metrics/MetricDetailsPage";
 import { ProjectPullRequestRiskSection } from "../features/pullRequests/ProjectPullRequestRiskSection";
 import { ProjectIssuesSection } from "../features/issues/ProjectIssuesSection";
 
@@ -97,7 +98,7 @@ function Dashboard() {
  * Router is created once outside React state to avoid recreation on re-renders.
  */
 export const router = createBrowserRouter([
-  // ── Public landing & account pages ──────────────────────────────────────────
+  // ── Public landing & account pages ───────────────────────────────────────────
   { path: "/", element: <PublicOnlyRoute><LandingPage /></PublicOnlyRoute> },
   { path: "/landing", element: <LandingPage /> },
   { path: "/signup", element: <PublicOnlyRoute><SignupPage /></PublicOnlyRoute> },
@@ -143,6 +144,17 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <WorkspaceRoute>
           <Dashboard />
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/dashboard/metrics/details",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <MetricDetailsPage />
         </WorkspaceRoute>
       </ProtectedRoute>
     ),

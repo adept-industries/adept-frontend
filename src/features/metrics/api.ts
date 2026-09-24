@@ -4,9 +4,16 @@ import type {
   DoraMetricsSeriesFilters,
   DoraMetricsSummaryResponse,
   DoraMetricsSeriesResponse,
+  DeploymentFrequencyDetailsResponse,
+  MetricDetailsFilters,
 } from "./types.js";
 
-function buildSearchParams(filters: DoraMetricsFilters & { metricType?: string | null; granularity?: string }): string {
+function buildSearchParams(filters: DoraMetricsFilters & {
+  metricType?: string | null;
+  granularity?: string;
+  page?: number;
+  size?: number;
+}): string {
   const params = new URLSearchParams();
   if (filters.projectId) params.set("projectId", filters.projectId);
   if (filters.repositoryId) params.set("repositoryId", filters.repositoryId);
@@ -14,6 +21,8 @@ function buildSearchParams(filters: DoraMetricsFilters & { metricType?: string |
   if (filters.to) params.set("to", filters.to);
   if (filters.metricType) params.set("metricType", filters.metricType);
   if (filters.granularity) params.set("granularity", filters.granularity);
+  if (filters.page !== undefined && filters.page !== null) params.set("page", String(filters.page));
+  if (filters.size !== undefined && filters.size !== null) params.set("size", String(filters.size));
   const str = params.toString();
   return str ? `?${str}` : "";
 }
@@ -22,22 +31,40 @@ export function fetchDoraMetricsSummary(
   filters: DoraMetricsFilters,
   signal?: AbortSignal,
 ): Promise<DoraMetricsSummaryResponse> {
-  return apiRequest<DoraMetricsSummaryResponse>({
-    method: "GET",
-    path: `/metrics/summary${buildSearchParams(filters)}`,
-    auth: "bearer",
-    signal,
-  });
+  return apiRequest<DoraMetricsSummaryResponse>(
+    {
+      method: "GET",
+      path: `/metrics/summary${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
 }
 
 export function fetchDoraMetricsSeries(
   filters: DoraMetricsSeriesFilters,
   signal?: AbortSignal,
 ): Promise<DoraMetricsSeriesResponse> {
-  return apiRequest<DoraMetricsSeriesResponse>({
-    method: "GET",
-    path: `/metrics/series${buildSearchParams(filters)}`,
-    auth: "bearer",
-    signal,
-  });
+  return apiRequest<DoraMetricsSeriesResponse>(
+    {
+      method: "GET",
+      path: `/metrics/series${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
+}
+
+export function fetchDeploymentFrequencyDetails(
+  filters: MetricDetailsFilters,
+  signal?: AbortSignal,
+): Promise<DeploymentFrequencyDetailsResponse> {
+  return apiRequest<DeploymentFrequencyDetailsResponse>(
+    {
+      method: "GET",
+      path: `/metrics/deployment-frequency/details${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
 }

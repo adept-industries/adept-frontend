@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router";
 import type { MetricRating, MetricSummaryDto, MetricSeriesItemDto } from "./types.js";
 import { DoraMetricChart } from "./DoraMetricChart.js";
 
-// ── Rating colours ────────────────────────────────────────────────────────
+// ── Rating colours ────────────────────────────────────────────────────────────
 
 const RATING_CLASS: Record<MetricRating, string> = {
   ELITE:   "dora-badge--elite",
@@ -29,7 +30,7 @@ const RATING_COLOR: Record<MetricRating, string> = {
   UNKNOWN: "#737373",
 };
 
-// ── Value formatter ────────────────────────────────────────────────────────
+// ── Value formatter ───────────────────────────────────────────────────────────
 
 function formatValue(value: number, unit: string, sampleSize?: number): string {
   if (sampleSize === 0 && !unit.startsWith("deployments")) return "—";
@@ -39,7 +40,7 @@ function formatValue(value: number, unit: string, sampleSize?: number): string {
   return `${value % 1 === 0 ? value : value.toFixed(1)}h`;
 }
 
-// ── Props ─────────────────────────────────────────────────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface DoraMetricCardProps {
   /** Display title */
@@ -61,9 +62,13 @@ interface DoraMetricCardProps {
   preset?: "7d" | "30d" | "90d";
   /** Workspace timezone */
   timezone?: string;
+  /** Optional link to details drill-down page */
+  detailsLink?: string;
+  /** Render a static (non-navigating) More button for illustrative/preview displays */
+  showStaticMore?: boolean;
 }
 
-// ── Component ─────────────────────────────────────────────────────────────
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function DoraMetricCard({
   title,
@@ -76,6 +81,8 @@ export function DoraMetricCard({
   showFailureBreakdown = false,
   preset,
   timezone,
+  detailsLink,
+  showStaticMore = false,
 }: DoraMetricCardProps) {
   const [expanded, setExpanded] = useState(false);
   const ratingClass = RATING_CLASS[metric.rating];
@@ -113,7 +120,7 @@ export function DoraMetricCard({
         </span>
       </div>
 
-      {/* Secondary info / action row (Percentile toggle, failure breakdown, or placeholder) */}
+      {/* Secondary info / action row (Percentile toggle, failure breakdown, and/or More link) */}
       <div className="dora-card-action-slot">
         {hasPercentiles ? (
           <button
@@ -148,6 +155,24 @@ export function DoraMetricCard({
               {metric.dimensions["total_deployments"]} total
             </span>
           </div>
+        ) : null}
+        {detailsLink ? (
+          <Link
+            to={detailsLink}
+            className="dora-card-more-link"
+            aria-label={`View details for ${title}`}
+          >
+            <span>More</span>
+            <span className="dora-card-more-arrow" aria-hidden="true">&rarr;</span>
+          </Link>
+        ) : showStaticMore ? (
+          <span
+            className="dora-card-more-link"
+            aria-hidden="true"
+          >
+            <span>More</span>
+            <span className="dora-card-more-arrow" aria-hidden="true">&rarr;</span>
+          </span>
         ) : null}
       </div>
 

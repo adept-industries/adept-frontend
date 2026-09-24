@@ -219,6 +219,17 @@ export function DoraMetricsSection({
   const items = seriesData?.series ?? [];
   const timezone = seriesData?.timezone ?? workspaceTimezone;
 
+  const buildDetailsLink = (metric: string) => {
+    const params = new URLSearchParams();
+    params.set("metric", metric);
+    if (selectedProjectId) params.set("projectId", selectedProjectId);
+    if (selectedRepositoryId) params.set("repositoryId", selectedRepositoryId);
+    if (preset) params.set("preset", preset);
+    if (range.from) params.set("from", range.from);
+    if (range.to) params.set("to", range.to);
+    return `/dashboard/metrics/details?${params.toString()}`;
+  };
+
   return (
     <section className="dora-section" aria-label="DORA Metrics">
       {/* Section header + filter bar */}
@@ -309,6 +320,7 @@ export function DoraMetricsSection({
                   icon={<IconRocket />}
                   preset={preset}
                   timezone={timezone}
+                  detailsLink={buildDetailsLink("DEPLOYMENT_FREQUENCY")}
                 />
               </div>
               <div role="listitem">
@@ -321,6 +333,7 @@ export function DoraMetricsSection({
                   icon={<IconShield />}
                   preset={preset}
                   timezone={timezone}
+                  detailsLink={buildDetailsLink("FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS")}
                 />
               </div>
             </div>
@@ -338,6 +351,7 @@ export function DoraMetricsSection({
                   showPercentiles
                   preset={preset}
                   timezone={timezone}
+                  detailsLink={buildDetailsLink("CHANGE_LEAD_TIME_HOURS")}
                 />
               </div>
               <div role="listitem">
@@ -351,6 +365,7 @@ export function DoraMetricsSection({
                   showFailureBreakdown
                   preset={preset}
                   timezone={timezone}
+                  detailsLink={buildDetailsLink("CHANGE_FAILURE_RATE_PERCENT")}
                 />
               </div>
             </div>
