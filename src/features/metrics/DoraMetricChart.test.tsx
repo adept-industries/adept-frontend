@@ -247,7 +247,7 @@ describe("DoraMetricChart rolling date ranges", () => {
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toHaveTextContent("Sep 22 · 4/d");
     const rect = tooltip.querySelector("rect");
-    expect(rect).toHaveAttribute("rx", "2.5");
-    expect(Number(rect?.getAttribute("height"))).toBeLessThanOrEqual(14);
+    expect(rect).toHaveAttribute("rx", "3");
+    expect(Number(rect?.getAttribute("height"))).toBeLessThanOrEqual(18);
   });
 });

@@ -547,20 +547,20 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit, 
             (point.totalDeploymentCount === 1 ? " deployment" : " deployments")
           : formatChartValue(point.value, effectiveUnit, effectivePreset, label);
         const tooltipText = formatDateKey(point.dateKey) + " · " + pointLabel;
-        const fontSz = isDetails ? 6.2 : 7.5;
-        const charW = isDetails ? 3.6 : 4.4;
-        const padX = isDetails ? 10 : 12;
+        const fontSz = isDetails ? 7.6 : 7.5;
+        const charW = isDetails ? 4.4 : 4.4;
+        const padX = isDetails ? 14 : 12;
         const tooltipWidth = Math.min(
           W - PAD_LEFT - PAD_RIGHT,
-          Math.max(isDetails ? 44 : 58, tooltipText.length * charW + padX),
+          Math.max(isDetails ? 62 : 58, tooltipText.length * charW + padX),
         );
-        const tooltipHeight = isDetails ? 13 : 16;
-        const textY = isDetails ? 9 : 11.2;
+        const tooltipHeight = isDetails ? 16 : 16;
+        const textY = isDetails ? 11.2 : 11.2;
         const pointX = toX(hoveredIndex);
         const pointY = toY(point.value);
         const tooltipX = Math.max(PAD_LEFT, Math.min(pointX - tooltipWidth / 2, W - PAD_RIGHT - tooltipWidth));
-        const tooltipY = pointY - tooltipHeight - 4 >= PAD_TOP
-          ? pointY - tooltipHeight - 4
+        const tooltipY = pointY - tooltipHeight - 5 >= PAD_TOP
+          ? pointY - tooltipHeight - 5
           : pointY + 6;
         return (
           <g
@@ -574,10 +574,10 @@ export function DoraMetricChart({ series, color, label, preset, timezone, unit, 
               y="0"
               width={tooltipWidth}
               height={tooltipHeight}
-              rx={isDetails ? "2.5" : "3"}
+              rx="3"
               fill="var(--card-bg, #101010)"
               stroke="var(--border-color, #414141)"
-              strokeWidth={isDetails ? "0.75" : "1"}
+              strokeWidth="1"
             />
             <text
               x={tooltipWidth / 2}
