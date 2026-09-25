@@ -1463,8 +1463,8 @@ p {
 }
 
 .dora-repository-filter select {
-  min-width: 13rem;
-  max-width: 22rem;
+  min-width: 0;
+  max-width: min(22rem, 100%);
   height: 2.25rem;
   padding: 0 2rem 0 0.65rem;
   border: 1px solid var(--stat-card-border);
@@ -1476,6 +1476,10 @@ p {
   font-weight: 500;
   text-transform: none;
   letter-spacing: normal;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .dora-filter-bar {
@@ -2635,7 +2639,8 @@ button.alerts-status {
   border-radius: 0.5rem;
   padding: 0.25rem;
   overflow-x: auto;
-  max-width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .metric-tab-button {
@@ -2675,15 +2680,19 @@ button.alerts-status {
   background: var(--surface-card, rgba(255, 255, 255, 0.02));
   border: 1px solid var(--stat-card-border);
   border-radius: 0.65rem;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .metric-details-scope-info {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.65rem;
   font-size: 0.78rem;
   color: var(--text-secondary);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .metric-details-scope-pill {
@@ -2700,6 +2709,9 @@ button.alerts-status {
   color: var(--text-primary);
   box-sizing: border-box;
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .metric-details-repo-filter {
@@ -2710,11 +2722,19 @@ button.alerts-status {
   font-size: 0.78rem;
   color: var(--text-secondary);
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.metric-details-repo-filter > span {
+  flex-shrink: 0;
 }
 
 .metric-details-repo-filter select {
-  min-width: 12rem;
-  max-width: 20rem;
+  min-width: 0;
+  max-width: min(20rem, 100%);
+  width: auto;
+  flex: 1 1 auto;
   height: 2.125rem;
   padding: 0 1.75rem 0 0.65rem;
   border: 1px solid var(--stat-card-border);
@@ -2727,6 +2747,9 @@ button.alerts-status {
   text-transform: none;
   letter-spacing: normal;
   box-sizing: border-box;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .metric-details-controls-bar .dora-filter-bar {
@@ -2735,6 +2758,9 @@ button.alerts-status {
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 .metric-details-controls-bar .dora-filter-btn {
@@ -2744,6 +2770,7 @@ button.alerts-status {
   padding: 0 0.75rem !important;
   font-size: 0.78rem !important;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .metric-details-chart-panel {
@@ -3129,4 +3156,54 @@ button.alerts-status {
 
 .metric-details-table tr.metric-details-row--failure td:first-child {
   box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.6);
+}
+
+
+/* Metric Details Page Responsive */
+@media (max-width: 768px) {
+  .metric-details-controls-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .metric-details-scope-info {
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .metric-details-repo-filter {
+    width: 100%;
+    display: flex;
+  }
+
+  .metric-details-repo-filter select {
+    flex: 1;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .metric-details-controls-bar .dora-filter-bar {
+    width: 100%;
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .metric-details-controls-bar .dora-filter-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0 0.4rem !important;
+    font-size: 0.74rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-details-controls-bar {
+    padding: 0.65rem 0.75rem;
+  }
+
+  .metric-details-controls-bar .dora-filter-btn {
+    padding: 0 0.25rem !important;
+    font-size: 0.7rem !important;
+  }
 }
