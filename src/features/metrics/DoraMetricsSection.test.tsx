@@ -354,4 +354,18 @@ describe("DoraMetricsSection", () => {
     expect(url.searchParams.get("preset")).toBeTruthy();
   });
 
+  it("links the Change Failure Rate card to its drill-down with the current scope", async () => {
+    renderSection({
+      selectedProjectId: "proj-123",
+      repositories: [{ id: "repo-1", fullName: "acme/api" }],
+    });
+
+    const moreLink = await screen.findByRole("link", { name: "View details for Change Failure Rate" });
+    const url = new URL(moreLink.getAttribute("href")!, "http://localhost");
+    expect(url.pathname).toBe("/dashboard/metrics/details");
+    expect(url.searchParams.get("metric")).toBe("CHANGE_FAILURE_RATE_PERCENT");
+    expect(url.searchParams.get("projectId")).toBe("proj-123");
+    expect(url.searchParams.get("preset")).toBeTruthy();
+  });
+
 });

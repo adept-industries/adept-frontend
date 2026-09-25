@@ -592,6 +592,26 @@ export interface paths {
         patch: operations["updateProjectTracking"];
         trace?: never;
     };
+    "/api/v1/metrics/change-failure-rate/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Change Failure Rate event details
+         * @description Returns paginated finished production deployments inside the window, both failed and successful, with whether each counts as a failure and any linked incident. Totals cover the whole window and match the metric's numerator and denominator.
+         */
+        get: operations["getChangeFailureRateDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics/change-lead-time/details": {
         parameters: {
             query?: never;
@@ -1198,6 +1218,59 @@ export interface components {
             workspaceSelectionRequired: false;
             /** @description Active workspace memberships. Empty when the account must create a workspace. */
             workspaces: components["schemas"]["WorkspaceSummaryResponse"][];
+        };
+        ChangeFailureRateDetailDto: {
+            commitSha?: string;
+            /** Format: uuid */
+            deploymentId?: string;
+            environment?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            incident?: components["schemas"]["ChangeFailureRateIncidentRefDto"];
+            isFailure?: boolean;
+            repositoryFullName?: string;
+            /** Format: uuid */
+            repositoryId?: string;
+            repositoryName?: string;
+            /** @enum {string} */
+            status?: "QUEUED" | "IN_PROGRESS" | "SUCCESS" | "FAILURE" | "CANCELLED";
+        };
+        ChangeFailureRateDetailsResponse: {
+            /** Format: int64 */
+            failedDeployments?: number;
+            /** Format: double */
+            failureRatePercent?: number;
+            items?: components["schemas"]["ChangeFailureRateDetailDto"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: date-time */
+            rangeEnd?: string;
+            /** Format: date-time */
+            rangeStart?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            /** Format: int32 */
+            size?: number;
+            timezone?: string;
+            /** Format: int64 */
+            totalDeployments?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        ChangeFailureRateIncidentRefDto: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            severity?: "UNKNOWN" | "SEV1" | "SEV2" | "SEV3" | "SEV4";
+            title?: string;
         };
         ChangeLeadTimeDetailDto: {
             authorLogin?: string;
@@ -3862,6 +3935,35 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JiraProjectResponse"];
+                };
+            };
+        };
+    };
+    getChangeFailureRateDetails: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeFailureRateDetailsResponse"];
                 };
             };
         };

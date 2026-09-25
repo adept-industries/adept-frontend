@@ -188,3 +188,49 @@ export interface RecoveryTimeDetailsResponse {
   totalPages: number;
   items: RecoveryTimeDetailDto[];
 }
+
+export type DeploymentStatus = "QUEUED" | "IN_PROGRESS" | "SUCCESS" | "FAILURE" | "CANCELLED";
+
+/** Compact reference to an incident that names a deployment as its failed deployment. */
+export interface ChangeFailureRateIncidentRefDto {
+  id: string;
+  title: string;
+  severity: IncidentSeverity;
+}
+
+/**
+ * One finished production deployment returned by the Change Failure Rate details
+ * endpoint. `isFailure` mirrors the engine: status FAILURE or a linked incident.
+ */
+export interface ChangeFailureRateDetailDto {
+  deploymentId: string;
+  repositoryId: string;
+  repositoryName: string;
+  repositoryFullName: string | null;
+  finishedAt: string;
+  environment: string;
+  status: DeploymentStatus;
+  commitSha: string | null;
+  isFailure: boolean;
+  incident: ChangeFailureRateIncidentRefDto | null;
+}
+
+export interface ChangeFailureRateDetailsResponse {
+  workspaceId: string;
+  projectId: string | null;
+  repositoryId: string | null;
+  repositoryCount: number;
+  rangeStart: string;
+  rangeEnd: string;
+  timezone: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  /** Denominator across the whole window: finished production deployments. */
+  totalDeployments: number;
+  /** Numerator across the whole window: deployments counted as failures. */
+  failedDeployments: number;
+  failureRatePercent: number;
+  items: ChangeFailureRateDetailDto[];
+}

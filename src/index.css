@@ -3045,3 +3045,88 @@ button.alerts-status {
   background: rgba(115, 115, 115, 0.12);
   color: var(--text-secondary);
 }
+
+/* Change Failure Rate – breakdown banner, status badges and failure flags */
+.metric-details-summary-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  padding: 0.45rem 0.85rem;
+  border-radius: 99px;
+  border: 1px solid var(--stat-card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.metric-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.metric-status-badge--success {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.metric-status-badge--failure {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+}
+
+.metric-status-badge--cancelled,
+.metric-status-badge--pending {
+  background: rgba(115, 115, 115, 0.12);
+  color: var(--text-secondary);
+}
+
+.metric-failure-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metric-failure-flag {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.metric-failure-flag::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.metric-failure-flag--yes {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+}
+
+.metric-failure-flag--no {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.metric-failure-reason {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.metric-details-table tr.metric-details-row--failure td:first-child {
+  box-shadow: inset 3px 0 0 rgba(239, 68, 68, 0.6);
+}

@@ -7,6 +7,7 @@ import {
   fetchDeploymentFrequencyDetails,
   fetchChangeLeadTimeDetails,
   fetchRecoveryTimeDetails,
+  fetchChangeFailureRateDetails,
 } from "./api.js";
 import type {
   DoraMetricsFilters,
@@ -16,6 +17,7 @@ import type {
   DeploymentFrequencyDetailsResponse,
   ChangeLeadTimeDetailsResponse,
   RecoveryTimeDetailsResponse,
+  ChangeFailureRateDetailsResponse,
   MetricDetailsFilters,
 } from "./types.js";
 
@@ -113,6 +115,25 @@ export function useRecoveryTimeDetails(filters: MetricDetailsFilters) {
       ? queryKeys.recoveryTimeDetails(workspaceId, filters)
       : ["recovery-time-details-disabled"],
     queryFn: ({ signal }) => fetchRecoveryTimeDetails(filters, signal),
+    enabled: !!workspaceId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * React Query hook for Change Failure Rate drill-down details.
+ */
+export function useChangeFailureRateDetails(filters: MetricDetailsFilters) {
+  const { state } = useAuth();
+  const workspaceId = state.status === "authenticated"
+    ? state.currentMembership.workspaceId
+    : null;
+
+  return useQuery<ChangeFailureRateDetailsResponse>({
+    queryKey: workspaceId
+      ? queryKeys.changeFailureRateDetails(workspaceId, filters)
+      : ["change-failure-rate-details-disabled"],
+    queryFn: ({ signal }) => fetchChangeFailureRateDetails(filters, signal),
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
   });
