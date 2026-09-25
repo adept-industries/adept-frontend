@@ -144,11 +144,51 @@ describe("MetricDetailsPage", () => {
     });
   });
 
-  it("switches to other metric tabs and renders upcoming PR placeholder", async () => {
+  it("switches to Change Lead Time tab and renders CLT table", async () => {
     const user = userEvent.setup();
+    const CLT_FIXTURE = {
+      workspaceId: "ws-1",
+      projectId: null,
+      repositoryId: null,
+      repositoryCount: 1,
+      rangeStart: "2026-08-01T00:00:00Z",
+      rangeEnd: "2026-08-31T00:00:00Z",
+      timezone: "UTC",
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1,
+      items: [
+        {
+          prId: "pr-1",
+          prNumber: 142,
+          prTitle: "Add search index caching",
+          prUrl: "https://github.com/acme/engine/pull/142",
+          authorLogin: "rangaNP",
+          repositoryId: "repo-1",
+          repositoryName: "engine",
+          repositoryOwnerLogin: "acme",
+          repositoryFullName: "acme/engine",
+          firstCommitAt: "2026-09-20T14:15:00Z",
+          openedAt: "2026-09-20T16:00:00Z",
+          mergedAt: "2026-09-21T09:30:00Z",
+          deployedAt: "2026-09-21T09:42:00Z",
+          leadTimeSeconds: 70020,
+          codingTimeSeconds: 6300,
+          reviewTimeSeconds: 63000,
+          deployTimeSeconds: 720,
+          deploymentEnvironment: "production",
+          deploymentCommitSha: "abc1234",
+        },
+      ],
+    };
+
     server.use(
       http.get(`${API}/metrics/deployment-frequency/details`, () =>
-        HttpResponse.json(DETAILS_FIXTURE),
+        HttpResponse.json({ ...DETAILS_FIXTURE, items: [], totalElements: 0, totalPages: 0 }),
+      ),
+      http.get(`${API}/metrics/change-lead-time/details`, () =>
+        HttpResponse.json(CLT_FIXTURE),
       ),
     );
 
@@ -162,7 +202,41 @@ describe("MetricDetailsPage", () => {
     await user.click(leadTimeTab);
 
     expect(screen.getByText("Change Lead Time Details")).toBeInTheDocument();
-    expect(screen.getByText("Change Lead Time drill-down coming soon")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("acme/engine")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("rangaNP")).toBeInTheDocument();
+    // PR link
+    const prLink = screen.getByRole("link", { name: /142.*Add search index caching/i });
+    expect(prLink).toHaveAttribute("href", "https://github.com/acme/engine/pull/142");
+    expect(prLink).toHaveAttribute("target", "_blank");
+    // Lead time cell should show formatted duration
+    expect(screen.getByText(/19h 27m/i)).toBeInTheDocument();
+    // Pagination
+    expect(screen.getByText(/Showing 1.*of 1 pull requests/i)).toBeInTheDocument();
+  });
+
+  it("switches to Recovery Time tab and renders upcoming PR placeholder", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get(`${API}/metrics/deployment-frequency/details`, () =>
+        HttpResponse.json(DETAILS_FIXTURE),
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText("Deployment Frequency Details")).toBeInTheDocument();
+    });
+
+    const recoveryTab = screen.getByRole("tab", { name: "Recovery Time" });
+    await user.click(recoveryTab);
+
+    expect(screen.getByText("Recovery Time Details")).toBeInTheDocument();
+    expect(screen.getByText("Recovery Time drill-down coming soon")).toBeInTheDocument();
 
     const switchBtn = screen.getByRole("button", { name: "Switch to Deployment Frequency" });
     await user.click(switchBtn);

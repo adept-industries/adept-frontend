@@ -95,3 +95,49 @@ export interface MetricDetailsFilters extends DoraMetricsFilters {
   page?: number;
   size?: number;
 }
+
+/**
+ * One pull request row returned by the Change Lead Time details endpoint.
+ * All time-breakdown fields (coding/review/deploy) are null when the
+ * corresponding timestamp is missing from the raw data.
+ */
+export interface ChangeLeadTimeDetailDto {
+  prId: string;
+  prNumber: number;
+  prTitle: string;
+  prUrl: string | null;
+  authorLogin: string | null;
+  repositoryId: string;
+  repositoryName: string;
+  repositoryOwnerLogin: string | null;
+  repositoryFullName: string;
+  firstCommitAt: string | null;
+  openedAt: string | null;
+  mergedAt: string | null;
+  deployedAt: string;
+  /** Total lead time in seconds (deployedAt − firstCommitAt). */
+  leadTimeSeconds: number | null;
+  /** Coding stage in seconds (openedAt − firstCommitAt). */
+  codingTimeSeconds: number | null;
+  /** Review/merge stage in seconds (mergedAt − openedAt). */
+  reviewTimeSeconds: number | null;
+  /** Deploy stage in seconds (deployedAt − mergedAt). */
+  deployTimeSeconds: number | null;
+  deploymentEnvironment: string;
+  deploymentCommitSha: string | null;
+}
+
+export interface ChangeLeadTimeDetailsResponse {
+  workspaceId: string;
+  projectId: string | null;
+  repositoryId: string | null;
+  repositoryCount: number;
+  rangeStart: string;
+  rangeEnd: string;
+  timezone: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  items: ChangeLeadTimeDetailDto[];
+}

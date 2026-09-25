@@ -2957,3 +2957,28 @@ button.alerts-status {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+/* Change Lead Time – lead time cell with breakdown tooltip hint */
+.metric-lead-time-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--primary-light, #818cf8);
+  border-bottom: 1px dashed rgba(129, 140, 248, 0.45);
+  cursor: default;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.metric-lead-time-cell:hover {
+  color: #fff;
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+/* PR title link inside CLT table – non-monospace override */
+.metric-details-table .metric-commit-link {
+  font-family: inherit;
+  font-size: 0.83rem;
+  white-space: normal;
+}
