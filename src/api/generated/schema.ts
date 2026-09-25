@@ -652,6 +652,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/metrics/recovery-time/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Failed Deployment Recovery Time event details
+         * @description Returns paginated resolved incidents whose resolution falls inside the window, with detection/resolution times and correlated failed and recovery deployments. Open incidents are excluded.
+         */
+        get: operations["getRecoveryTimeDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics/series": {
         parameters: {
             query?: never;
@@ -1705,6 +1725,59 @@ export interface components {
             repositories: components["schemas"]["ProjectRepositoryResponse"][];
             /** Format: uuid */
             workspaceId: string;
+        };
+        RecoveryDeploymentRefDto: {
+            commitSha?: string;
+            environment?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: uuid */
+            id?: string;
+        };
+        RecoveryTimeDetailDto: {
+            /** Format: date-time */
+            detectedAt?: string;
+            failedDeployment?: components["schemas"]["RecoveryDeploymentRefDto"];
+            /** Format: uuid */
+            incidentId?: string;
+            recoveryDeployment?: components["schemas"]["RecoveryDeploymentRefDto"];
+            /** Format: int64 */
+            recoveryDurationSeconds?: number;
+            repositoryFullName?: string;
+            /** Format: uuid */
+            repositoryId?: string;
+            repositoryName?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            /** @enum {string} */
+            severity?: "UNKNOWN" | "SEV1" | "SEV2" | "SEV3" | "SEV4";
+            /** @enum {string} */
+            source?: "JIRA" | "MANUAL" | "GITHUB";
+            title?: string;
+        };
+        RecoveryTimeDetailsResponse: {
+            items?: components["schemas"]["RecoveryTimeDetailDto"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: date-time */
+            rangeEnd?: string;
+            /** Format: date-time */
+            rangeStart?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            /** Format: int32 */
+            size?: number;
+            timezone?: string;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: uuid */
+            workspaceId?: string;
         };
         RefreshRequest: {
             /** Format: uuid */
@@ -3878,6 +3951,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeploymentFrequencyDetailsResponse"];
+                };
+            };
+        };
+    };
+    getRecoveryTimeDetails: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecoveryTimeDetailsResponse"];
                 };
             };
         };
