@@ -7,6 +7,7 @@ import type {
   DeploymentFrequencyDetailsResponse,
   ChangeLeadTimeDetailsResponse,
   RecoveryTimeDetailsResponse,
+  ChangeFailureRateDetailsResponse,
   MetricDetailsFilters,
 } from "./types.js";
 
@@ -93,6 +94,20 @@ export function fetchRecoveryTimeDetails(
     {
       method: "GET",
       path: `/metrics/recovery-time/details${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
+}
+
+export function fetchChangeFailureRateDetails(
+  filters: MetricDetailsFilters,
+  signal?: AbortSignal,
+): Promise<ChangeFailureRateDetailsResponse> {
+  return apiRequest<ChangeFailureRateDetailsResponse>(
+    {
+      method: "GET",
+      path: `/metrics/change-failure-rate/details${buildSearchParams(filters)}`,
       auth: "bearer",
       signal,
     }

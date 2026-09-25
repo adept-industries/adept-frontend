@@ -59,6 +59,10 @@ export const queryKeys = {
   recoveryTimeDetails: (workspaceId: string, filters: MetricDetailsFilters) =>
     [workspaceId, "metrics", "recovery-time", "details", filters] as const,
 
+  /** Change failure rate details — workspace-scoped, filter-aware. */
+  changeFailureRateDetails: (workspaceId: string, filters: MetricDetailsFilters) =>
+    [workspaceId, "metrics", "change-failure-rate", "details", filters] as const,
+
   projectPullRequestRisks: (
     workspaceId: string,
     projectId: string,
