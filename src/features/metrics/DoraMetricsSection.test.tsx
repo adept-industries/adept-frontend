@@ -340,4 +340,18 @@ describe("DoraMetricsSection", () => {
     expect(within(selector).queryByRole("option", { name: "acme/frontend" })).not.toBeInTheDocument();
   });
 
+  it("links the Recovery Time card to its drill-down with the current scope", async () => {
+    renderSection({
+      selectedProjectId: "proj-123",
+      repositories: [{ id: "repo-1", fullName: "acme/api" }],
+    });
+
+    const moreLink = await screen.findByRole("link", { name: "View details for Recovery Time" });
+    const url = new URL(moreLink.getAttribute("href")!, "http://localhost");
+    expect(url.pathname).toBe("/dashboard/metrics/details");
+    expect(url.searchParams.get("metric")).toBe("FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS");
+    expect(url.searchParams.get("projectId")).toBe("proj-123");
+    expect(url.searchParams.get("preset")).toBeTruthy();
+  });
+
 });
