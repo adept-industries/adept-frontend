@@ -5,6 +5,7 @@ import { AppShell } from "../../components/layout/AppShell.js";
 import { useContext } from "react";
 import { ProjectContext } from "../projects/ProjectContext.js";
 import {
+  useChangeFailureRateDetails,
   useChangeLeadTimeDetails,
   useDeploymentFrequencyDetails,
   useDoraMetricsSeries,
@@ -13,8 +14,11 @@ import {
 } from "./useDoraMetrics.js";
 import { DoraMetricChart } from "./DoraMetricChart.js";
 import type {
+  ChangeFailureRateDetailDto,
+  ChangeFailureRateDetailsResponse,
   ChangeLeadTimeDetailDto,
   DeploymentFrequencyDetailDto,
+  DeploymentStatus,
   DoraMetricsFilters,
   IncidentSeverity,
   IncidentSource,
@@ -227,6 +231,33 @@ const SEVERITY_CLASS: Record<IncidentSeverity, string> = {
   UNKNOWN: "metric-severity-badge--unknown",
 };
 
+const DEPLOYMENT_STATUS_CLASS: Record<DeploymentStatus, string> = {
+  SUCCESS: "metric-status-badge--success",
+  FAILURE: "metric-status-badge--failure",
+  CANCELLED: "metric-status-badge--cancelled",
+  QUEUED: "metric-status-badge--pending",
+  IN_PROGRESS: "metric-status-badge--pending",
+};
+
+function formatDeploymentStatus(status: DeploymentStatus): string {
+  return status === "IN_PROGRESS" ? "IN PROGRESS" : status;
+}
+
+function formatFailureBreakdown(data: ChangeFailureRateDetailsResponse): string {
+  const noun = data.totalDeployments === 1 ? "deployment" : "deployments";
+  return `Showing ${data.totalDeployments} total production ${noun} `
+    + `(${data.failedDeployments} failed = ${data.failureRatePercent.toFixed(1)}% failure rate)`;
+}
+
+function FailureReason({ item }: { item: ChangeFailureRateDetailDto }) {
+  if (!item.isFailure) return null;
+  const reasons = [
+    item.status === "FAILURE" ? "deployment failed" : null,
+    item.incident ? "linked incident" : null,
+  ].filter(Boolean);
+  return <span className="metric-failure-reason">{reasons.join(" + ")}</span>;
+}
+
 function DeploymentShaChip({
   deployment,
   repositoryFullName,
@@ -401,6 +432,20 @@ export function MetricDetailsPage() {
   // Fetch recovery time details when active
   const recoveryTimeQuery = useRecoveryTimeDetails(
     activeMetric === "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS"
+      ? {
+          projectId: projectIdParam,
+          repositoryId: repositoryIdParam,
+          from: range.from,
+          to: range.to,
+          page,
+          size: 20,
+        }
+      : { projectId: null, repositoryId: null },
+  );
+
+  // Fetch change failure rate details when active
+  const changeFailureRateQuery = useChangeFailureRateDetails(
+    activeMetric === "CHANGE_FAILURE_RATE_PERCENT"
       ? {
           projectId: projectIdParam,
           repositoryId: repositoryIdParam,
@@ -999,24 +1044,180 @@ export function MetricDetailsPage() {
             </div>
           </>
         ) : (
-          /* Placeholder for PR 4 rollout */
-          <div className="metric-details-table-panel">
-            <div className="metric-details-empty">
-              <h3>{activeTabConfig.label} drill-down coming soon</h3>
-              <p>
-                Detailed raw event logs for {activeTabConfig.label} will be rolled out in an
-                upcoming update.
-              </p>
-              <button
-                type="button"
-                className="dora-filter-btn"
-                style={{ marginTop: "0.5rem" }}
-                onClick={() => handleTabChange("DEPLOYMENT_FREQUENCY")}
+          <>
+            {changeFailureRateQuery.data && changeFailureRateQuery.data.totalDeployments > 0 && (
+              <div
+                className="metric-details-summary-chip"
+                role="status"
+                aria-label="Change failure rate breakdown"
               >
-                Switch to Deployment Frequency
-              </button>
+                {formatFailureBreakdown(changeFailureRateQuery.data)}
+              </div>
+            )}
+            <div className="metric-details-table-panel">
+              {changeFailureRateQuery.isLoading ? (
+                <div className="metric-details-empty" aria-busy="true">
+                  <p>Loading production deployments&hellip;</p>
+                </div>
+              ) : changeFailureRateQuery.error ? (
+                <div className="metric-details-empty" role="alert">
+                  <h3>Production deployments could not be loaded</h3>
+                  <p>
+                    {changeFailureRateQuery.error instanceof Error
+                      ? changeFailureRateQuery.error.message
+                      : "Please try again."}
+                  </p>
+                  <button
+                    type="button"
+                    className="dora-filter-btn"
+                    onClick={() => void changeFailureRateQuery.refetch()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : !changeFailureRateQuery.data ||
+                changeFailureRateQuery.data.items.length === 0 ? (
+                <div className="metric-details-empty">
+                  <h3>No finished production deployments</h3>
+                  <p>
+                    There are no finished production deployments recorded in this time range for
+                    the selected repository scope.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <table
+                    className="metric-details-table"
+                    aria-label="Production deployments counted in change failure rate"
+                  >
+                    <thead>
+                      <tr>
+                        <th scope="col">Finished Time</th>
+                        <th scope="col">Repository</th>
+                        <th scope="col">Environment</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Commit SHA</th>
+                        <th scope="col">Counted as Failure</th>
+                        <th scope="col">Linked Incident</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {changeFailureRateQuery.data.items.map((item: ChangeFailureRateDetailDto) => (
+                        <tr
+                          key={item.deploymentId}
+                          className={item.isFailure ? "metric-details-row--failure" : undefined}
+                        >
+                          <td>{formatTimestamp(item.finishedAt, workspaceTimezone)}</td>
+                          <td><strong>{item.repositoryFullName ?? item.repositoryName}</strong></td>
+                          <td>
+                            <span className="metric-env-badge">{item.environment}</span>
+                          </td>
+                          <td>
+                            <span
+                              className={`metric-status-badge ${
+                                DEPLOYMENT_STATUS_CLASS[item.status] ?? "metric-status-badge--pending"
+                              }`}
+                            >
+                              {formatDeploymentStatus(item.status)}
+                            </span>
+                          </td>
+                          <td>
+                            {item.commitSha ? (
+                              item.repositoryFullName ? (
+                                <a
+                                  href={`https://github.com/${item.repositoryFullName}/commit/${item.commitSha}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="metric-commit-link"
+                                  title={`View commit ${item.commitSha} on GitHub`}
+                                >
+                                  <code>{item.commitSha.slice(0, 7)}</code>
+                                  <span className="metric-commit-arrow" aria-hidden="true">{"↗"}</span>
+                                </a>
+                              ) : (
+                                <code className="metric-commit-sha" title={item.commitSha}>
+                                  {item.commitSha.slice(0, 7)}
+                                </code>
+                              )
+                            ) : (
+                              <span className="metric-details-muted">&mdash;</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="metric-failure-cell">
+                              <span
+                                className={`metric-failure-flag ${
+                                  item.isFailure ? "metric-failure-flag--yes" : "metric-failure-flag--no"
+                                }`}
+                              >
+                                {item.isFailure ? "Yes" : "No"}
+                              </span>
+                              <FailureReason item={item} />
+                            </div>
+                          </td>
+                          <td>
+                            {item.incident ? (
+                              <div className="metric-incident-cell">
+                                <span className="metric-incident-title">{item.incident.title}</span>
+                                <span
+                                  className={`metric-severity-badge ${
+                                    SEVERITY_CLASS[item.incident.severity] ?? SEVERITY_CLASS.UNKNOWN
+                                  }`}
+                                >
+                                  {item.incident.severity === "UNKNOWN" ? "Unknown" : item.incident.severity}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="metric-details-muted">&mdash;</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination */}
+                  <div className="metric-details-pagination">
+                    <span>
+                      Showing{" "}
+                      {changeFailureRateQuery.data.totalElements === 0
+                        ? 0
+                        : changeFailureRateQuery.data.page * changeFailureRateQuery.data.size + 1}
+                      –
+                      {Math.min(
+                        (changeFailureRateQuery.data.page + 1) * changeFailureRateQuery.data.size,
+                        changeFailureRateQuery.data.totalElements,
+                      )}{" "}
+                      of {changeFailureRateQuery.data.totalElements} deployments
+                    </span>
+
+                    <div className="metric-details-pagination-buttons">
+                      <button
+                        type="button"
+                        className="metric-pagination-btn"
+                        onClick={() => handlePageChange(Math.max(0, page - 1))}
+                        disabled={page === 0}
+                      >
+                        Previous
+                      </button>
+                      <span>
+                        Page {changeFailureRateQuery.data.page + 1} of{" "}
+                        {Math.max(1, changeFailureRateQuery.data.totalPages)}
+                      </span>
+                      <button
+                        type="button"
+                        className="metric-pagination-btn"
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page + 1 >= changeFailureRateQuery.data.totalPages}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+          </>
         )}
 
       </div>
