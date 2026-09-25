@@ -141,3 +141,50 @@ export interface ChangeLeadTimeDetailsResponse {
   totalPages: number;
   items: ChangeLeadTimeDetailDto[];
 }
+
+export type IncidentSource = "JIRA" | "MANUAL" | "GITHUB";
+export type IncidentSeverity = "UNKNOWN" | "SEV1" | "SEV2" | "SEV3" | "SEV4";
+
+/** Compact reference to a deployment correlated with an incident. */
+export interface RecoveryDeploymentRefDto {
+  id: string;
+  commitSha: string | null;
+  environment: string | null;
+  finishedAt: string | null;
+}
+
+/**
+ * One resolved incident returned by the Recovery Time details endpoint.
+ * `resolvedAt` is the instant used by the metric: the recovery deployment's
+ * finish time when linked, otherwise the incident's recorded resolution time.
+ */
+export interface RecoveryTimeDetailDto {
+  incidentId: string;
+  title: string;
+  source: IncidentSource;
+  severity: IncidentSeverity;
+  repositoryId: string;
+  repositoryName: string;
+  repositoryFullName: string | null;
+  detectedAt: string;
+  resolvedAt: string;
+  /** Recovery duration in seconds (resolvedAt − detectedAt). */
+  recoveryDurationSeconds: number | null;
+  failedDeployment: RecoveryDeploymentRefDto | null;
+  recoveryDeployment: RecoveryDeploymentRefDto | null;
+}
+
+export interface RecoveryTimeDetailsResponse {
+  workspaceId: string;
+  projectId: string | null;
+  repositoryId: string | null;
+  repositoryCount: number;
+  rangeStart: string;
+  rangeEnd: string;
+  timezone: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  items: RecoveryTimeDetailDto[];
+}

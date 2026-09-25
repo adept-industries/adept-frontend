@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
@@ -91,6 +91,60 @@ const DETAILS_FIXTURE = {
       source: "GITHUB_WORKFLOW",
       commitSha: "9876543210fedcba",
       durationSeconds: null,
+    },
+  ],
+};
+
+const RECOVERY_FIXTURE = {
+  workspaceId: "ws-1",
+  projectId: null,
+  repositoryId: null,
+  repositoryCount: 1,
+  rangeStart: "2026-09-01T00:00:00Z",
+  rangeEnd: "2026-09-08T00:00:00Z",
+  timezone: "UTC",
+  page: 0,
+  size: 20,
+  totalElements: 2,
+  totalPages: 1,
+  items: [
+    {
+      incidentId: "inc-1",
+      title: "Checkout returns 500s",
+      source: "GITHUB",
+      severity: "SEV1",
+      repositoryId: "repo-1",
+      repositoryName: "engine",
+      repositoryFullName: "acme/engine",
+      detectedAt: "2026-09-02T10:00:00Z",
+      resolvedAt: "2026-09-02T12:30:00Z",
+      recoveryDurationSeconds: 9000,
+      failedDeployment: {
+        id: "dep-fail",
+        commitSha: "bad0001ffffffff",
+        environment: "production",
+        finishedAt: "2026-09-02T09:58:00Z",
+      },
+      recoveryDeployment: {
+        id: "dep-fix",
+        commitSha: "good002eeeeeeee",
+        environment: "production",
+        finishedAt: "2026-09-02T12:30:00Z",
+      },
+    },
+    {
+      incidentId: "inc-2",
+      title: "Queue backlog",
+      source: "MANUAL",
+      severity: "UNKNOWN",
+      repositoryId: "repo-1",
+      repositoryName: "engine",
+      repositoryFullName: "acme/engine",
+      detectedAt: "2026-09-05T08:00:00Z",
+      resolvedAt: "2026-09-05T08:45:00Z",
+      recoveryDurationSeconds: 2700,
+      failedDeployment: null,
+      recoveryDeployment: null,
     },
   ],
 };
@@ -218,7 +272,7 @@ describe("MetricDetailsPage", () => {
     expect(screen.getByText(/Showing 1.*of 1 pull requests/i)).toBeInTheDocument();
   });
 
-  it("switches to Recovery Time tab and renders upcoming PR placeholder", async () => {
+  it("switches to Change Failure Rate tab and renders upcoming PR placeholder", async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${API}/metrics/deployment-frequency/details`, () =>
@@ -232,16 +286,119 @@ describe("MetricDetailsPage", () => {
       expect(screen.getByText("Deployment Frequency Details")).toBeInTheDocument();
     });
 
-    const recoveryTab = screen.getByRole("tab", { name: "Recovery Time" });
-    await user.click(recoveryTab);
+    const cfrTab = screen.getByRole("tab", { name: "Change Failure Rate" });
+    await user.click(cfrTab);
 
-    expect(screen.getByText("Recovery Time Details")).toBeInTheDocument();
-    expect(screen.getByText("Recovery Time drill-down coming soon")).toBeInTheDocument();
+    expect(screen.getByText("Change Failure Rate Details")).toBeInTheDocument();
+    expect(screen.getByText("Change Failure Rate drill-down coming soon")).toBeInTheDocument();
 
     const switchBtn = screen.getByRole("button", { name: "Switch to Deployment Frequency" });
     await user.click(switchBtn);
 
     expect(screen.getByText("Deployment Frequency Details")).toBeInTheDocument();
+  });
+
+  it("renders resolved incidents on the Recovery Time tab with correlated deployments", async () => {
+    const requests: URL[] = [];
+    server.use(
+      http.get(`${API}/metrics/recovery-time/details`, ({ request }) => {
+        requests.push(new URL(request.url));
+        return HttpResponse.json(RECOVERY_FIXTURE);
+      }),
+    );
+
+    renderPage("/dashboard/metrics/details?metric=FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS&projectId=proj-1&preset=7d");
+
+    expect(screen.getByText("Recovery Time Details")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("Checkout returns 500s")).toBeInTheDocument();
+    });
+
+    const table = screen.getByRole("table", { name: /Resolved incidents/i });
+    const rows = within(table).getAllByRole("row");
+    expect(rows).toHaveLength(3);
+
+    const linkedRow = rows[1];
+    expect(within(linkedRow).getByText("GitHub")).toBeInTheDocument();
+    expect(within(linkedRow).getByText("SEV1")).toBeInTheDocument();
+    expect(within(linkedRow).getByText("acme/engine")).toBeInTheDocument();
+    expect(within(linkedRow).getByText("2h 30m")).toBeInTheDocument();
+    expect(within(linkedRow).getByRole("link", { name: /bad0001/ })).toHaveAttribute(
+      "href",
+      "https://github.com/acme/engine/commit/bad0001ffffffff",
+    );
+    expect(within(linkedRow).getByRole("link", { name: /good002/ })).toHaveAttribute(
+      "href",
+      "https://github.com/acme/engine/commit/good002eeeeeeee",
+    );
+
+    const manualRow = rows[2];
+    expect(within(manualRow).getByText("Manual")).toBeInTheDocument();
+    expect(within(manualRow).getByText("Unknown")).toBeInTheDocument();
+    expect(within(manualRow).getByText("45m")).toBeInTheDocument();
+    expect(within(manualRow).queryByRole("link")).not.toBeInTheDocument();
+
+    expect(screen.getByText(/Showing 1.*of 2 incidents/i)).toBeInTheDocument();
+
+    const lastRequest = requests.at(-1)!;
+    expect(lastRequest.searchParams.get("projectId")).toBe("proj-1");
+    expect(lastRequest.searchParams.get("page")).toBe("0");
+    expect(lastRequest.searchParams.get("size")).toBe("20");
+    expect(lastRequest.searchParams.get("from")).toBeTruthy();
+    expect(lastRequest.searchParams.get("to")).toBeTruthy();
+  });
+
+  it("explains that open incidents are excluded from recovery time", async () => {
+    server.use(
+      http.get(`${API}/metrics/recovery-time/details`, () =>
+        HttpResponse.json({ ...RECOVERY_FIXTURE, items: [], totalElements: 0, totalPages: 0 }),
+      ),
+    );
+
+    renderPage("/dashboard/metrics/details?metric=FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS");
+
+    const notice = screen.getByRole("note");
+    expect(notice).toHaveTextContent(/Only resolved incidents are counted/i);
+    expect(notice).toHaveTextContent(/Open incidents are excluded/i);
+    expect(within(notice).getByRole("link", { name: "Alerts" })).toHaveAttribute(
+      "href",
+      "/dashboard/alerts",
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("No resolved incidents")).toBeInTheDocument();
+    });
+  });
+
+  it("requests the next page of resolved incidents", async () => {
+    const user = userEvent.setup();
+    const pages: string[] = [];
+    server.use(
+      http.get(`${API}/metrics/recovery-time/details`, ({ request }) => {
+        const page = new URL(request.url).searchParams.get("page") ?? "0";
+        pages.push(page);
+        return HttpResponse.json({
+          ...RECOVERY_FIXTURE,
+          page: Number(page),
+          totalElements: 42,
+          totalPages: 3,
+        });
+      }),
+    );
+
+    renderPage("/dashboard/metrics/details?metric=FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS");
+
+    await waitFor(() => {
+      expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Page 2 of 3")).toBeInTheDocument();
+    });
+    expect(pages).toContain("1");
   });
 
   it("provides back link navigation to /dashboard", async () => {

@@ -6,6 +6,7 @@ import {
   fetchDoraMetricsSeries,
   fetchDeploymentFrequencyDetails,
   fetchChangeLeadTimeDetails,
+  fetchRecoveryTimeDetails,
 } from "./api.js";
 import type {
   DoraMetricsFilters,
@@ -14,6 +15,7 @@ import type {
   DoraMetricsSeriesResponse,
   DeploymentFrequencyDetailsResponse,
   ChangeLeadTimeDetailsResponse,
+  RecoveryTimeDetailsResponse,
   MetricDetailsFilters,
 } from "./types.js";
 
@@ -92,6 +94,25 @@ export function useChangeLeadTimeDetails(filters: MetricDetailsFilters) {
       ? queryKeys.changeLeadTimeDetails(workspaceId, filters)
       : ["change-lead-time-details-disabled"],
     queryFn: ({ signal }) => fetchChangeLeadTimeDetails(filters, signal),
+    enabled: !!workspaceId,
+    staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * React Query hook for Failed Deployment Recovery Time drill-down details.
+ */
+export function useRecoveryTimeDetails(filters: MetricDetailsFilters) {
+  const { state } = useAuth();
+  const workspaceId = state.status === "authenticated"
+    ? state.currentMembership.workspaceId
+    : null;
+
+  return useQuery<RecoveryTimeDetailsResponse>({
+    queryKey: workspaceId
+      ? queryKeys.recoveryTimeDetails(workspaceId, filters)
+      : ["recovery-time-details-disabled"],
+    queryFn: ({ signal }) => fetchRecoveryTimeDetails(filters, signal),
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
   });

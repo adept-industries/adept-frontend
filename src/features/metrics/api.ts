@@ -6,6 +6,7 @@ import type {
   DoraMetricsSeriesResponse,
   DeploymentFrequencyDetailsResponse,
   ChangeLeadTimeDetailsResponse,
+  RecoveryTimeDetailsResponse,
   MetricDetailsFilters,
 } from "./types.js";
 
@@ -78,6 +79,20 @@ export function fetchChangeLeadTimeDetails(
     {
       method: "GET",
       path: `/metrics/change-lead-time/details${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
+}
+
+export function fetchRecoveryTimeDetails(
+  filters: MetricDetailsFilters,
+  signal?: AbortSignal,
+): Promise<RecoveryTimeDetailsResponse> {
+  return apiRequest<RecoveryTimeDetailsResponse>(
+    {
+      method: "GET",
+      path: `/metrics/recovery-time/details${buildSearchParams(filters)}`,
       auth: "bearer",
       signal,
     }
