@@ -592,6 +592,26 @@ export interface paths {
         patch: operations["updateProjectTracking"];
         trace?: never;
     };
+    "/api/v1/metrics/change-lead-time/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Change Lead Time event details
+         * @description Returns paginated pull requests with their lead-time breakdown (coding, review, and deploy stages) based on successful production deployments.
+         */
+        get: operations["getChangeLeadTimeDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics/deployment-frequency/details": {
         parameters: {
             query?: never;
@@ -621,7 +641,7 @@ export interface paths {
         };
         /**
          * Get scoped DORA metric event details
-         * @description Returns paginated raw event records for a specific DORA metric.
+         * @description Returns paginated raw event records for a specific DORA metric. Defaults to Deployment Frequency when no metric type is specified.
          */
         get: operations["getDetails"];
         put?: never;
@@ -1158,6 +1178,62 @@ export interface components {
             workspaceSelectionRequired: false;
             /** @description Active workspace memberships. Empty when the account must create a workspace. */
             workspaces: components["schemas"]["WorkspaceSummaryResponse"][];
+        };
+        ChangeLeadTimeDetailDto: {
+            authorLogin?: string;
+            /** Format: int64 */
+            codingTimeSeconds?: number;
+            /** Format: int64 */
+            deployTimeSeconds?: number;
+            /** Format: date-time */
+            deployedAt?: string;
+            deploymentCommitSha?: string;
+            deploymentEnvironment?: string;
+            /** Format: date-time */
+            firstCommitAt?: string;
+            /** Format: int64 */
+            leadTimeSeconds?: number;
+            /** Format: date-time */
+            mergedAt?: string;
+            /** Format: date-time */
+            openedAt?: string;
+            /** Format: uuid */
+            prId?: string;
+            /** Format: int32 */
+            prNumber?: number;
+            prTitle?: string;
+            prUrl?: string;
+            repositoryFullName?: string;
+            /** Format: uuid */
+            repositoryId?: string;
+            repositoryName?: string;
+            repositoryOwnerLogin?: string;
+            /** Format: int64 */
+            reviewTimeSeconds?: number;
+        };
+        ChangeLeadTimeDetailsResponse: {
+            items?: components["schemas"]["ChangeLeadTimeDetailDto"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: uuid */
+            projectId?: string;
+            /** Format: date-time */
+            rangeEnd?: string;
+            /** Format: date-time */
+            rangeStart?: string;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            /** Format: int32 */
+            size?: number;
+            timezone?: string;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: uuid */
+            workspaceId?: string;
         };
         CreateAlertRuleRequest: {
             /** @enum {string} */
@@ -3717,6 +3793,35 @@ export interface operations {
             };
         };
     };
+    getChangeLeadTimeDetails: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                from?: string;
+                to?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeLeadTimeDetailsResponse"];
+                };
+            };
+        };
+    };
     getDeploymentFrequencyDetails: {
         parameters: {
             query?: {
@@ -3766,7 +3871,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Paginated event details for the requested metric. */
             200: {
                 headers: {
                     [name: string]: unknown;
