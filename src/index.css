@@ -2982,3 +2982,66 @@ button.alerts-status {
   font-size: 0.83rem;
   white-space: normal;
 }
+
+/* Recovery Time – resolved-incidents notice and incident cells */
+.metric-details-notice {
+  padding: 0.75rem 1rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.metric-details-notice a {
+  color: var(--primary-light, #818cf8);
+  font-weight: 600;
+}
+
+.metric-incident-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.metric-incident-title {
+  font-weight: 600;
+}
+
+.metric-severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.metric-severity-badge--sev1 {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+}
+
+.metric-severity-badge--sev2 {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+}
+
+.metric-severity-badge--sev3 {
+  background: rgba(245, 158, 11, 0.14);
+  color: #f59e0b;
+}
+
+.metric-severity-badge--sev4 {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary-light, #818cf8);
+}
+
+.metric-severity-badge--unknown {
+  background: rgba(115, 115, 115, 0.12);
+  color: var(--text-secondary);
+}

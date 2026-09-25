@@ -9,13 +9,18 @@ import {
   useDeploymentFrequencyDetails,
   useDoraMetricsSeries,
   useDoraMetricsSummary,
+  useRecoveryTimeDetails,
 } from "./useDoraMetrics.js";
 import { DoraMetricChart } from "./DoraMetricChart.js";
 import type {
   ChangeLeadTimeDetailDto,
   DeploymentFrequencyDetailDto,
   DoraMetricsFilters,
+  IncidentSeverity,
+  IncidentSource,
   MetricRating,
+  RecoveryDeploymentRefDto,
+  RecoveryTimeDetailDto,
 } from "./types.js";
 
 const RATING_CLASS: Record<MetricRating, string> = {
@@ -208,6 +213,55 @@ function formatSource(source: DeploymentFrequencyDetailDto["source"]): string {
   }
 }
 
+const INCIDENT_SOURCE_LABEL: Record<IncidentSource, string> = {
+  GITHUB: "GitHub",
+  JIRA: "Jira",
+  MANUAL: "Manual",
+};
+
+const SEVERITY_CLASS: Record<IncidentSeverity, string> = {
+  SEV1: "metric-severity-badge--sev1",
+  SEV2: "metric-severity-badge--sev2",
+  SEV3: "metric-severity-badge--sev3",
+  SEV4: "metric-severity-badge--sev4",
+  UNKNOWN: "metric-severity-badge--unknown",
+};
+
+function DeploymentShaChip({
+  deployment,
+  repositoryFullName,
+  label,
+}: {
+  deployment: RecoveryDeploymentRefDto | null;
+  repositoryFullName: string | null;
+  label: string;
+}) {
+  if (!deployment || !deployment.commitSha) {
+    return <span className="metric-details-muted" title={`No ${label} deployment correlated`}>&mdash;</span>;
+  }
+  const shortSha = deployment.commitSha.slice(0, 7);
+  const title = [
+    `${label} deployment ${deployment.commitSha}`,
+    deployment.environment ? `in ${deployment.environment}` : null,
+  ].filter(Boolean).join(" ");
+
+  if (!repositoryFullName) {
+    return <code className="metric-commit-sha" title={title}>{shortSha}</code>;
+  }
+  return (
+    <a
+      href={`https://github.com/${repositoryFullName}/commit/${deployment.commitSha}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="metric-commit-link"
+      title={`${title} — view on GitHub`}
+    >
+      <code>{shortSha}</code>
+      <span className="metric-commit-arrow" aria-hidden="true">{"↗"}</span>
+    </a>
+  );
+}
+
 export function MetricDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { state } = useAuth();
@@ -333,6 +387,20 @@ export function MetricDetailsPage() {
   // Fetch change lead time details when active
   const changeLeadTimeQuery = useChangeLeadTimeDetails(
     activeMetric === "CHANGE_LEAD_TIME_HOURS"
+      ? {
+          projectId: projectIdParam,
+          repositoryId: repositoryIdParam,
+          from: range.from,
+          to: range.to,
+          page,
+          size: 20,
+        }
+      : { projectId: null, repositoryId: null },
+  );
+
+  // Fetch recovery time details when active
+  const recoveryTimeQuery = useRecoveryTimeDetails(
+    activeMetric === "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS"
       ? {
           projectId: projectIdParam,
           repositoryId: repositoryIdParam,
@@ -786,8 +854,152 @@ export function MetricDetailsPage() {
               </>
             )}
           </div>
+        ) : activeMetric === "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" ? (
+          <>
+            <div className="metric-details-notice" role="note">
+              <strong>Only resolved incidents are counted.</strong>{" "}
+              Recovery time includes incidents whose resolution falls inside this window. When a
+              recovery deployment is linked, its finish time is used as the resolution time.
+              Open incidents are excluded and tracked under{" "}
+              <Link to="/dashboard/alerts">Alerts</Link>.
+            </div>
+            <div className="metric-details-table-panel">
+              {recoveryTimeQuery.isLoading ? (
+                <div className="metric-details-empty" aria-busy="true">
+                  <p>Loading resolved incidents&hellip;</p>
+                </div>
+              ) : recoveryTimeQuery.error ? (
+                <div className="metric-details-empty" role="alert">
+                  <h3>Resolved incidents could not be loaded</h3>
+                  <p>
+                    {recoveryTimeQuery.error instanceof Error
+                      ? recoveryTimeQuery.error.message
+                      : "Please try again."}
+                  </p>
+                  <button
+                    type="button"
+                    className="dora-filter-btn"
+                    onClick={() => void recoveryTimeQuery.refetch()}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : !recoveryTimeQuery.data ||
+                recoveryTimeQuery.data.items.length === 0 ? (
+                <div className="metric-details-empty">
+                  <h3>No resolved incidents</h3>
+                  <p>
+                    No incidents were resolved in this time range for the selected repository
+                    scope.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <table
+                    className="metric-details-table"
+                    aria-label="Resolved incidents contributing to recovery time"
+                  >
+                    <thead>
+                      <tr>
+                        <th scope="col">Incident</th>
+                        <th scope="col">Repository</th>
+                        <th scope="col">Severity</th>
+                        <th scope="col">Detected</th>
+                        <th scope="col">Resolved</th>
+                        <th scope="col">Recovery Time</th>
+                        <th scope="col">Failed Deployment</th>
+                        <th scope="col">Recovery Deployment</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recoveryTimeQuery.data.items.map((item: RecoveryTimeDetailDto) => (
+                        <tr key={item.incidentId}>
+                          <td>
+                            <div className="metric-incident-cell">
+                              <span className="metric-incident-title">{item.title}</span>
+                              <span className="metric-source-badge">
+                                {INCIDENT_SOURCE_LABEL[item.source] ?? item.source}
+                              </span>
+                            </div>
+                          </td>
+                          <td><strong>{item.repositoryFullName ?? item.repositoryName}</strong></td>
+                          <td>
+                            <span className={`metric-severity-badge ${SEVERITY_CLASS[item.severity] ?? SEVERITY_CLASS.UNKNOWN}`}>
+                              {item.severity === "UNKNOWN" ? "Unknown" : item.severity}
+                            </span>
+                          </td>
+                          <td>{formatTimestamp(item.detectedAt, workspaceTimezone)}</td>
+                          <td>{formatTimestamp(item.resolvedAt, workspaceTimezone)}</td>
+                          <td>
+                            <span className="metric-lead-time-cell">
+                              {item.recoveryDurationSeconds != null
+                                ? formatDuration(item.recoveryDurationSeconds)
+                                : <span className="metric-details-muted">&mdash;</span>}
+                            </span>
+                          </td>
+                          <td>
+                            <DeploymentShaChip
+                              deployment={item.failedDeployment}
+                              repositoryFullName={item.repositoryFullName}
+                              label="Failed"
+                            />
+                          </td>
+                          <td>
+                            <DeploymentShaChip
+                              deployment={item.recoveryDeployment}
+                              repositoryFullName={item.repositoryFullName}
+                              label="Recovery"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination */}
+                  <div className="metric-details-pagination">
+                    <span>
+                      Showing{" "}
+                      {recoveryTimeQuery.data.totalElements === 0
+                        ? 0
+                        : recoveryTimeQuery.data.page * recoveryTimeQuery.data.size + 1}
+                      –
+                      {Math.min(
+                        (recoveryTimeQuery.data.page + 1) * recoveryTimeQuery.data.size,
+                        recoveryTimeQuery.data.totalElements,
+                      )}{" "}
+                      of {recoveryTimeQuery.data.totalElements} incidents
+                    </span>
+
+                    <div className="metric-details-pagination-buttons">
+                      <button
+                        type="button"
+                        className="metric-pagination-btn"
+                        onClick={() => handlePageChange(Math.max(0, page - 1))}
+                        disabled={page === 0}
+                      >
+                        Previous
+                      </button>
+                      <span>
+                        Page {recoveryTimeQuery.data.page + 1} of{" "}
+                        {Math.max(1, recoveryTimeQuery.data.totalPages)}
+                      </span>
+                      <button
+                        type="button"
+                        className="metric-pagination-btn"
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page + 1 >= recoveryTimeQuery.data.totalPages}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
         ) : (
-          /* Placeholder for PR 3, 4 rollout */
+          /* Placeholder for PR 4 rollout */
           <div className="metric-details-table-panel">
             <div className="metric-details-empty">
               <h3>{activeTabConfig.label} drill-down coming soon</h3>
