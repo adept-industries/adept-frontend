@@ -64,8 +64,8 @@ async function waitForJiraProjectSync(
 function isRepoDeletedFromGithub(repo: RepositoryResponse, githubLastSyncedAt?: string): boolean {
   return Boolean(
     githubLastSyncedAt &&
-      !repo.trackingEnabled &&
-      (!repo.lastSyncedAt || new Date(repo.lastSyncedAt).getTime() < new Date(githubLastSyncedAt).getTime())
+    !repo.trackingEnabled &&
+    (!repo.lastSyncedAt || new Date(repo.lastSyncedAt).getTime() < new Date(githubLastSyncedAt).getTime())
   );
 }
 
@@ -700,7 +700,7 @@ export function IntegrationsPage() {
           >
             <strong style={{ color: "var(--primary-light, #818cf8)" }}>Tip:</strong>
             <span>
-              To add or remove repositories, update access in <strong>GitHub Settings &rarr; GitHub Apps &rarr; Adept</strong>, then click <strong>Sync Repositories</strong>.
+              To add or remove repositories, update access in <strong>GitHub Settings &rarr; Applications &rarr; Adept-Production</strong>, then click <strong>Configure</strong>.
             </span>
           </div>
 
@@ -907,12 +907,12 @@ export function IntegrationsPage() {
                                   cursor: isUnavailable ? "not-allowed" : "pointer",
                                   ...(glowingRepoId === repo.id
                                     ? {
-                                        boxShadow: "0 0 12px 2px rgba(239, 68, 68, 0.8)",
-                                        borderColor: "#ef4444",
-                                        color: "#fca5a5",
-                                        fontWeight: 700,
-                                        animation: "pulse 1.5s infinite",
-                                      }
+                                      boxShadow: "0 0 12px 2px rgba(239, 68, 68, 0.8)",
+                                      borderColor: "#ef4444",
+                                      color: "#fca5a5",
+                                      fontWeight: 700,
+                                      animation: "pulse 1.5s infinite",
+                                    }
                                     : {}),
                                 }}
                               >
