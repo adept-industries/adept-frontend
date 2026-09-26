@@ -2601,6 +2601,15 @@ button.alerts-status {
 
 .metric-details-header {
   display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.metric-details-header-left {
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
@@ -3205,5 +3214,316 @@ button.alerts-status {
   .metric-details-controls-bar .dora-filter-btn {
     padding: 0 0.25rem !important;
     font-size: 0.7rem !important;
+  }
+}
+
+/* ── PDF Download Button ────────────────────────────────────────────────── */
+
+.metric-pdf-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--primary-light, #818cf8);
+  background: rgba(129, 140, 248, 0.08);
+  border: 1px solid rgba(129, 140, 248, 0.3);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: center;
+  line-height: 1;
+}
+
+.metric-pdf-download-btn:hover {
+  background: rgba(129, 140, 248, 0.16);
+  border-color: rgba(129, 140, 248, 0.55);
+  color: #a5b4fc;
+  transform: translateY(-1px);
+}
+
+.metric-pdf-download-btn:active {
+  transform: translateY(0);
+}
+
+.metric-pdf-download-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Print-only metadata block (hidden on screen, visible in PDF) ──────── */
+
+.metric-pdf-meta {
+  display: none;
+}
+
+/* ── @media print – PDF layout ─────────────────────────────────────────── */
+
+@media print {
+  /* Hide interactive chrome */
+  .app-shell-sidebar,
+  .app-shell-topbar,
+  .metric-details-header,
+  .metric-details-back-link,
+  .metric-details-tabs,
+  .metric-details-controls-bar,
+  .metric-details-pagination,
+  .metric-pdf-download-btn,
+  .dora-filter-bar,
+  [role="tablist"],
+  nav {
+    display: none !important;
+  }
+
+  /* Remove the main layout wrapper constraints.
+     padding: 1.5cm compensates for @page { margin: 0 } below,
+     which suppresses Chrome's built-in URL / page-number footer. */
+  body,
+  .app-shell,
+  .app-shell-content,
+  .metric-details-container {
+    all: unset;
+    display: block !important;
+    margin: 0 !important;
+    padding: 1.5cm !important;
+    background: #fff !important;
+    color: #111 !important;
+    font-family: system-ui, sans-serif !important;
+  }
+
+  /* Show and style the print metadata header */
+  .metric-pdf-meta {
+    display: block !important;
+    padding: 0 0 1.25rem 0;
+    border-bottom: 2px solid #374151;
+    margin-bottom: 1.5rem;
+    page-break-inside: avoid;
+    text-align: center;
+  }
+
+  .metric-pdf-meta-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 0.75rem;
+  }
+
+  .metric-pdf-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.25rem;
+    font-size: 0.78rem;
+    color: #374151;
+    margin-bottom: 0.35rem;
+  }
+
+  .metric-pdf-meta-row strong {
+    color: #111;
+  }
+
+  .metric-pdf-meta-generated {
+    font-size: 0.7rem;
+    color: #6b7280;
+    margin-top: 0.2rem;
+  }
+
+  /* Table panel */
+  .metric-details-table-panel {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Table styles for print */
+  .metric-details-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.73rem;
+    color: #111;
+    page-break-inside: auto;
+  }
+
+  .metric-details-table thead {
+    background: #f3f4f6 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .metric-details-table th {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+    font-weight: 700;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #d1d5db;
+    text-align: left;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .metric-details-table td {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #e5e7eb;
+    vertical-align: top;
+    color: #111 !important;
+  }
+
+  .metric-details-table tr {
+    page-break-inside: avoid;
+  }
+
+  .metric-details-table tbody tr:nth-child(even) td {
+    background: #f9fafb !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .metric-details-table tr.metric-details-row--failure td {
+    background: #fef2f2 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Make badges legible in black & white */
+  .dora-badge,
+  .metric-env-badge,
+  .metric-source-badge,
+  .metric-status-badge,
+  .metric-severity-badge,
+  .metric-failure-flag {
+    background: transparent !important;
+    border: 1px solid currentColor !important;
+    color: #374151 !important;
+    font-size: 0.65rem !important;
+    padding: 0.08rem 0.3rem !important;
+    border-radius: 3px !important;
+  }
+
+  .metric-failure-flag--yes {
+    color: #b91c1c !important;
+    border-color: #b91c1c !important;
+  }
+
+  /* Links as underlined text in print */
+  a.metric-commit-link {
+    color: #1d4ed8 !important;
+    text-decoration: underline !important;
+  }
+
+  .metric-commit-arrow {
+    display: none !important;
+  }
+
+  /* Notice banner in recovery time section */
+  .metric-details-notice {
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+    color: #374151 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+  }
+
+  /* Header in print (now hidden entirely, but keep styles for reference) */
+  .metric-details-header {
+    display: none !important;
+  }
+
+  /* Summary chip for CFR */
+  .metric-details-summary-chip {
+    color: #374151 !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    margin-bottom: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+  }
+
+  /* ── Chart panel in print ── */
+  .metric-details-chart-panel {
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+    box-shadow: none !important;
+    border-radius: 6px !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1.25rem;
+    page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .metric-details-chart-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+  }
+
+  .metric-details-chart-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #111 !important;
+  }
+
+  .metric-details-chart-stat {
+    font-size: 0.72rem;
+    color: #374151 !important;
+  }
+
+  .metric-details-stat-value {
+    font-weight: 700;
+    color: #111 !important;
+  }
+
+  .metric-details-stat-unit,
+  .metric-details-stat-sample {
+    color: #6b7280 !important;
+  }
+
+  /* The SVG chart – fix colours that rely on dark CSS vars */
+  .dora-chart-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Override SVG elements that use dark-only literal colours */
+  .dora-chart-svg line[stroke="rgba(255, 255, 255, 0.14)"] {
+    stroke: #d1d5db !important;
+  }
+
+  .dora-chart-svg circle[fill="rgba(255, 255, 255, 0.28)"] {
+    fill: #9ca3af !important;
+  }
+
+  /* Tooltip rect (dark bg) – hide the hover tooltip in print */
+  .dora-chart-tooltip {
+    display: none !important;
+  }
+
+  /* Interactive hover overlay – disable pointer events in print (no effect but clean) */
+  .dora-chart-svg rect[fill="transparent"] {
+    display: none !important;
+  }
+
+  /* @page margin: 0 — Chrome places its built-in header/footer
+     (URL, date, page numbers) in the margin area. Setting it to 0
+     removes that space entirely, suppressing the URL footer.
+     Visual whitespace is handled by the body padding above. */
+  @page {
+    size: A4 landscape;
+    margin: 0;
   }
 }

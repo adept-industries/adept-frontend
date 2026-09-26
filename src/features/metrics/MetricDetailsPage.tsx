@@ -465,6 +465,14 @@ export function MetricDetailsPage() {
     setSearchParams(newParams);
   };
 
+  const handleDownloadPdf = () => {
+    const presetLabel = PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset;
+    const originalTitle = document.title;
+    document.title = `${activeTabConfig.label} – ${presetLabel} – Adept DORA Metrics`;
+    window.print();
+    document.title = originalTitle;
+  };
+
   const handlePresetChange = (p: TimeRangePreset) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("preset", p);
@@ -504,8 +512,24 @@ export function MetricDetailsPage() {
 
         {/* Header */}
         <div className="metric-details-header">
-          <p className="metric-details-eyebrow">DORA Metric Drill-Down</p>
-          <h1 className="metric-details-title">{activeTabConfig.title}</h1>
+          <div className="metric-details-header-left">
+            <p className="metric-details-eyebrow">DORA Metric Drill-Down</p>
+            <h1 className="metric-details-title">{activeTabConfig.title}</h1>
+          </div>
+          <button
+            id="metric-details-download-pdf"
+            type="button"
+            className="metric-pdf-download-btn"
+            onClick={handleDownloadPdf}
+            aria-label={`Download ${activeTabConfig.label} report as PDF`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download as PDF
+          </button>
         </div>
 
         {/* Metric Selector Tabs */}
@@ -576,6 +600,38 @@ export function MetricDetailsPage() {
                 {p.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Hidden print-only metadata block rendered at the top of the PDF */}
+        <div className="metric-pdf-meta" aria-hidden="true">
+          <div className="metric-pdf-meta-title">{activeTabConfig.title}</div>
+          <div className="metric-pdf-meta-row">
+            <span>
+              <strong>Date Range:</strong>{" "}
+              {PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset}
+              {" "}({new Date(range.from).toLocaleDateString(undefined, { dateStyle: "medium" })}
+              {" – "}
+              {new Date(range.to).toLocaleDateString(undefined, { dateStyle: "medium" })})
+            </span>
+            <span>
+              <strong>Scope:</strong>{" "}
+              {selectedProject ? selectedProject.name : "All accessible projects"}
+            </span>
+            <span>
+              <strong>Timezone:</strong> {workspaceTimezone}
+            </span>
+            {activeSummaryMetric && (
+              <span>
+                <strong>Period value:</strong>{" "}
+                {formatMetricValue(activeSummaryMetric.value, activeSummaryMetric.unit, activeSummaryMetric.sampleSize)}
+                {" "}({activeSummaryMetric.unit}) · {activeSummaryMetric.sampleSize} sample{activeSummaryMetric.sampleSize !== 1 ? "s" : ""}
+                {" "}· Rating: {activeSummaryMetric.rating}
+              </span>
+            )}
+          </div>
+          <div className="metric-pdf-meta-generated">
+            Generated: {new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeStyle: "short" }).format(new Date())}
           </div>
         </div>
 
