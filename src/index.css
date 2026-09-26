@@ -3265,12 +3265,12 @@ button.alerts-status {
   /* Hide interactive chrome */
   .app-shell-sidebar,
   .app-shell-topbar,
-  .metric-details-header,
   .metric-details-back-link,
   .metric-details-tabs,
   .metric-details-controls-bar,
   .metric-details-pagination,
   .metric-pdf-download-btn,
+  .metric-details-eyebrow,
   .dora-filter-bar,
   [role="tablist"],
   nav {
@@ -3301,13 +3301,6 @@ button.alerts-status {
     margin-bottom: 1.5rem;
     page-break-inside: avoid;
     text-align: center;
-  }
-
-  .metric-pdf-meta-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #111;
-    margin-bottom: 0.75rem;
   }
 
   .metric-pdf-meta-row {
@@ -3433,9 +3426,22 @@ button.alerts-status {
     border-radius: 4px;
   }
 
-  /* Header in print (now hidden entirely, but keep styles for reference) */
+  /* Header in print – show centered title, hide eyebrow and download button */
   .metric-details-header {
-    display: none !important;
+    display: block !important;
+    text-align: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .metric-details-header-left {
+    display: block !important;
+  }
+
+  .metric-details-header-left .metric-details-title {
+    color: #111 !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
   }
 
   /* Summary chip for CFR */

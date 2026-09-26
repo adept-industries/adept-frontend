@@ -604,8 +604,7 @@ export function MetricDetailsPage() {
         </div>
 
         {/* Hidden print-only metadata block rendered at the top of the PDF */}
-        <div className="metric-pdf-meta" aria-hidden="true">
-          <div className="metric-pdf-meta-title">{activeTabConfig.title}</div>
+        <div className="metric-pdf-meta" aria-hidden="true" hidden>
           <div className="metric-pdf-meta-row">
             <span>
               <strong>Date Range:</strong>{" "}
