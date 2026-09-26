@@ -56,7 +56,7 @@ function Dashboard() {
           <h1 id="dash-title" className="dash-welcome-title">Dashboard</h1>
           <p className="dash-welcome-sub">
             {selectedProject
-              ? <>Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong> — DORA metrics filtered to this project.</>
+              ? <>Viewing <strong style={{ color: "var(--text-primary)" }}>{selectedProject.name}</strong> - DORA metrics filtered to this project.</>
               : projects.length > 0
                 ? "Select a project to filter this dashboard."
                 : "Welcome! Get started by creating a project and connecting your repositories."}
@@ -64,14 +64,14 @@ function Dashboard() {
         </div>
 
         {authenticatedState && (
-            <div className="dash-inline-controls">
-              <WorkspaceSwitcher
-                workspaces={authenticatedState.workspaces}
-                currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
-              />
-              <div className="topbar-divider" aria-hidden="true" />
-              <ProjectSelector />
-            </div>
+          <div className="dash-inline-controls">
+            <WorkspaceSwitcher
+              workspaces={authenticatedState.workspaces}
+              currentWorkspaceId={authenticatedState.currentMembership.workspaceId}
+            />
+            <div className="topbar-divider" aria-hidden="true" />
+            <ProjectSelector />
+          </div>
         )}
       </div>
 
