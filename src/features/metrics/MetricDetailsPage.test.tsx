@@ -687,4 +687,79 @@ describe("MetricDetailsPage", () => {
     expect(screen.getByText("deployments/week")).toBeInTheDocument();
     expect(screen.getByText(/18 samples in range/i)).toBeInTheDocument();
   });
+
+  it("fetches all pages and renders all records when downloading PDF", async () => {
+    const user = userEvent.setup();
+    const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
+
+    // Mock multi-page responses for size=100
+    server.use(
+      http.get(`${API}/metrics/deployment-frequency/details`, ({ request }) => {
+        const url = new URL(request.url);
+        const page = url.searchParams.get("page") ?? "0";
+        const size = url.searchParams.get("size") ?? "20";
+
+        if (size === "100") {
+          if (page === "0") {
+            return HttpResponse.json({
+              ...DETAILS_FIXTURE,
+              page: 0,
+              size: 100,
+              totalElements: 120,
+              totalPages: 2,
+              items: Array.from({ length: 100 }, (_, i) => ({
+                id: `dep-p0-${i}`,
+                repositoryId: "repo-1",
+                repositoryName: "core-service",
+                repositoryFullName: "acme/core-service",
+                deployedAt: "2026-08-20T14:30:00Z",
+                environment: "production",
+                source: "GITHUB_DEPLOYMENT",
+                commitSha: "a1b2c3d4e5f67890",
+                durationSeconds: 100,
+              })),
+            });
+          } else {
+            return HttpResponse.json({
+              ...DETAILS_FIXTURE,
+              page: 1,
+              size: 100,
+              totalElements: 120,
+              totalPages: 2,
+              items: Array.from({ length: 20 }, (_, i) => ({
+                id: `dep-p1-${i}`,
+                repositoryId: "repo-1",
+                repositoryName: "core-service",
+                repositoryFullName: "acme/core-service",
+                deployedAt: "2026-08-22T10:15:00Z",
+                environment: "production",
+                source: "GITHUB_WORKFLOW",
+                commitSha: "9876543210fedcba",
+                durationSeconds: 200,
+              })),
+            });
+          }
+        }
+
+        return HttpResponse.json(DETAILS_FIXTURE);
+      }),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("acme/core-service")).toHaveLength(2);
+    });
+
+    const downloadBtn = screen.getByRole("button", { name: /Download Deployment Frequency report as PDF/i });
+    expect(downloadBtn).toBeInTheDocument();
+
+    await user.click(downloadBtn);
+
+    await waitFor(() => {
+      expect(printSpy).toHaveBeenCalled();
+    });
+
+    printSpy.mockRestore();
+  });
 });

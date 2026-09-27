@@ -3287,7 +3287,7 @@ button.alerts-status {
     all: unset;
     display: block !important;
     margin: 0 !important;
-    padding: 1.5cm !important;
+    padding: 1cm !important;
     background: #fff !important;
     color: #111 !important;
     font-family: system-ui, sans-serif !important;
@@ -3529,7 +3529,7 @@ button.alerts-status {
      removes that space entirely, suppressing the URL footer.
      Visual whitespace is handled by the body padding above. */
   @page {
-    size: A4 landscape;
+    size: A4 portrait;
     margin: 0;
   }
 }

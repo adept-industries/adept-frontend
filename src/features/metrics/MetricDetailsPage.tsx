@@ -5,6 +5,12 @@ import { AppShell } from "../../components/layout/AppShell.js";
 import { useContext } from "react";
 import { ProjectContext } from "../projects/ProjectContext.js";
 import {
+  fetchChangeFailureRateDetails,
+  fetchChangeLeadTimeDetails,
+  fetchDeploymentFrequencyDetails,
+  fetchRecoveryTimeDetails,
+} from "./api.js";
+import {
   useChangeFailureRateDetails,
   useChangeLeadTimeDetails,
   useDeploymentFrequencyDetails,
@@ -465,12 +471,110 @@ export function MetricDetailsPage() {
     setSearchParams(newParams);
   };
 
-  const handleDownloadPdf = () => {
-    const presetLabel = PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset;
-    const originalTitle = document.title;
-    document.title = `${activeTabConfig.label} – ${presetLabel} – Adept DORA Metrics`;
-    window.print();
-    document.title = originalTitle;
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [printAllDfItems, setPrintAllDfItems] = useState<DeploymentFrequencyDetailDto[] | null>(null);
+  const [printAllCltItems, setPrintAllCltItems] = useState<ChangeLeadTimeDetailDto[] | null>(null);
+  const [printAllRecoveryItems, setPrintAllRecoveryItems] = useState<RecoveryTimeDetailDto[] | null>(null);
+  const [printAllCfrItems, setPrintAllCfrItems] = useState<ChangeFailureRateDetailDto[] | null>(null);
+
+  const handleDownloadPdf = async () => {
+    if (isExportingPdf) return;
+    setIsExportingPdf(true);
+    const filterParams = {
+      projectId: projectIdParam,
+      repositoryId: repositoryIdParam,
+      from: range.from,
+      to: range.to,
+    };
+
+    try {
+      if (activeMetric === "DEPLOYMENT_FREQUENCY") {
+        const firstPage = await fetchDeploymentFrequencyDetails({ ...filterParams, page: 0, size: 100 });
+        let allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchDeploymentFrequencyDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        setPrintAllDfItems(allItems);
+      } else if (activeMetric === "CHANGE_LEAD_TIME_HOURS") {
+        const firstPage = await fetchChangeLeadTimeDetails({ ...filterParams, page: 0, size: 100 });
+        let allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchChangeLeadTimeDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        setPrintAllCltItems(allItems);
+      } else if (activeMetric === "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS") {
+        const firstPage = await fetchRecoveryTimeDetails({ ...filterParams, page: 0, size: 100 });
+        let allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchRecoveryTimeDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        setPrintAllRecoveryItems(allItems);
+      } else if (activeMetric === "CHANGE_FAILURE_RATE_PERCENT") {
+        const firstPage = await fetchChangeFailureRateDetails({ ...filterParams, page: 0, size: 100 });
+        let allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchChangeFailureRateDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        setPrintAllCfrItems(allItems);
+      }
+
+      // Wait a tick for the complete dataset to render into DOM
+      setTimeout(() => {
+        const presetLabel = PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset;
+        const originalTitle = document.title;
+        document.title = `${activeTabConfig.label} – ${presetLabel} – Adept DORA Metrics`;
+
+        const cleanup = () => {
+          document.title = originalTitle;
+          setIsExportingPdf(false);
+          setPrintAllDfItems(null);
+          setPrintAllCltItems(null);
+          setPrintAllRecoveryItems(null);
+          setPrintAllCfrItems(null);
+          window.removeEventListener("afterprint", cleanup);
+        };
+        window.addEventListener("afterprint", cleanup);
+
+        window.print();
+
+        // Fallback for browsers/environments where afterprint may not fire reliably
+        setTimeout(cleanup, 1000);
+      }, 100);
+    } catch {
+      setIsExportingPdf(false);
+      setPrintAllDfItems(null);
+      setPrintAllCltItems(null);
+      setPrintAllRecoveryItems(null);
+      setPrintAllCfrItems(null);
+    }
   };
 
   const handlePresetChange = (p: TimeRangePreset) => {
@@ -521,6 +625,7 @@ export function MetricDetailsPage() {
             type="button"
             className="metric-pdf-download-btn"
             onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
             aria-label={`Download ${activeTabConfig.label} report as PDF`}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -528,7 +633,7 @@ export function MetricDetailsPage() {
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Download as PDF
+            {isExportingPdf ? "Preparing PDF..." : "Download as PDF"}
           </button>
         </div>
 
@@ -616,6 +721,13 @@ export function MetricDetailsPage() {
             <span>
               <strong>Scope:</strong>{" "}
               {selectedProject ? selectedProject.name : "All accessible projects"}
+            </span>
+            <span>
+              <strong>Repository:</strong>{" "}
+              {repositoryIdParam
+                ? (availableRepositories.find((r) => r.id === repositoryIdParam)?.fullName ??
+                   "Selected repository")
+                : "All repositories"}
             </span>
             <span>
               <strong>Timezone:</strong> {workspaceTimezone}
@@ -733,7 +845,7 @@ export function MetricDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {deploymentFrequencyQuery.data.items.map((item) => (
+                    {(printAllDfItems ?? deploymentFrequencyQuery.data.items).map((item) => (
                       <tr key={item.id}>
                         <td>{formatTimestamp(item.deployedAt, workspaceTimezone)}</td>
                         <td>
@@ -862,7 +974,7 @@ export function MetricDetailsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {changeLeadTimeQuery.data.items.map((item: ChangeLeadTimeDetailDto) => (
+                    {(printAllCltItems ?? changeLeadTimeQuery.data.items).map((item: ChangeLeadTimeDetailDto) => (
                       <tr key={item.prId}>
                         <td>
                           {item.prUrl ? (
@@ -1012,7 +1124,7 @@ export function MetricDetailsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {recoveryTimeQuery.data.items.map((item: RecoveryTimeDetailDto) => (
+                      {(printAllRecoveryItems ?? recoveryTimeQuery.data.items).map((item: RecoveryTimeDetailDto) => (
                         <tr key={item.incidentId}>
                           <td>
                             <div className="metric-incident-cell">
@@ -1157,7 +1269,7 @@ export function MetricDetailsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {changeFailureRateQuery.data.items.map((item: ChangeFailureRateDetailDto) => (
+                      {(printAllCfrItems ?? changeFailureRateQuery.data.items).map((item: ChangeFailureRateDetailDto) => (
                         <tr
                           key={item.deploymentId}
                           className={item.isFailure ? "metric-details-row--failure" : undefined}
