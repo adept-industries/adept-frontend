@@ -858,6 +858,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMessages"];
+        put?: never;
+        post: operations["sendMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/pull-request-risks": {
         parameters: {
             query?: never;
@@ -911,6 +927,22 @@ export interface paths {
          * @description Every supplied repository must be tracked, non-archived, and belong to the current workspace. Jira mappings are unchanged.
          */
         put: operations["replaceProjectRepositories"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeam"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1327,6 +1359,27 @@ export interface components {
             totalPages?: number;
             /** Format: uuid */
             workspaceId?: string;
+        };
+        ChatMessageResponse: {
+            content?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            projectId?: string;
+            sender?: components["schemas"]["ChatMessageSenderDto"];
+        };
+        ChatMessageSenderDto: {
+            avatarUrl?: string;
+            displayName?: string;
+            email?: string;
+            /** Format: uuid */
+            membershipId?: string;
+            /** @enum {string} */
+            role?: "MANAGER" | "LEAD";
+            /** Format: uuid */
+            userId?: string;
         };
         CreateAlertRuleRequest: {
             /** @enum {string} */
@@ -1799,6 +1852,14 @@ export interface components {
             /** Format: uuid */
             workspaceId: string;
         };
+        ProjectTeamResponse: {
+            manager?: components["schemas"]["TeamMemberDto"];
+            members?: components["schemas"]["TeamMemberDto"][];
+            projectDescription?: string;
+            /** Format: uuid */
+            projectId?: string;
+            projectName?: string;
+        };
         RecoveryDeploymentRefDto: {
             commitSha?: string;
             environment?: string;
@@ -1905,6 +1966,9 @@ export interface components {
             newPassword: string;
             token: string;
         };
+        SendChatMessageRequest: {
+            content: string;
+        };
         SettingsOptions: {
             complete: boolean;
             values: string[];
@@ -1923,6 +1987,17 @@ export interface components {
             emailVerificationRequired: boolean;
             user: components["schemas"]["UserSummary"];
             workspace: components["schemas"]["WorkspaceSummaryResponse"];
+        };
+        TeamMemberDto: {
+            avatarUrl?: string;
+            displayName?: string;
+            email?: string;
+            /** Format: uuid */
+            membershipId?: string;
+            /** @enum {string} */
+            role?: "MANAGER" | "LEAD";
+            /** Format: uuid */
+            userId?: string;
         };
         /** @description Presence-aware patch for alert rules. At least one field must be provided. */
         UpdateAlertRuleRequest: {
@@ -4801,6 +4876,54 @@ export interface operations {
             };
         };
     };
+    getMessages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessageResponse"][];
+                };
+            };
+        };
+    };
+    sendMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendChatMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChatMessageResponse"];
+                };
+            };
+        };
+    };
     listProjectPullRequestRisks: {
         parameters: {
             query?: {
@@ -5021,6 +5144,28 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    getTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ProjectTeamResponse"];
                 };
             };
         };
