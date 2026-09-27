@@ -1080,6 +1080,8 @@ export function MetricDetailsPage() {
               <strong>Only resolved incidents are counted.</strong>{" "}
               Recovery time includes incidents whose resolution falls inside this window. When a
               recovery deployment is linked, its finish time is used as the resolution time.
+              Open incidents are excluded and tracked under{" "}
+              <Link to="/dashboard/alerts">Alerts</Link>.
             </div>
             <div className="metric-details-table-panel">
               {recoveryTimeQuery.isLoading ? (
