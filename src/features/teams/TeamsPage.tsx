@@ -134,33 +134,31 @@ export function TeamsPage() {
               {/* Header */}
               <div className="teams-chat-header">
                 <div className="teams-header-info">
-                  <h2 className="teams-header-title">
-                    {selectedProject.name}
-                  </h2>
+                  <div className="teams-header-title-row">
+                    <h2 className="teams-header-title">
+                      {selectedProject.name}
+                    </h2>
+                    {team && team.members.length > 0 && (
+                      <div className="team-members-chips" aria-label="Team members">
+                        {team.members.map((member: TeamMember) => (
+                          <div
+                            key={member.membershipId}
+                            className="member-chip"
+                            title={`${member.displayName} (${member.email})`}
+                          >
+                            <span
+                              className={`member-chip-role ${member.role === "MANAGER" ? "manager" : "lead"}`}
+                            >
+                              {member.role}
+                            </span>
+                            <span className="member-chip-name">{member.displayName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {selectedProject.description && (
                     <div className="teams-header-desc">{selectedProject.description}</div>
-                  )}
-                </div>
-
-                <div className="teams-header-meta">
-                  {/* Team Members */}
-                  {team && (
-                    <div className="team-members-chips" aria-label="Team members">
-                      {team.members.map((member: TeamMember) => (
-                        <div
-                          key={member.membershipId}
-                          className="member-chip"
-                          title={`${member.displayName} (${member.email})`}
-                        >
-                          <span
-                            className={`member-chip-role ${member.role === "MANAGER" ? "manager" : "lead"}`}
-                          >
-                            {member.role}
-                          </span>
-                          <span>{member.displayName}</span>
-                        </div>
-                      ))}
-                    </div>
                   )}
                 </div>
               </div>

@@ -126,16 +126,25 @@
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   background: var(--dashboard-header-bg);
   backdrop-filter: blur(8px);
+  min-width: 0;
 }
 
 .teams-header-info {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
   min-width: 0;
+  flex: 1;
+}
+
+.teams-header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .teams-header-title {
@@ -143,9 +152,8 @@
   font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .teams-header-desc {
@@ -156,46 +164,31 @@
   text-overflow: ellipsis;
 }
 
-.teams-header-meta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-}
-
-.teams-live-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #16a34a;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-}
-
-.teams-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #16a34a;
-  animation: pulse-dot 1.8s infinite;
-}
-
-@keyframes pulse-dot {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.7; }
-}
-
 .team-members-chips {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  flex-wrap: wrap;
-  max-width: 480px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+  padding: 0.2rem 0;
+  min-width: 0;
+  flex: 1;
+}
+
+.team-members-chips::-webkit-scrollbar {
+  height: 4px;
+}
+
+.team-members-chips::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 9999px;
+}
+
+.team-members-chips::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .member-chip {
@@ -208,6 +201,8 @@
   background: var(--surface-muted);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .member-chip-role {
@@ -226,6 +221,12 @@
 .member-chip-role.lead {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+.member-chip-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 /* Chat Messages Area */
