@@ -90,6 +90,7 @@ describe("AppShell theme", () => {
       "Dashboard",
       "Integrations",
       "Projects",
+      "Teams",
       "Alerts",
       "Workspaces",
     ]);
@@ -121,6 +122,7 @@ describe("AppShell theme", () => {
     expect(within(navigation).getAllByRole("link").map((link) => link.textContent?.trim())).toEqual([
       "Dashboard",
       "Projects",
+      "Teams",
       "Alerts",
       "Workspaces",
     ]);
