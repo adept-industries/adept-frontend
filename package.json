@@ -17,6 +17,7 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.101.4",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

@@ -21,6 +21,7 @@ import { AcceptInvitePage } from "../features/auth/pages/AcceptInvitePage";
 import { IntegrationsPage } from "../features/integrations/IntegrationsPage";
 import { ProjectsPage } from "../features/projects/ProjectsPage";
 import { AlertsPage } from "../features/alerts/AlertsPage";
+import { TeamsPage } from "../features/teams/TeamsPage";
 import { useProjects } from "../features/projects/useProjects";
 import { DoraMetricsSection } from "../features/metrics/DoraMetricsSection";
 import { MetricDetailsPage } from "../features/metrics/MetricDetailsPage";
@@ -181,6 +182,31 @@ export const router = createBrowserRouter([
         <WorkspaceRoute>
           <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
             <ProjectsPage />
+          </RoleRoute>
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/dashboard/teams",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
+            <TeamsPage />
+          </RoleRoute>
+        </WorkspaceRoute>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/dashboard/teams/:projectId",
+    element: (
+      <ProtectedRoute>
+        <WorkspaceRoute>
+          <RoleRoute allowedRoles={["MANAGER", "LEAD"]}>
+            <TeamsPage />
           </RoleRoute>
         </WorkspaceRoute>
       </ProtectedRoute>
