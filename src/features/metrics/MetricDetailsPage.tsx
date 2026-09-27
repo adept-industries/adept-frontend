@@ -5,6 +5,13 @@ import { AppShell } from "../../components/layout/AppShell.js";
 import { useContext } from "react";
 import { ProjectContext } from "../projects/ProjectContext.js";
 import {
+  fetchChangeFailureRateDetails,
+  fetchChangeLeadTimeDetails,
+  fetchDeploymentFrequencyDetails,
+  fetchRecoveryTimeDetails,
+} from "./api.js";
+import { exportMetricPdf, type MetricExportData } from "./exportMetricPdf.js";
+import {
   useChangeFailureRateDetails,
   useChangeLeadTimeDetails,
   useDeploymentFrequencyDetails,
@@ -465,6 +472,119 @@ export function MetricDetailsPage() {
     setSearchParams(newParams);
   };
 
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (isExportingPdf) return;
+    setIsExportingPdf(true);
+    const filterParams = {
+      projectId: projectIdParam,
+      repositoryId: repositoryIdParam,
+      from: range.from,
+      to: range.to,
+    };
+
+    try {
+      let exportData: MetricExportData;
+
+      if (activeMetric === "DEPLOYMENT_FREQUENCY") {
+        const firstPage = await fetchDeploymentFrequencyDetails({ ...filterParams, page: 0, size: 100 });
+        const allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchDeploymentFrequencyDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        exportData = { type: "DEPLOYMENT_FREQUENCY", items: allItems };
+      } else if (activeMetric === "CHANGE_LEAD_TIME_HOURS") {
+        const firstPage = await fetchChangeLeadTimeDetails({ ...filterParams, page: 0, size: 100 });
+        const allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchChangeLeadTimeDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        exportData = { type: "CHANGE_LEAD_TIME_HOURS", items: allItems };
+      } else if (activeMetric === "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS") {
+        const firstPage = await fetchRecoveryTimeDetails({ ...filterParams, page: 0, size: 100 });
+        const allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchRecoveryTimeDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        exportData = { type: "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS", items: allItems };
+      } else {
+        const firstPage = await fetchChangeFailureRateDetails({ ...filterParams, page: 0, size: 100 });
+        const allItems = [...firstPage.items];
+        if (firstPage.totalPages > 1) {
+          const subsequentPages = await Promise.all(
+            Array.from({ length: firstPage.totalPages - 1 }, (_, i) =>
+              fetchChangeFailureRateDetails({ ...filterParams, page: i + 1, size: 100 })
+            )
+          );
+          for (const res of subsequentPages) {
+            allItems.push(...res.items);
+          }
+        }
+        exportData = { type: "CHANGE_FAILURE_RATE_PERCENT", items: allItems };
+      }
+
+      const presetLabel = PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset;
+      const repoName = repositoryIdParam
+        ? (availableRepositories.find((r) => r.id === repositoryIdParam)?.fullName ?? "Selected repository")
+        : "All repositories";
+
+      exportMetricPdf({
+        title: activeTabConfig.title,
+        metricLabel: activeTabConfig.label,
+        presetLabel,
+        dateRange: range,
+        scopeName: selectedProject ? `Project: ${selectedProject.name}` : "All accessible projects",
+        repositoryName: repoName,
+        timezone: workspaceTimezone,
+        periodSummary: activeSummaryMetric
+          ? {
+              formattedValue: formatMetricValue(
+                activeSummaryMetric.value,
+                activeSummaryMetric.unit,
+                activeSummaryMetric.sampleSize,
+              ),
+              unit: activeSummaryMetric.unit,
+              sampleSize: activeSummaryMetric.sampleSize,
+              ratingLabel: RATING_LABEL[activeSummaryMetric.rating] ?? activeSummaryMetric.rating,
+            }
+          : null,
+        cfrBreakdown:
+          activeMetric === "CHANGE_FAILURE_RATE_PERCENT" &&
+          changeFailureRateQuery.data &&
+          changeFailureRateQuery.data.totalDeployments > 0
+            ? formatFailureBreakdown(changeFailureRateQuery.data)
+            : null,
+        data: exportData,
+      });
+    } catch {
+      // In case of error, gracefully handle
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   const handlePresetChange = (p: TimeRangePreset) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("preset", p);
@@ -504,8 +624,25 @@ export function MetricDetailsPage() {
 
         {/* Header */}
         <div className="metric-details-header">
-          <p className="metric-details-eyebrow">DORA Metric Drill-Down</p>
-          <h1 className="metric-details-title">{activeTabConfig.title}</h1>
+          <div className="metric-details-header-left">
+            <p className="metric-details-eyebrow">DORA Metric Drill-Down</p>
+            <h1 className="metric-details-title">{activeTabConfig.title}</h1>
+          </div>
+          <button
+            id="metric-details-download-pdf"
+            type="button"
+            className="metric-pdf-download-btn"
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+            aria-label={`Download ${activeTabConfig.label} report as PDF`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {isExportingPdf ? "Preparing PDF..." : "Download as PDF"}
+          </button>
         </div>
 
         {/* Metric Selector Tabs */}
@@ -576,6 +713,44 @@ export function MetricDetailsPage() {
                 {p.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Hidden print-only metadata block rendered at the top of the PDF */}
+        <div className="metric-pdf-meta" aria-hidden="true" hidden>
+          <div className="metric-pdf-meta-row">
+            <span>
+              <strong>Date Range:</strong>{" "}
+              {PRESETS.find((p) => p.value === activePreset)?.label ?? activePreset}
+              {" "}({new Date(range.from).toLocaleDateString(undefined, { dateStyle: "medium" })}
+              {" – "}
+              {new Date(range.to).toLocaleDateString(undefined, { dateStyle: "medium" })})
+            </span>
+            <span>
+              <strong>Scope:</strong>{" "}
+              {selectedProject ? selectedProject.name : "All accessible projects"}
+            </span>
+            <span>
+              <strong>Repository:</strong>{" "}
+              {repositoryIdParam
+                ? (availableRepositories.find((r) => r.id === repositoryIdParam)?.fullName ??
+                   "Selected repository")
+                : "All repositories"}
+            </span>
+            <span>
+              <strong>Timezone:</strong> {workspaceTimezone}
+            </span>
+            {activeSummaryMetric && (
+              <span>
+                <strong>Period value:</strong>{" "}
+                {formatMetricValue(activeSummaryMetric.value, activeSummaryMetric.unit, activeSummaryMetric.sampleSize)}
+                {" "}({activeSummaryMetric.unit}) · {activeSummaryMetric.sampleSize} sample{activeSummaryMetric.sampleSize !== 1 ? "s" : ""}
+                {" "}· Rating: {activeSummaryMetric.rating}
+              </span>
+            )}
+          </div>
+          <div className="metric-pdf-meta-generated">
+            Generated: {new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeStyle: "short" }).format(new Date())}
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
+import * as exportPdfModule from "./exportMetricPdf.js";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext.js";
 import { ProjectContext, type ProjectContextValue } from "../projects/ProjectContext.js";
 import type { AuthenticatedState } from "../../auth/types.js";
@@ -686,5 +687,87 @@ describe("MetricDetailsPage", () => {
     expect(screen.getByText("4.5")).toBeInTheDocument();
     expect(screen.getByText("deployments/week")).toBeInTheDocument();
     expect(screen.getByText(/18 samples in range/i)).toBeInTheDocument();
+  });
+
+  it("fetches all pages and triggers direct PDF export with exact settings", async () => {
+    const user = userEvent.setup();
+    const exportSpy = vi.spyOn(exportPdfModule, "exportMetricPdf").mockImplementation(() => {});
+
+    // Mock multi-page responses for size=100
+    server.use(
+      http.get(`${API}/metrics/deployment-frequency/details`, ({ request }) => {
+        const url = new URL(request.url);
+        const page = url.searchParams.get("page") ?? "0";
+        const size = url.searchParams.get("size") ?? "20";
+
+        if (size === "100") {
+          if (page === "0") {
+            return HttpResponse.json({
+              ...DETAILS_FIXTURE,
+              page: 0,
+              size: 100,
+              totalElements: 120,
+              totalPages: 2,
+              items: Array.from({ length: 100 }, (_, i) => ({
+                id: `dep-p0-${i}`,
+                repositoryId: "repo-1",
+                repositoryName: "core-service",
+                repositoryFullName: "acme/core-service",
+                deployedAt: "2026-08-20T14:30:00Z",
+                environment: "production",
+                source: "GITHUB_DEPLOYMENT",
+                commitSha: "a1b2c3d4e5f67890",
+                durationSeconds: 100,
+              })),
+            });
+          } else {
+            return HttpResponse.json({
+              ...DETAILS_FIXTURE,
+              page: 1,
+              size: 100,
+              totalElements: 120,
+              totalPages: 2,
+              items: Array.from({ length: 20 }, (_, i) => ({
+                id: `dep-p1-${i}`,
+                repositoryId: "repo-1",
+                repositoryName: "core-service",
+                repositoryFullName: "acme/core-service",
+                deployedAt: "2026-08-22T10:15:00Z",
+                environment: "production",
+                source: "GITHUB_WORKFLOW",
+                commitSha: "9876543210fedcba",
+                durationSeconds: 200,
+              })),
+            });
+          }
+        }
+
+        return HttpResponse.json(DETAILS_FIXTURE);
+      }),
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getAllByText("acme/core-service")).toHaveLength(2);
+    });
+
+    const downloadBtn = screen.getByRole("button", { name: /Download Deployment Frequency report as PDF/i });
+    expect(downloadBtn).toBeInTheDocument();
+
+    await user.click(downloadBtn);
+
+    await waitFor(() => {
+      expect(exportSpy).toHaveBeenCalledTimes(1);
+    });
+
+    const exportCall = exportSpy.mock.calls[0][0];
+    expect(exportCall.metricLabel).toBe("Deployment Frequency");
+    expect(exportCall.data.type).toBe("DEPLOYMENT_FREQUENCY");
+    expect(exportCall.data.items).toHaveLength(120);
+    expect(exportCall.timezone).toBe("UTC");
+    expect(exportCall.repositoryName).toBe("All repositories");
+
+    exportSpy.mockRestore();
   });
 });
