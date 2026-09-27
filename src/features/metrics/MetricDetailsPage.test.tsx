@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
+import * as exportPdfModule from "./exportMetricPdf.js";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext.js";
 import { ProjectContext, type ProjectContextValue } from "../projects/ProjectContext.js";
 import type { AuthenticatedState } from "../../auth/types.js";
@@ -688,9 +689,9 @@ describe("MetricDetailsPage", () => {
     expect(screen.getByText(/18 samples in range/i)).toBeInTheDocument();
   });
 
-  it("fetches all pages and renders all records when downloading PDF", async () => {
+  it("fetches all pages and triggers direct PDF export with exact settings", async () => {
     const user = userEvent.setup();
-    const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
+    const exportSpy = vi.spyOn(exportPdfModule, "exportMetricPdf").mockImplementation(() => {});
 
     // Mock multi-page responses for size=100
     server.use(
@@ -757,9 +758,16 @@ describe("MetricDetailsPage", () => {
     await user.click(downloadBtn);
 
     await waitFor(() => {
-      expect(printSpy).toHaveBeenCalled();
+      expect(exportSpy).toHaveBeenCalledTimes(1);
     });
 
-    printSpy.mockRestore();
+    const exportCall = exportSpy.mock.calls[0][0];
+    expect(exportCall.metricLabel).toBe("Deployment Frequency");
+    expect(exportCall.data.type).toBe("DEPLOYMENT_FREQUENCY");
+    expect(exportCall.data.items).toHaveLength(120);
+    expect(exportCall.timezone).toBe("UTC");
+    expect(exportCall.repositoryName).toBe("All repositories");
+
+    exportSpy.mockRestore();
   });
 });
