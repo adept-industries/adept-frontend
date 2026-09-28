@@ -98,7 +98,11 @@ function authenticatedState(role: "MANAGER" | "LEAD" = "MANAGER"): Authenticated
   };
 }
 
-function renderTeamsPage(projects = mockProjects, role: "MANAGER" | "LEAD" = "MANAGER") {
+function renderTeamsPage(
+  projects = mockProjects,
+  role: "MANAGER" | "LEAD" = "MANAGER",
+  initialPath = "/dashboard/teams",
+) {
   const state = authenticatedState(role);
   const actions = {
     logout: vi.fn(),
@@ -119,7 +123,7 @@ function renderTeamsPage(projects = mockProjects, role: "MANAGER" | "LEAD" = "MA
         <TeamsPage />
       </ProjectContext.Provider>
     </AuthContext.Provider>,
-    { initialPath: "/dashboard/teams" },
+    { initialPath },
   );
 }
 
@@ -199,5 +203,17 @@ describe("TeamsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Let us review PR #42 today")).toBeInTheDocument();
     });
+  });
+
+  it("renders mobile back button in chat header allowing return to channels", async () => {
+    const user = userEvent.setup();
+    const { container } = renderTeamsPage(mockProjects, "MANAGER", "/dashboard/teams/proj-1");
+
+    const backBtn = container.querySelector<HTMLButtonElement>(".teams-back-btn");
+    expect(backBtn).toBeInTheDocument();
+    expect(backBtn).toHaveAttribute("aria-label", "Back to team chats");
+    if (backBtn) {
+      await user.click(backBtn);
+    }
   });
 });

@@ -58,6 +58,10 @@ export function TeamsPage() {
     navigate(`/dashboard/teams/${id}`);
   };
 
+  const handleBackToTeams = () => {
+    navigate("/dashboard/teams");
+  };
+
   const handleSend = async (e: FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isSending) return;
@@ -75,7 +79,7 @@ export function TeamsPage() {
 
   return (
     <AppShell>
-      <div className="dash-header-row">
+      <div className={`dash-header-row ${routeProjectId ? "teams-header-mobile-compact" : ""}`}>
         <div className="dash-welcome">
           <p className="dash-welcome-eyebrow">Real-Time Team Collaboration</p>
           <h1 id="teams-title" className="dash-welcome-title">Teams</h1>
@@ -85,7 +89,7 @@ export function TeamsPage() {
         </div>
       </div>
 
-      <div className="teams-layout">
+      <div className={`teams-layout ${routeProjectId ? "has-selected-chat" : "no-selected-chat"}`}>
         {/* Left: Teams / Projects List */}
         <aside className="teams-sidebar" aria-label="Team chats">
           <div className="teams-sidebar-header">
@@ -135,6 +139,28 @@ export function TeamsPage() {
               <div className="teams-chat-header">
                 <div className="teams-header-info">
                   <div className="teams-header-title-row">
+                    <button
+                      type="button"
+                      className="teams-back-btn"
+                      onClick={handleBackToTeams}
+                      aria-label="Back to team chats"
+                      title="Back to team chats"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      <span>Chats</span>
+                    </button>
                     <h2 className="teams-header-title">
                       {selectedProject.name}
                     </h2>
