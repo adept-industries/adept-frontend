@@ -113,7 +113,13 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
               </p>
             )}
 
-            <CycleTimeChart series={data.series} timezone={timezone} granularity={data.granularity} />
+            <CycleTimeChart
+              series={data.series}
+              rangeStart={data.periodStart}
+              rangeEnd={data.periodEnd}
+              timezone={timezone}
+              granularity={data.granularity}
+            />
 
             <div className="cycle-time-legend" aria-hidden="true">
               {CYCLE_TIME_STAGES.map(({ stage, label }) => (

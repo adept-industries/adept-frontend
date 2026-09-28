@@ -1,17 +1,6 @@
 import { useState } from "react";
-import { CYCLE_TIME_STAGES, formatCycleHours, stageColorVar } from "./cycleTime.js";
+import { CYCLE_TIME_STAGES, formatCycleHours, formatPeriodRange, stageColorVar } from "./cycleTime.js";
 import type { CycleTimePeriodDto, CycleTimeStage, MetricGranularity } from "./types.js";
-
-function formatPeriod(periodStart: string, timezone: string, granularity: MetricGranularity): string {
-  const options: Intl.DateTimeFormatOptions = granularity === "MONTH"
-    ? { month: "short", year: "2-digit", timeZone: timezone }
-    : { month: "short", day: "numeric", timeZone: timezone };
-  try {
-    return new Intl.DateTimeFormat("en-US", options).format(new Date(periodStart));
-  } catch {
-    return new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" }).format(new Date(periodStart));
-  }
-}
 
 function stageHours(period: CycleTimePeriodDto, stage: CycleTimeStage): number {
   const value = period.stages.find((item) => item.stage === stage);
@@ -33,6 +22,8 @@ function plural(count: number): string {
 
 interface CycleTimeChartProps {
   series: CycleTimePeriodDto[];
+  rangeStart: string;
+  rangeEnd: string;
   timezone: string;
   granularity: MetricGranularity;
 }
@@ -44,7 +35,8 @@ const PAD_RIGHT = 8;
 const PAD_TOP = 10;
 const PAD_BOTTOM = 24;
 
-export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChartProps) {
+export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granularity }: CycleTimeChartProps) {
+  const label = (period: CycleTimePeriodDto) => formatPeriodRange(period, rangeStart, rangeEnd, timezone);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const totals = series.map((period) =>
     CYCLE_TIME_STAGES.reduce((sum, { stage }) => sum + stageHours(period, stage), 0));
@@ -58,7 +50,10 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
   const plotHeight = HEIGHT - PAD_TOP - PAD_BOTTOM;
   const slot = plotWidth / series.length;
   const barWidth = Math.min(44, slot * 0.62);
-  const labelEvery = Math.max(1, Math.ceil(series.length / 10));
+  // Range labels ("Aug 31 – Sep 6") need ~76 chart units at this font size; skip
+  // labels rather than let neighbours overlap. The readout always names the bar.
+  const labelWidth = granularity === "DAY" ? 40 : 76;
+  const labelEvery = Math.max(1, Math.ceil(labelWidth / slot));
   const y = (hours: number) => PAD_TOP + plotHeight - (hours / maxTotal) * plotHeight;
   // Until a bar is hovered, describe the latest period that had merges.
   const latestIndex = series.findLastIndex((period) => period.pullRequestCount > 0);
@@ -98,7 +93,7 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
 
         {series.map((period, index) => {
           const x = PAD_LEFT + slot * index + (slot - barWidth) / 2;
-          const periodLabel = formatPeriod(period.periodStart, timezone, granularity);
+          const periodLabel = label(period);
           let stackTop = 0;
           const dimmed = activeIndex !== null && activeIndex !== index;
           return (
@@ -150,7 +145,7 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
 
       <p className="cycle-time-chart-detail" aria-live="polite">
         {shown
-          ? `${formatPeriod(shown.periodStart, timezone, granularity)} · ${plural(shown.pullRequestCount)} · `
+          ? `${label(shown)} · ${plural(shown.pullRequestCount)} · `
             + describeStages(shown, " · ")
           : "Hover or focus a bar to see its stage medians."}
       </p>
