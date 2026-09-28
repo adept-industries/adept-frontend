@@ -172,6 +172,35 @@ describe("CycleTimeSection", () => {
     expect(await screen.findByText("No merged pull requests in this period")).toBeInTheDocument();
   });
 
+  it("explains that cycle time has not been calculated yet", async () => {
+    // Before the first recalculation the API omits calculatedAt and bottleneck entirely.
+    const notCalculated: Record<string, unknown> = {
+      ...CYCLE_TIME_FIXTURE,
+      pullRequestCount: 0,
+      unreviewedPullRequestCount: 0,
+      series: [],
+    };
+    delete notCalculated.calculatedAt;
+    delete notCalculated.bottleneck;
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(notCalculated)));
+
+    renderSection();
+
+    expect(await screen.findByText("Cycle time is being calculated")).toBeInTheDocument();
+    expect(screen.getByText("Cycle time has not been calculated yet")).toBeInTheDocument();
+  });
+
+  it("hides the bottleneck line when the API reports none", async () => {
+    const withoutBottleneck: Record<string, unknown> = { ...CYCLE_TIME_FIXTURE };
+    delete withoutBottleneck.bottleneck;
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(withoutBottleneck)));
+
+    renderSection();
+
+    expect(await screen.findByRole("list", { name: "Stage medians" })).toBeInTheDocument();
+    expect(screen.queryByText(/Bottleneck:/)).not.toBeInTheDocument();
+  });
+
   it("offers a retry when loading fails", async () => {
     server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(
       { type: "about:blank", title: "Internal Server Error", status: 500, code: "INTERNAL_ERROR", detail: "Boom" },
