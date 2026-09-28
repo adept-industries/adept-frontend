@@ -143,8 +143,8 @@ export function useChangeFailureRateDetails(filters: MetricDetailsFilters) {
 }
 
 /**
- * React Query hook for code-review cycle time (stage medians, stacked series,
- * size breakdown and review rounds). Shares the DORA scope filters.
+ * React Query hook for code-review cycle time (stage medians, stacked series
+ * and unreviewed pull requests). Shares the DORA scope filters.
  */
 export function useCycleTime(filters: CycleTimeFilters) {
   const { state } = useAuth();

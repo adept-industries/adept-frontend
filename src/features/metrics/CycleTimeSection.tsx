@@ -50,6 +50,13 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
               Retry
             </button>
           </div>
+        ) : data && data.pullRequestCount === 0 && !data.calculatedAt ? (
+          <div className="dash-empty cycle-time-empty">
+            <h3 className="dash-empty-title">Cycle time is being calculated</h3>
+            <p className="dash-empty-desc">
+              Stage times appear after the selected repositories finish their next sync.
+            </p>
+          </div>
         ) : !data || data.pullRequestCount === 0 ? (
           <div className="dash-empty cycle-time-empty">
             <h3 className="dash-empty-title">No merged pull requests in this period</h3>
