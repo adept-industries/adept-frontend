@@ -1468,7 +1468,7 @@ export interface components {
         };
         CycleTimeResponse: {
             /**
-             * @description Stage with the longest median, or null when there is no data.
+             * @description Stage with the longest non-zero median, or null when no stage took measurable time.
              * @enum {string}
              */
             bottleneck?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
@@ -1728,7 +1728,7 @@ export interface components {
                 [key: string]: unknown;
             };
             /** @enum {string} */
-            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_MERGE_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
+            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
             /** Format: date-time */
             periodEnd?: string;
             /** Format: date-time */
@@ -4216,7 +4216,7 @@ export interface operations {
                 /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
                 /** @description Metric type to fetch details for. */
-                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_MERGE_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -4275,7 +4275,7 @@ export interface operations {
                 projectId?: string;
                 /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
-                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_MERGE_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
                 granularity?: "DAY" | "WEEK" | "MONTH";
                 from?: string;
                 to?: string;
