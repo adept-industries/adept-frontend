@@ -641,7 +641,7 @@ export interface paths {
         };
         /**
          * Get scoped code-review cycle time
-         * @description Splits merged pull requests into coding, pickup, review, merge and deploy stages and returns stage medians for the range, a stacked series per period, a pull request size breakdown and review rounds. Pull requests are grouped by merge time and scoped exactly like the DORA metrics endpoints.
+         * @description Splits merged pull requests into coding, pickup, review and deploy stages and returns stage medians for the range, a stacked series per period and a pull request size breakdown. Pull requests are grouped by merge time and scoped exactly like the DORA metrics endpoints.
          */
         get: operations["getCycleTime"];
         put?: never;
@@ -1471,7 +1471,7 @@ export interface components {
              * @description Stage with the longest median, or null when there is no data.
              * @enum {string}
              */
-            bottleneck?: "CODING" | "PICKUP" | "REVIEW" | "MERGE" | "DEPLOY";
+            bottleneck?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
             /** Format: date-time */
             calculatedAt?: string;
             calculationVersion?: string;
@@ -1492,34 +1492,30 @@ export interface components {
             repositoryCount?: number;
             /** Format: uuid */
             repositoryId?: string;
-            reviewRounds?: components["schemas"]["CycleTimeReviewRoundsDto"];
             series?: components["schemas"]["CycleTimePeriodDto"][];
             sizeBreakdown?: components["schemas"]["CycleTimeSizeBucketDto"][];
             stages?: components["schemas"]["CycleTimeStageDto"][];
             stale?: boolean;
             timezone?: string;
+            /**
+             * Format: int32
+             * @description Merged pull requests in the range that no human reviewed before merge.
+             */
+            unreviewedPullRequestCount?: number;
             /** Format: uuid */
             workspaceId?: string;
         };
-        CycleTimeReviewRoundsDto: {
-            /** @description Average number of changes-requested reviews per reviewed pull request. */
-            averageRounds?: number;
-            /** Format: int32 */
-            pullRequestsWithChangesRequested?: number;
-            /**
-             * Format: int32
-             * @description Merged pull requests that received at least one human review.
-             */
-            reviewedPullRequestCount?: number;
-        };
         CycleTimeSizeBucketDto: {
-            /** @description Median pickup hours, or null when no pull request in the bucket was reviewed. */
-            pickupMedianHours?: number;
+            /** @description Median hours from ready for review to merge, or null when no pull request in the bucket has one. */
+            mergeMedianHours?: number | null;
             /** Format: int32 */
             pullRequestCount?: number;
-            /** @description Median review hours, or null when no pull request in the bucket was approved. */
-            reviewMedianHours?: number;
-            /** @description Changed-line bucket: XS <= 10, S <= 100, M <= 400, L <= 1000, XL > 1000. */
+            /**
+             * Format: int32
+             * @description Pull requests in the bucket that received at least one human review.
+             */
+            reviewedPullRequestCount?: number;
+            /** @description Changed-line bucket: S <= 100, M <= 400, L <= 1000, XL > 1000. */
             size?: string;
         };
         CycleTimeStageDto: {
@@ -1532,7 +1528,7 @@ export interface components {
              */
             sampleSize?: number;
             /** @enum {string} */
-            stage?: "CODING" | "PICKUP" | "REVIEW" | "MERGE" | "DEPLOY";
+            stage?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
         };
         DeleteWorkspaceRequest: {
             confirmationSlug: string;
