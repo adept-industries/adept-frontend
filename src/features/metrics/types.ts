@@ -240,21 +240,12 @@ export interface ChangeFailureRateDetailsResponse {
 type GeneratedCycleTimeResponse = components["schemas"]["CycleTimeResponse"];
 type GeneratedCycleTimeStage = components["schemas"]["CycleTimeStageDto"];
 type GeneratedCycleTimePeriod = components["schemas"]["CycleTimePeriodDto"];
-type GeneratedCycleTimeSizeBucket = components["schemas"]["CycleTimeSizeBucketDto"];
 
 export type CycleTimeStage = NonNullable<GeneratedCycleTimeStage["stage"]>;
 export type CycleTimeStageDto = RequiredGenerated<GeneratedCycleTimeStage>;
 
 export type CycleTimePeriodDto = Omit<RequiredGenerated<GeneratedCycleTimePeriod>, "stages"> & {
   stages: CycleTimeStageDto[];
-};
-
-export type CycleTimeSizeBucketDto = Omit<
-  RequiredGenerated<GeneratedCycleTimeSizeBucket>,
-  "mergeMedianHours"
-> & {
-  /** Ready for review to merge; null when no pull request of this size has one. */
-  mergeMedianHours: number | null;
 };
 
 export type CycleTimeResponse = Omit<
@@ -265,7 +256,6 @@ export type CycleTimeResponse = Omit<
   | "bottleneck"
   | "stages"
   | "series"
-  | "sizeBreakdown"
 > & {
   projectId: string | null;
   repositoryId: string | null;
@@ -273,7 +263,6 @@ export type CycleTimeResponse = Omit<
   bottleneck: CycleTimeStage | null;
   stages: CycleTimeStageDto[];
   series: CycleTimePeriodDto[];
-  sizeBreakdown: CycleTimeSizeBucketDto[];
 };
 
 export interface CycleTimeFilters extends DoraMetricsFilters {

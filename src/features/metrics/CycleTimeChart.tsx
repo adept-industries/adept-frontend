@@ -39,7 +39,7 @@ interface CycleTimeChartProps {
 
 const WIDTH = 720;
 const HEIGHT = 190;
-const PAD_LEFT = 40;
+const PAD_LEFT = 52;
 const PAD_RIGHT = 8;
 const PAD_TOP = 10;
 const PAD_BOTTOM = 24;

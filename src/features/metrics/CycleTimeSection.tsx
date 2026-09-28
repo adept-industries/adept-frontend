@@ -10,11 +10,6 @@ const STAGE_DESCRIPTIONS: Record<CycleTimeStage, string> = {
   DEPLOY: "Merge to production",
 };
 
-// The API omits null fields, so a missing median arrives as undefined.
-function formatOptionalHours(hours: number | null | undefined): string {
-  return hours == null ? "—" : formatCycleHours(hours);
-}
-
 function plural(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
@@ -120,38 +115,6 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
                   {label}
                 </span>
               ))}
-            </div>
-
-            <div className="cycle-time-insight">
-              <h3 className="cycle-time-insight-title">Pull request size</h3>
-              <table className="cycle-time-size-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Size</th>
-                    <th scope="col">PRs</th>
-                    <th scope="col">Reviewed</th>
-                    <th scope="col">Time to merge</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.sizeBreakdown.map((bucket) => (
-                    <tr key={bucket.size}>
-                      <th scope="row">{bucket.size}</th>
-                      <td>{bucket.pullRequestCount}</td>
-                      <td>
-                        {bucket.pullRequestCount > 0
-                          ? `${bucket.reviewedPullRequestCount} of ${bucket.pullRequestCount}`
-                          : "—"}
-                      </td>
-                      <td>{formatOptionalHours(bucket.mergeMedianHours)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="cycle-time-footnote">
-                Changed lines: S ≤ 100, M ≤ 400, L ≤ 1,000, XL &gt; 1,000. Time to merge is the median
-                from ready for review to merge.
-              </p>
             </div>
 
             <p className="cycle-time-footnote">

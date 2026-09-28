@@ -11,10 +11,14 @@ export function stageColorVar(stage: CycleTimeStage): string {
   return `var(--cycle-${stage.toLowerCase()})`;
 }
 
-/** Compact duration: minutes under an hour, hours under two days, then days. */
+function withUnit(value: number, singular: string, plural: string): string {
+  return `${value} ${value === 1 ? singular : plural}`;
+}
+
+/** Readable duration: minutes under an hour, hours under two days, then days. */
 export function formatCycleHours(hours: number): string {
-  if (hours <= 0) return "0h";
-  if (hours < 1) return `${Math.max(1, Math.round(hours * 60))}m`;
-  if (hours < 48) return `${Number(hours.toFixed(1))}h`;
-  return `${Number((hours / 24).toFixed(1))}d`;
+  if (hours <= 0) return "0 min";
+  if (hours < 1) return withUnit(Math.max(1, Math.round(hours * 60)), "min", "min");
+  if (hours < 48) return withUnit(Number(hours.toFixed(1)), "hr", "hrs");
+  return withUnit(Number((hours / 24).toFixed(1)), "day", "days");
 }

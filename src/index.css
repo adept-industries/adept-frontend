@@ -3704,54 +3704,6 @@ button.alerts-status {
   gap: 0.35rem;
 }
 
-.cycle-time-insight {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid var(--stat-card-border);
-  border-radius: 0.5rem;
-  background: var(--card-bg);
-}
-
-.cycle-time-insight-title {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.cycle-time-size-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.78rem;
-}
-
-.cycle-time-size-table th,
-.cycle-time-size-table td {
-  padding: 0.3rem 0.4rem;
-  border-bottom: 1px solid var(--dashboard-subtle-border);
-  text-align: right;
-  color: var(--text-primary);
-}
-
-.cycle-time-size-table thead th {
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-secondary);
-}
-
-.cycle-time-size-table th:first-child {
-  text-align: left;
-}
-
-.cycle-time-size-table tbody tr:last-child th,
-.cycle-time-size-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 .cycle-time-footnote {
   margin: 0;
   font-size: 0.72rem;
