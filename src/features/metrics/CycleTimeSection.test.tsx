@@ -7,7 +7,7 @@ import type { AuthenticatedState } from "../../auth/types.js";
 import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
-import { formatCycleHours } from "./cycleTime.js";
+import { formatCycleHours, formatPeriodRange } from "./cycleTime.js";
 import type { CycleTimeFilters } from "./types.js";
 
 const API = "/api/v1";
@@ -149,7 +149,7 @@ describe("CycleTimeSection", () => {
 
     renderSection();
 
-    expect(await screen.findByText("Sep 14 · 7 merged PRs · Coding 4 hrs · Pickup 14 hrs · Review 6 hrs · Deploy 17 hrs"))
+    expect(await screen.findByText("Sep 14 – 20 · 7 merged PRs · Coding 4 hrs · Pickup 14 hrs · Review 6 hrs · Deploy 17 hrs"))
       .toBeInTheDocument();
   });
 
@@ -162,7 +162,7 @@ describe("CycleTimeSection", () => {
     const bars = await screen.findAllByRole("img", { name: /merged pull requests/ });
     expect(bars).toHaveLength(2);
     await user.tab();
-    expect(screen.getByText("Sep 7 · 5 merged PRs · Coding 8 hrs · Pickup 44 hrs · Review 4 hrs · Deploy —"))
+    expect(screen.getByText("Sep 7 – 13 · 5 merged PRs · Coding 8 hrs · Pickup 44 hrs · Review 4 hrs · Deploy —"))
       .toBeInTheDocument();
   });
 
@@ -226,5 +226,45 @@ describe("formatCycleHours", () => {
     [72, "3 days"],
   ])("formats %s hours as %s", (hours, expected) => {
     expect(formatCycleHours(hours)).toBe(expected);
+  });
+});
+
+describe("formatPeriodRange", () => {
+  const week = (start: string, end: string) => ({ periodStart: start, periodEnd: end });
+
+  it.each([
+    // Full weeks show inclusive days, so neighbouring bars never share a date.
+    ["within a month", week("2026-08-24T00:00:00Z", "2026-08-31T00:00:00Z"), "Aug 24 – 30"],
+    ["across months", week("2026-08-31T00:00:00Z", "2026-09-07T00:00:00Z"), "Aug 31 – Sep 6"],
+  ])("labels a full week %s", (_name, period, expected) => {
+    expect(formatPeriodRange(period, "2026-08-01T00:00:00Z", "2026-10-01T00:00:00Z", "UTC")).toBe(expected);
+  });
+
+  it("clips the first and the current week to the selected range", () => {
+    const from = "2026-08-29T17:00:00Z";
+    const now = "2026-09-30T10:00:00Z";
+    expect(formatPeriodRange(week("2026-08-24T00:00:00Z", "2026-08-31T00:00:00Z"), from, now, "UTC"))
+      .toBe("Aug 29 – 30");
+    expect(formatPeriodRange(week("2026-09-28T00:00:00Z", "2026-10-05T00:00:00Z"), from, now, "UTC"))
+      .toBe("Sep 28 – 30");
+  });
+
+  it("shows one date for a single day or a week that has only just started", () => {
+    expect(formatPeriodRange(
+      week("2026-09-28T00:00:00Z", "2026-10-05T00:00:00Z"),
+      "2026-08-29T00:00:00Z",
+      "2026-09-28T06:00:00Z",
+      "UTC",
+    )).toBe("Sep 28");
+  });
+
+  it("uses the workspace timezone for the covered dates", () => {
+    // Monday 00:00 in Colombo is 18:30 UTC on the Sunday before.
+    expect(formatPeriodRange(
+      week("2026-08-30T18:30:00Z", "2026-09-06T18:30:00Z"),
+      "2026-08-01T00:00:00Z",
+      "2026-10-01T00:00:00Z",
+      "Asia/Colombo",
+    )).toBe("Aug 31 – Sep 6");
   });
 });
