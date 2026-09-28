@@ -1458,11 +1458,20 @@ export interface components {
             timezone: string;
         };
         CycleTimePeriodDto: {
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Exclusive end of the calendar period. The last period can end after the requested range.
+             */
             periodEnd?: string;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Start of the calendar day, Monday-start week or month in the workspace timezone. The first period can start before the requested range; only merges inside the range are counted.
+             */
             periodStart?: string;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Merged pull requests in this period and inside the requested range.
+             */
             pullRequestCount?: number;
             stages?: components["schemas"]["CycleTimeStageDto"][];
         };
