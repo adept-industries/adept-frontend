@@ -343,6 +343,34 @@ export const handlers = [
     }),
   ),
 
+  // Code-review cycle time — no merged pull requests by default.
+  http.get(`${API}/metrics/cycle-time`, () =>
+    HttpResponse.json({
+      workspaceId: "ws-1",
+      projectId: null,
+      repositoryId: null,
+      repositoryCount: 2,
+      periodStart: "2026-07-24T00:00:00Z",
+      periodEnd: "2026-08-23T00:00:00Z",
+      timezone: "UTC",
+      granularity: "WEEK",
+      calculationVersion: "cycle-time-v1",
+      calculatedAt: "2026-08-23T12:00:00Z",
+      stale: false,
+      pullRequestCount: 0,
+      bottleneck: null,
+      stages: ["CODING", "PICKUP", "REVIEW", "MERGE", "DEPLOY"].map((stage) => ({
+        stage,
+        medianHours: 0,
+        p75Hours: 0,
+        sampleSize: 0,
+      })),
+      series: [],
+      sizeBreakdown: [],
+      reviewRounds: { reviewedPullRequestCount: 0, averageRounds: 0, pullRequestsWithChangesRequested: 0 },
+    }),
+  ),
+
   // DORA metrics — series
   http.get(`${API}/metrics/series`, () =>
     HttpResponse.json({

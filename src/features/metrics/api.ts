@@ -1,5 +1,7 @@
 import { apiRequest } from "../../api/client.js";
 import type {
+  CycleTimeFilters,
+  CycleTimeResponse,
   DoraMetricsFilters,
   DoraMetricsSeriesFilters,
   DoraMetricsSummaryResponse,
@@ -108,6 +110,20 @@ export function fetchChangeFailureRateDetails(
     {
       method: "GET",
       path: `/metrics/change-failure-rate/details${buildSearchParams(filters)}`,
+      auth: "bearer",
+      signal,
+    }
+  );
+}
+
+export function fetchCycleTime(
+  filters: CycleTimeFilters,
+  signal?: AbortSignal,
+): Promise<CycleTimeResponse> {
+  return apiRequest<CycleTimeResponse>(
+    {
+      method: "GET",
+      path: `/metrics/cycle-time${buildSearchParams(filters)}`,
       auth: "bearer",
       signal,
     }

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { queryKeys } from "../../api/queryKeys.js";
 import {
+  fetchCycleTime,
   fetchDoraMetricsSummary,
   fetchDoraMetricsSeries,
   fetchDeploymentFrequencyDetails,
@@ -10,6 +11,8 @@ import {
   fetchChangeFailureRateDetails,
 } from "./api.js";
 import type {
+  CycleTimeFilters,
+  CycleTimeResponse,
   DoraMetricsFilters,
   DoraMetricsSeriesFilters,
   DoraMetricsSummaryResponse,
@@ -136,5 +139,25 @@ export function useChangeFailureRateDetails(filters: MetricDetailsFilters) {
     queryFn: ({ signal }) => fetchChangeFailureRateDetails(filters, signal),
     enabled: !!workspaceId,
     staleTime: 30 * 1000,
+  });
+}
+
+/**
+ * React Query hook for code-review cycle time (stage medians, stacked series,
+ * size breakdown and review rounds). Shares the DORA scope filters.
+ */
+export function useCycleTime(filters: CycleTimeFilters) {
+  const { state } = useAuth();
+  const workspaceId = state.status === "authenticated"
+    ? state.currentMembership.workspaceId
+    : null;
+
+  return useQuery<CycleTimeResponse>({
+    queryKey: workspaceId
+      ? queryKeys.cycleTime(workspaceId, filters)
+      : ["cycle-time-disabled"],
+    queryFn: ({ signal }) => fetchCycleTime(filters, signal),
+    enabled: !!workspaceId,
+    staleTime: 60 * 1000,
   });
 }

@@ -234,3 +234,53 @@ export interface ChangeFailureRateDetailsResponse {
   failureRatePercent: number;
   items: ChangeFailureRateDetailDto[];
 }
+
+// ── Code-review cycle time ────────────────────────────────────────────────
+
+type GeneratedCycleTimeResponse = components["schemas"]["CycleTimeResponse"];
+type GeneratedCycleTimeStage = components["schemas"]["CycleTimeStageDto"];
+type GeneratedCycleTimePeriod = components["schemas"]["CycleTimePeriodDto"];
+type GeneratedCycleTimeSizeBucket = components["schemas"]["CycleTimeSizeBucketDto"];
+
+export type CycleTimeStage = NonNullable<GeneratedCycleTimeStage["stage"]>;
+export type CycleTimeStageDto = RequiredGenerated<GeneratedCycleTimeStage>;
+export type CycleTimeReviewRoundsDto = RequiredGenerated<components["schemas"]["CycleTimeReviewRoundsDto"]>;
+
+export type CycleTimePeriodDto = Omit<RequiredGenerated<GeneratedCycleTimePeriod>, "stages"> & {
+  stages: CycleTimeStageDto[];
+};
+
+export type CycleTimeSizeBucketDto = Omit<
+  RequiredGenerated<GeneratedCycleTimeSizeBucket>,
+  "pickupMedianHours" | "reviewMedianHours"
+> & {
+  /** Null when no pull request of this size was reviewed. */
+  pickupMedianHours: number | null;
+  /** Null when no pull request of this size was approved. */
+  reviewMedianHours: number | null;
+};
+
+export type CycleTimeResponse = Omit<
+  RequiredGenerated<GeneratedCycleTimeResponse>,
+  | "projectId"
+  | "repositoryId"
+  | "calculatedAt"
+  | "bottleneck"
+  | "stages"
+  | "series"
+  | "sizeBreakdown"
+  | "reviewRounds"
+> & {
+  projectId: string | null;
+  repositoryId: string | null;
+  calculatedAt: string | null;
+  bottleneck: CycleTimeStage | null;
+  stages: CycleTimeStageDto[];
+  series: CycleTimePeriodDto[];
+  sizeBreakdown: CycleTimeSizeBucketDto[];
+  reviewRounds: CycleTimeReviewRoundsDto;
+};
+
+export interface CycleTimeFilters extends DoraMetricsFilters {
+  granularity: MetricGranularity;
+}
