@@ -3,33 +3,20 @@ import { CycleTimeChart } from "./CycleTimeChart.js";
 import { CYCLE_TIME_STAGES, formatCycleHours, stageColorVar } from "./cycleTime.js";
 import type { CycleTimeFilters, CycleTimeStage } from "./types.js";
 
-const BOTTLENECK_EXPLANATIONS: Record<CycleTimeStage, (duration: string) => string> = {
-  CODING: (duration) => `work took a median ${duration} before pull requests were ready for review.`,
-  PICKUP: (duration) => `pull requests waited a median ${duration} for their first review.`,
-  REVIEW: (duration) => `review took a median ${duration} from first review to approval.`,
-  MERGE: (duration) => `approved pull requests waited a median ${duration} to be merged.`,
-  DEPLOY: (duration) => `merged pull requests waited a median ${duration} to reach production.`,
-};
-
 const STAGE_DESCRIPTIONS: Record<CycleTimeStage, string> = {
   CODING: "First commit to ready for review",
   PICKUP: "Ready for review to first review",
-  REVIEW: "First review to approval",
-  MERGE: "Approval to merge",
+  REVIEW: "First review to merge",
   DEPLOY: "Merge to production",
 };
 
-const IconReview = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <circle cx="6" cy="6" r="3" />
-    <circle cx="18" cy="18" r="3" />
-    <path d="M6 9v12" />
-    <path d="M13 6h3a2 2 0 0 1 2 2v7" />
-  </svg>
-);
+// The API omits null fields, so a missing median arrives as undefined.
+function formatOptionalHours(hours: number | null | undefined): string {
+  return hours == null ? "—" : formatCycleHours(hours);
+}
 
-function formatOptionalHours(hours: number | null): string {
-  return hours === null ? "—" : formatCycleHours(hours);
+function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 interface CycleTimeSectionProps {
@@ -77,18 +64,6 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
           </div>
         ) : (
           <>
-            <div className="dora-card-header">
-              <div className="cycle-time-heading">
-                <span className="dora-card-icon-wrap"><IconReview /></span>
-                <div>
-                  <div className="dora-card-title">Where merged pull requests spend their time</div>
-                  <div className="dora-card-subtitle">
-                    {data.pullRequestCount} merged pull request{data.pullRequestCount === 1 ? "" : "s"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {data.bottleneck && (() => {
               const stage = data.stages.find((item) => item.stage === data.bottleneck);
               const label = CYCLE_TIME_STAGES.find((item) => item.stage === data.bottleneck)?.label;
@@ -96,7 +71,7 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
                 <p className="cycle-time-bottleneck" role="status">
                   <span className="cycle-time-dot" style={{ background: stageColorVar(stage.stage) }} aria-hidden="true" />
                   <strong>Bottleneck: {label}</strong>
-                  <span>— {BOTTLENECK_EXPLANATIONS[stage.stage](formatCycleHours(stage.medianHours))}</span>
+                  <span>· {formatCycleHours(stage.medianHours)}</span>
                 </p>
               ) : null;
             })()}
@@ -104,7 +79,10 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
             <ul className="cycle-time-stages" aria-label="Stage medians">
               {CYCLE_TIME_STAGES.map(({ stage, label }) => {
                 const value = data.stages.find((item) => item.stage === stage);
+                const sampleSize = value?.sampleSize ?? 0;
                 const isBottleneck = data.bottleneck === stage;
+                // Pickup and review only exist once someone reviews a pull request.
+                const needsReview = stage === "PICKUP" || stage === "REVIEW";
                 return (
                   <li
                     key={stage}
@@ -113,18 +91,25 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
                   >
                     <span className="cycle-time-stage-label">{label}</span>
                     <span className="cycle-time-stage-value">
-                      {value && value.sampleSize > 0 ? formatCycleHours(value.medianHours) : "—"}
+                      {value && sampleSize > 0 ? formatCycleHours(value.medianHours) : "—"}
                     </span>
                     <span className="cycle-time-stage-meta" title={STAGE_DESCRIPTIONS[stage]}>
                       {STAGE_DESCRIPTIONS[stage]}
                     </span>
                     <span className="cycle-time-stage-meta">
-                      {value?.sampleSize ?? 0} PR{value?.sampleSize === 1 ? "" : "s"}
+                      {sampleSize === 0 && needsReview ? "No reviewed PRs" : plural(sampleSize, "PR")}
                     </span>
                   </li>
                 );
               })}
             </ul>
+
+            {data.unreviewedPullRequestCount > 0 && (
+              <p className="cycle-time-unreviewed">
+                {data.unreviewedPullRequestCount} of {plural(data.pullRequestCount, "pull request")} were
+                merged without a review.
+              </p>
+            )}
 
             <CycleTimeChart series={data.series} timezone={timezone} granularity={data.granularity} />
 
@@ -137,52 +122,41 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
               ))}
             </div>
 
-            <div className="cycle-time-insights">
-              <div className="cycle-time-insight">
-                <h3 className="cycle-time-insight-title">Pull request size</h3>
-                <table className="cycle-time-size-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Size</th>
-                      <th scope="col">PRs</th>
-                      <th scope="col">Pickup</th>
-                      <th scope="col">Review</th>
+            <div className="cycle-time-insight">
+              <h3 className="cycle-time-insight-title">Pull request size</h3>
+              <table className="cycle-time-size-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Size</th>
+                    <th scope="col">PRs</th>
+                    <th scope="col">Reviewed</th>
+                    <th scope="col">Time to merge</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.sizeBreakdown.map((bucket) => (
+                    <tr key={bucket.size}>
+                      <th scope="row">{bucket.size}</th>
+                      <td>{bucket.pullRequestCount}</td>
+                      <td>
+                        {bucket.pullRequestCount > 0
+                          ? `${bucket.reviewedPullRequestCount} of ${bucket.pullRequestCount}`
+                          : "—"}
+                      </td>
+                      <td>{formatOptionalHours(bucket.mergeMedianHours)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {data.sizeBreakdown.map((bucket) => (
-                      <tr key={bucket.size}>
-                        <th scope="row">{bucket.size}</th>
-                        <td>{bucket.pullRequestCount}</td>
-                        <td>{formatOptionalHours(bucket.pickupMedianHours)}</td>
-                        <td>{formatOptionalHours(bucket.reviewMedianHours)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p className="cycle-time-footnote">
-                  Changed lines: XS ≤ 10, S ≤ 100, M ≤ 400, L ≤ 1,000, XL &gt; 1,000.
-                </p>
-              </div>
-
-              <div className="cycle-time-insight">
-                <h3 className="cycle-time-insight-title">Review rounds</h3>
-                <div className="dora-card-value-row">
-                  <span className="stat-card-value dora-card-value">
-                    {data.reviewRounds.averageRounds.toFixed(1)}
-                  </span>
-                  <span className="dora-card-unit">changes requested per reviewed PR</span>
-                </div>
-                <p className="cycle-time-footnote">
-                  {data.reviewRounds.pullRequestsWithChangesRequested} of {data.reviewRounds.reviewedPullRequestCount} reviewed
-                  pull request{data.reviewRounds.reviewedPullRequestCount === 1 ? "" : "s"} had changes requested.
-                </p>
-              </div>
+                  ))}
+                </tbody>
+              </table>
+              <p className="cycle-time-footnote">
+                Changed lines: S ≤ 100, M ≤ 400, L ≤ 1,000, XL &gt; 1,000. Time to merge is the median
+                from ready for review to merge.
+              </p>
             </div>
 
             <p className="cycle-time-footnote">
-              Pull requests are grouped by merge date. Each stage is a separate median, so stage values
-              do not add up to a total cycle time. Bot reviews and authors replying to comments are excluded.
+              Pull requests are grouped by merge week. Each stage is a separate median, so stages do not
+              add up exactly. Bot reviews and authors reviewing their own pull requests are excluded.
             </p>
           </>
         )}

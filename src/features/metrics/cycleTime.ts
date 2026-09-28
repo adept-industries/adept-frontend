@@ -4,7 +4,6 @@ export const CYCLE_TIME_STAGES: ReadonlyArray<{ stage: CycleTimeStage; label: st
   { stage: "CODING", label: "Coding" },
   { stage: "PICKUP", label: "Pickup" },
   { stage: "REVIEW", label: "Review" },
-  { stage: "MERGE", label: "Merge" },
   { stage: "DEPLOY", label: "Deploy" },
 ];
 

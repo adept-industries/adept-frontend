@@ -47,7 +47,6 @@
   --cycle-coding: #4f46e5;
   --cycle-pickup: #f59e0b;
   --cycle-review: #10b981;
-  --cycle-merge: #818cf8;
   --cycle-deploy: #737373;
 
   color: var(--text-primary);
@@ -3578,19 +3577,20 @@ button.alerts-status {
 .cycle-time-bottleneck {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.45rem;
   margin: 0;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--stat-card-border);
-  border-radius: 0.5rem;
-  background: var(--surface-muted);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
 }
 
 .cycle-time-bottleneck strong {
   color: var(--text-primary);
+}
+
+.cycle-time-unreviewed {
+  margin: -0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .cycle-time-dot {
@@ -3603,7 +3603,7 @@ button.alerts-status {
 
 .cycle-time-stages {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.6rem;
   margin: 0;
   padding: 0;
@@ -3704,12 +3704,6 @@ button.alerts-status {
   gap: 0.35rem;
 }
 
-.cycle-time-insights {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  gap: 0.9rem;
-}
-
 .cycle-time-insight {
   display: flex;
   flex-direction: column;
@@ -3766,16 +3760,6 @@ button.alerts-status {
 }
 
 @media (max-width: 900px) {
-  .cycle-time-stages {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .cycle-time-insights {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
   .cycle-time-stages {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

@@ -244,7 +244,6 @@ type GeneratedCycleTimeSizeBucket = components["schemas"]["CycleTimeSizeBucketDt
 
 export type CycleTimeStage = NonNullable<GeneratedCycleTimeStage["stage"]>;
 export type CycleTimeStageDto = RequiredGenerated<GeneratedCycleTimeStage>;
-export type CycleTimeReviewRoundsDto = RequiredGenerated<components["schemas"]["CycleTimeReviewRoundsDto"]>;
 
 export type CycleTimePeriodDto = Omit<RequiredGenerated<GeneratedCycleTimePeriod>, "stages"> & {
   stages: CycleTimeStageDto[];
@@ -252,12 +251,10 @@ export type CycleTimePeriodDto = Omit<RequiredGenerated<GeneratedCycleTimePeriod
 
 export type CycleTimeSizeBucketDto = Omit<
   RequiredGenerated<GeneratedCycleTimeSizeBucket>,
-  "pickupMedianHours" | "reviewMedianHours"
+  "mergeMedianHours"
 > & {
-  /** Null when no pull request of this size was reviewed. */
-  pickupMedianHours: number | null;
-  /** Null when no pull request of this size was approved. */
-  reviewMedianHours: number | null;
+  /** Ready for review to merge; null when no pull request of this size has one. */
+  mergeMedianHours: number | null;
 };
 
 export type CycleTimeResponse = Omit<
@@ -269,7 +266,6 @@ export type CycleTimeResponse = Omit<
   | "stages"
   | "series"
   | "sizeBreakdown"
-  | "reviewRounds"
 > & {
   projectId: string | null;
   repositoryId: string | null;
@@ -278,7 +274,6 @@ export type CycleTimeResponse = Omit<
   stages: CycleTimeStageDto[];
   series: CycleTimePeriodDto[];
   sizeBreakdown: CycleTimeSizeBucketDto[];
-  reviewRounds: CycleTimeReviewRoundsDto;
 };
 
 export interface CycleTimeFilters extends DoraMetricsFilters {

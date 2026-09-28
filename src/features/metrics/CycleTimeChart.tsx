@@ -18,6 +18,19 @@ function stageHours(period: CycleTimePeriodDto, stage: CycleTimeStage): number {
   return value && value.sampleSize > 0 ? value.medianHours : 0;
 }
 
+function describeStages(period: CycleTimePeriodDto, separator: string): string {
+  return CYCLE_TIME_STAGES
+    .map(({ stage, label }) => {
+      const value = period.stages.find((item) => item.stage === stage);
+      return `${label} ${value && value.sampleSize > 0 ? formatCycleHours(value.medianHours) : "—"}`;
+    })
+    .join(separator);
+}
+
+function plural(count: number): string {
+  return `${count} merged PR${count === 1 ? "" : "s"}`;
+}
+
 interface CycleTimeChartProps {
   series: CycleTimePeriodDto[];
   timezone: string;
@@ -47,7 +60,10 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
   const barWidth = Math.min(44, slot * 0.62);
   const labelEvery = Math.max(1, Math.ceil(series.length / 10));
   const y = (hours: number) => PAD_TOP + plotHeight - (hours / maxTotal) * plotHeight;
-  const active = activeIndex !== null ? series[activeIndex] : null;
+  // Until a bar is hovered, describe the latest period that had merges.
+  const latestIndex = series.findLastIndex((period) => period.pullRequestCount > 0);
+  const shownIndex = activeIndex ?? (latestIndex >= 0 ? latestIndex : null);
+  const shown = shownIndex !== null ? series[shownIndex] : null;
 
   return (
     <div className="cycle-time-chart">
@@ -91,9 +107,7 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
               className="cycle-time-bar"
               tabIndex={0}
               role="img"
-              aria-label={`${periodLabel}: ${period.pullRequestCount} merged pull requests. ${CYCLE_TIME_STAGES
-                .map(({ stage, label }) => `${label} ${formatCycleHours(stageHours(period, stage))}`)
-                .join(", ")}`}
+              aria-label={`${periodLabel}: ${period.pullRequestCount} merged pull requests. ${describeStages(period, ", ")}`}
               opacity={dimmed ? 0.4 : 1}
               onPointerEnter={() => setActiveIndex(index)}
               onFocus={() => setActiveIndex(index)}
@@ -135,11 +149,9 @@ export function CycleTimeChart({ series, timezone, granularity }: CycleTimeChart
       </svg>
 
       <p className="cycle-time-chart-detail" aria-live="polite">
-        {active
-          ? `${formatPeriod(active.periodStart, timezone, granularity)} · ${active.pullRequestCount} merged PRs · `
-            + CYCLE_TIME_STAGES
-              .map(({ stage, label }) => `${label} ${formatCycleHours(stageHours(active, stage))}`)
-              .join(" · ")
+        {shown
+          ? `${formatPeriod(shown.periodStart, timezone, granularity)} · ${plural(shown.pullRequestCount)} · `
+            + describeStages(shown, " · ")
           : "Hover or focus a bar to see its stage medians."}
       </p>
     </div>
