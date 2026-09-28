@@ -3568,12 +3568,6 @@ button.alerts-status {
   gap: 0.75rem;
 }
 
-.cycle-time-heading {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
 .cycle-time-bottleneck {
   display: flex;
   align-items: center;
