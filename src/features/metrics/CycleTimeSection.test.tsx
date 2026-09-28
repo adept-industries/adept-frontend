@@ -56,16 +56,16 @@ const CYCLE_TIME_FIXTURE = {
   periodEnd: FILTERS.to,
   timezone: "UTC",
   granularity: "WEEK",
-  calculationVersion: "cycle-time-v1",
+  calculationVersion: "cycle-time-v2",
   calculatedAt: "2026-09-21T08:00:00Z",
   stale: false,
   pullRequestCount: 12,
+  unreviewedPullRequestCount: 2,
   bottleneck: "PICKUP",
   stages: [
     stage("CODING", 6, 12),
     stage("PICKUP", 30, 10),
-    stage("REVIEW", 5.5, 9),
-    stage("MERGE", 0.5, 9),
+    stage("REVIEW", 0.5, 9),
     stage("DEPLOY", 17, 8),
   ],
   series: [
@@ -73,23 +73,22 @@ const CYCLE_TIME_FIXTURE = {
       periodStart: "2026-09-07T00:00:00Z",
       periodEnd: "2026-09-14T00:00:00Z",
       pullRequestCount: 5,
-      stages: [stage("CODING", 8, 5), stage("PICKUP", 44, 5), stage("REVIEW", 4, 4), stage("MERGE", 1, 4), stage("DEPLOY", 0, 0)],
+      stages: [stage("CODING", 8, 5), stage("PICKUP", 44, 5), stage("REVIEW", 4, 4), stage("DEPLOY", 0, 0)],
     },
     {
       periodStart: "2026-09-14T00:00:00Z",
       periodEnd: "2026-09-21T00:00:00Z",
       pullRequestCount: 7,
-      stages: [stage("CODING", 4, 7), stage("PICKUP", 14, 5), stage("REVIEW", 6, 5), stage("MERGE", 0.5, 5), stage("DEPLOY", 17, 8)],
+      stages: [stage("CODING", 4, 7), stage("PICKUP", 14, 5), stage("REVIEW", 6, 5), stage("DEPLOY", 17, 8)],
     },
   ],
   sizeBreakdown: [
-    { size: "XS", pullRequestCount: 2, pickupMedianHours: 3, reviewMedianHours: 1 },
-    { size: "S", pullRequestCount: 5, pickupMedianHours: 12, reviewMedianHours: 4 },
-    { size: "M", pullRequestCount: 4, pickupMedianHours: 40, reviewMedianHours: 8 },
-    { size: "L", pullRequestCount: 1, pickupMedianHours: 70, reviewMedianHours: null },
-    { size: "XL", pullRequestCount: 0, pickupMedianHours: null, reviewMedianHours: null },
+    { size: "S", pullRequestCount: 7, reviewedPullRequestCount: 6, mergeMedianHours: 12 },
+    { size: "M", pullRequestCount: 4, reviewedPullRequestCount: 3, mergeMedianHours: 40 },
+    { size: "L", pullRequestCount: 1, reviewedPullRequestCount: 1, mergeMedianHours: 70 },
+    // The API omits null fields, so an empty bucket has no mergeMedianHours at all.
+    { size: "XL", pullRequestCount: 0, reviewedPullRequestCount: 0 },
   ],
-  reviewRounds: { reviewedPullRequestCount: 10, averageRounds: 1.4, pullRequestsWithChangesRequested: 6 },
 };
 
 function renderSection() {
@@ -112,29 +111,68 @@ describe("CycleTimeSection", () => {
     renderSection();
 
     expect(await screen.findByText("Bottleneck: Pickup")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("waited a median 30h for their first review");
+    expect(screen.getByRole("status")).toHaveTextContent(/^Bottleneck: Pickup· 30h$/);
     expect(requested!.searchParams.get("projectId")).toBe("project-1");
     expect(requested!.searchParams.get("granularity")).toBe("WEEK");
     expect(requested!.searchParams.get("from")).toBe(FILTERS.from);
 
     const stages = within(screen.getByRole("list", { name: "Stage medians" })).getAllByRole("listitem");
     expect(stages.map((item) => item.querySelector(".cycle-time-stage-label")?.textContent))
-      .toEqual(["Coding", "Pickup", "Review", "Merge", "Deploy"]);
+      .toEqual(["Coding", "Pickup", "Review", "Deploy"]);
     expect(stages[1]).toHaveClass("cycle-time-stage--bottleneck");
-    expect(stages[3]).toHaveTextContent("30m");
-    expect(screen.getByText("12 merged pull requests")).toBeInTheDocument();
+    expect(stages[2]).toHaveTextContent("30m");
+    expect(screen.getByText(/2 of 12 pull requests were\s+merged without a review/)).toBeInTheDocument();
   });
 
-  it("shows size and review-round insights", async () => {
+  it("shows how pull request size affects review coverage and time to merge", async () => {
     server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(CYCLE_TIME_FIXTURE)));
 
     renderSection();
 
     const table = await screen.findByRole("table");
-    const largeRow = within(table).getByRole("row", { name: /^L / });
-    expect(largeRow).toHaveTextContent("L12.9d—");
-    expect(screen.getByText("1.4")).toBeInTheDocument();
-    expect(screen.getByText(/6 of 10 reviewed\s+pull requests had changes requested/)).toBeInTheDocument();
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(rows.map((row) => row.textContent)).toEqual([
+      "S76 of 712h",
+      "M43 of 440h",
+      "L11 of 12.9d",
+      "XL0——",
+    ]);
+  });
+
+  it("marks review stages without reviewed pull requests", async () => {
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
+      ...CYCLE_TIME_FIXTURE,
+      unreviewedPullRequestCount: 12,
+      bottleneck: "DEPLOY",
+      stages: [stage("CODING", 6, 12), stage("PICKUP", 0, 0), stage("REVIEW", 0, 0), stage("DEPLOY", 17, 8)],
+    })));
+
+    renderSection();
+
+    const stages = within(await screen.findByRole("list", { name: "Stage medians" })).getAllByRole("listitem");
+    expect(stages[1]).toHaveTextContent("—");
+    expect(stages[1]).toHaveTextContent("No reviewed PRs");
+    expect(stages[3]).toHaveTextContent("8 PRs");
+  });
+
+  it("describes the latest period with merges until a bar is hovered", async () => {
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
+      ...CYCLE_TIME_FIXTURE,
+      series: [
+        ...CYCLE_TIME_FIXTURE.series,
+        {
+          periodStart: "2026-09-21T00:00:00Z",
+          periodEnd: "2026-09-28T00:00:00Z",
+          pullRequestCount: 0,
+          stages: [stage("CODING", 0, 0), stage("PICKUP", 0, 0), stage("REVIEW", 0, 0), stage("DEPLOY", 0, 0)],
+        },
+      ],
+    })));
+
+    renderSection();
+
+    expect(await screen.findByText("Sep 14 · 7 merged PRs · Coding 4h · Pickup 14h · Review 6h · Deploy 17h"))
+      .toBeInTheDocument();
   });
 
   it("describes a bar's stages when it receives focus", async () => {
@@ -146,7 +184,8 @@ describe("CycleTimeSection", () => {
     const bars = await screen.findAllByRole("img", { name: /merged pull requests/ });
     expect(bars).toHaveLength(2);
     await user.tab();
-    expect(screen.getByText(/Sep 7 · 5 merged PRs · Coding 8h · Pickup 44h/)).toBeInTheDocument();
+    expect(screen.getByText("Sep 7 · 5 merged PRs · Coding 8h · Pickup 44h · Review 4h · Deploy —"))
+      .toBeInTheDocument();
   });
 
   it("shows the empty state when nothing was merged", async () => {

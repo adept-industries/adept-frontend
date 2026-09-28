@@ -354,12 +354,13 @@ export const handlers = [
       periodEnd: "2026-08-23T00:00:00Z",
       timezone: "UTC",
       granularity: "WEEK",
-      calculationVersion: "cycle-time-v1",
+      calculationVersion: "cycle-time-v2",
       calculatedAt: "2026-08-23T12:00:00Z",
       stale: false,
       pullRequestCount: 0,
+      unreviewedPullRequestCount: 0,
       bottleneck: null,
-      stages: ["CODING", "PICKUP", "REVIEW", "MERGE", "DEPLOY"].map((stage) => ({
+      stages: ["CODING", "PICKUP", "REVIEW", "DEPLOY"].map((stage) => ({
         stage,
         medianHours: 0,
         p75Hours: 0,
@@ -367,7 +368,6 @@ export const handlers = [
       })),
       series: [],
       sizeBreakdown: [],
-      reviewRounds: { reviewedPullRequestCount: 0, averageRounds: 0, pullRequestsWithChangesRequested: 0 },
     }),
   ),
 
