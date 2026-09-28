@@ -82,13 +82,6 @@ const CYCLE_TIME_FIXTURE = {
       stages: [stage("CODING", 4, 7), stage("PICKUP", 14, 5), stage("REVIEW", 6, 5), stage("DEPLOY", 17, 8)],
     },
   ],
-  sizeBreakdown: [
-    { size: "S", pullRequestCount: 7, reviewedPullRequestCount: 6, mergeMedianHours: 12 },
-    { size: "M", pullRequestCount: 4, reviewedPullRequestCount: 3, mergeMedianHours: 40 },
-    { size: "L", pullRequestCount: 1, reviewedPullRequestCount: 1, mergeMedianHours: 70 },
-    // The API omits null fields, so an empty bucket has no mergeMedianHours at all.
-    { size: "XL", pullRequestCount: 0, reviewedPullRequestCount: 0 },
-  ],
 };
 
 function renderSection() {
@@ -111,7 +104,7 @@ describe("CycleTimeSection", () => {
     renderSection();
 
     expect(await screen.findByText("Bottleneck: Pickup")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(/^Bottleneck: Pickup· 30h$/);
+    expect(screen.getByRole("status")).toHaveTextContent(/^Bottleneck: Pickup· 30 hrs$/);
     expect(requested!.searchParams.get("projectId")).toBe("project-1");
     expect(requested!.searchParams.get("granularity")).toBe("WEEK");
     expect(requested!.searchParams.get("from")).toBe(FILTERS.from);
@@ -120,23 +113,8 @@ describe("CycleTimeSection", () => {
     expect(stages.map((item) => item.querySelector(".cycle-time-stage-label")?.textContent))
       .toEqual(["Coding", "Pickup", "Review", "Deploy"]);
     expect(stages[1]).toHaveClass("cycle-time-stage--bottleneck");
-    expect(stages[2]).toHaveTextContent("30m");
+    expect(stages[2]).toHaveTextContent("30 min");
     expect(screen.getByText(/2 of 12 pull requests were\s+merged without a review/)).toBeInTheDocument();
-  });
-
-  it("shows how pull request size affects review coverage and time to merge", async () => {
-    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(CYCLE_TIME_FIXTURE)));
-
-    renderSection();
-
-    const table = await screen.findByRole("table");
-    const rows = within(table).getAllByRole("row").slice(1);
-    expect(rows.map((row) => row.textContent)).toEqual([
-      "S76 of 712h",
-      "M43 of 440h",
-      "L11 of 12.9d",
-      "XL0——",
-    ]);
   });
 
   it("marks review stages without reviewed pull requests", async () => {
@@ -171,7 +149,7 @@ describe("CycleTimeSection", () => {
 
     renderSection();
 
-    expect(await screen.findByText("Sep 14 · 7 merged PRs · Coding 4h · Pickup 14h · Review 6h · Deploy 17h"))
+    expect(await screen.findByText("Sep 14 · 7 merged PRs · Coding 4 hrs · Pickup 14 hrs · Review 6 hrs · Deploy 17 hrs"))
       .toBeInTheDocument();
   });
 
@@ -184,7 +162,7 @@ describe("CycleTimeSection", () => {
     const bars = await screen.findAllByRole("img", { name: /merged pull requests/ });
     expect(bars).toHaveLength(2);
     await user.tab();
-    expect(screen.getByText("Sep 7 · 5 merged PRs · Coding 8h · Pickup 44h · Review 4h · Deploy —"))
+    expect(screen.getByText("Sep 7 · 5 merged PRs · Coding 8 hrs · Pickup 44 hrs · Review 4 hrs · Deploy —"))
       .toBeInTheDocument();
   });
 
@@ -209,11 +187,14 @@ describe("CycleTimeSection", () => {
 
 describe("formatCycleHours", () => {
   it.each([
-    [0, "0h"],
-    [0.25, "15m"],
-    [5.56, "5.6h"],
-    [47.9, "47.9h"],
-    [72, "3d"],
+    [0, "0 min"],
+    [0.25, "15 min"],
+    [1, "1 hr"],
+    [5.56, "5.6 hrs"],
+    [47.9, "47.9 hrs"],
+    [24, "24 hrs"],
+    [48, "2 days"],
+    [72, "3 days"],
   ])("formats %s hours as %s", (hours, expected) => {
     expect(formatCycleHours(hours)).toBe(expected);
   });

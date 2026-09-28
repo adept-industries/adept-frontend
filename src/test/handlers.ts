@@ -367,7 +367,6 @@ export const handlers = [
         sampleSize: 0,
       })),
       series: [],
-      sizeBreakdown: [],
     }),
   ),
 
