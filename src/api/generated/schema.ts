@@ -641,7 +641,7 @@ export interface paths {
         };
         /**
          * Get scoped code-review cycle time
-         * @description Splits merged pull requests into coding, pickup, review and deploy stages and returns stage medians for the range, a stacked series per period and a pull request size breakdown. Pull requests are grouped by merge time and scoped exactly like the DORA metrics endpoints.
+         * @description Splits merged pull requests into coding, pickup, review and deploy stages and returns stage medians for the range and a stacked series per period. Pull requests are grouped by merge time and scoped exactly like the DORA metrics endpoints.
          */
         get: operations["getCycleTime"];
         put?: never;
@@ -1493,7 +1493,6 @@ export interface components {
             /** Format: uuid */
             repositoryId?: string;
             series?: components["schemas"]["CycleTimePeriodDto"][];
-            sizeBreakdown?: components["schemas"]["CycleTimeSizeBucketDto"][];
             stages?: components["schemas"]["CycleTimeStageDto"][];
             stale?: boolean;
             timezone?: string;
@@ -1504,19 +1503,6 @@ export interface components {
             unreviewedPullRequestCount?: number;
             /** Format: uuid */
             workspaceId?: string;
-        };
-        CycleTimeSizeBucketDto: {
-            /** @description Median hours from ready for review to merge, or null when no pull request in the bucket has one. */
-            mergeMedianHours?: number | null;
-            /** Format: int32 */
-            pullRequestCount?: number;
-            /**
-             * Format: int32
-             * @description Pull requests in the bucket that received at least one human review.
-             */
-            reviewedPullRequestCount?: number;
-            /** @description Changed-line bucket: S <= 100, M <= 400, L <= 1000, XL > 1000. */
-            size?: string;
         };
         CycleTimeStageDto: {
             /** @description Median hours spent in this stage; zero when sampleSize is zero. */
