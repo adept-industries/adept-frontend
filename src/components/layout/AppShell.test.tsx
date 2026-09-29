@@ -16,6 +16,7 @@ const authValue: AuthContextValue = {
       displayName: "Manager",
       emailVerified: true,
       hasPassword: true,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "20000000-0000-0000-0000-000000000001",

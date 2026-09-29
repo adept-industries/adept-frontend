@@ -200,6 +200,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete the account onboarding tour */
+        post: operations["completeOnboarding"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/reauthenticate/password": {
         parameters: {
             query?: never;
@@ -2125,6 +2142,7 @@ export interface components {
             email: string;
             emailVerified: boolean;
             hasPassword: boolean;
+            onboardingComplete: boolean;
             /** Format: uuid */
             id: string;
         };
@@ -3005,6 +3023,61 @@ export interface operations {
                 headers: {
                     /** @description Sensitive responses are not cached. */
                     "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    completeOnboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Onboarding marked complete */
+            204: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Authentication or session validation failed */
+            401: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description CSRF, origin, membership, or role authorization failed */
+            403: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description A request rate limit was exceeded */
+            429: {
+                headers: {
+                    /** @description Sensitive responses are not cached. */
+                    "Cache-Control"?: "no-store";
+                    /** @description Seconds until the request may be retried. */
+                    "Retry-After"?: number;
                     [name: string]: unknown;
                 };
                 content: {

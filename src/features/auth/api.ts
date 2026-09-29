@@ -207,6 +207,14 @@ export async function getMe(
   };
 }
 
+export async function completeOnboarding(): Promise<void> {
+  await apiRequest<void>({
+    method: "POST",
+    path: "/auth/onboarding/complete",
+    auth: "bearer",
+  });
+}
+
 export function resendVerification(email: EmailBody["email"]): Promise<void> {
   return apiRequest<void, EmailBody>({
     method: "POST",

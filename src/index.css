@@ -102,6 +102,130 @@
   color-scheme: dark;
 }
 
+.onboarding-tour {
+  position: fixed;
+  z-index: 1200;
+  width: min(380px, calc(100vw - 24px));
+  padding: 1rem;
+  border: 2px solid #262626;
+  border-radius: 1rem;
+  background: #e6e6e6;
+  color: #171717;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.28);
+  max-height: calc(100vh - 24px);
+  overflow: visible;
+}
+
+.onboarding-tour[data-pointer]::before,
+.onboarding-tour[data-pointer]::after {
+  position: absolute;
+  left: var(--pointer-x, 28px);
+  width: 0;
+  height: 0;
+  border-right: 10px solid transparent;
+  border-left: 10px solid transparent;
+  transform: translateX(-50%);
+  content: "";
+}
+
+.onboarding-tour[data-pointer="top"]::before {
+  top: -13px;
+  border-bottom: 12px solid #262626;
+}
+
+.onboarding-tour[data-pointer="top"]::after {
+  top: -9px;
+  border-right-width: 8px;
+  border-bottom: 10px solid #e6e6e6;
+  border-left-width: 8px;
+}
+
+.onboarding-tour[data-pointer="bottom"]::before {
+  bottom: -13px;
+  border-top: 12px solid #262626;
+}
+
+.onboarding-tour[data-pointer="bottom"]::after {
+  bottom: -9px;
+  border-right-width: 8px;
+  border-top: 10px solid #e6e6e6;
+  border-left-width: 8px;
+}
+
+.onboarding-tour--paused {
+  right: 1rem;
+  bottom: 1rem;
+  left: auto;
+  width: min(320px, calc(100vw - 32px));
+}
+
+.onboarding-tour__eyebrow {
+  margin-bottom: 0.35rem;
+  color: #444444;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.onboarding-tour__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.onboarding-tour__message {
+  margin: 0.45rem 0 1rem;
+  color: #383838;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.onboarding-tour__error {
+  margin: 0 0 0.75rem;
+  color: #9c2222;
+  font-size: 0.85rem;
+}
+
+.onboarding-tour__actions,
+.onboarding-tour__step-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.onboarding-tour__step-actions {
+  justify-content: flex-end;
+}
+
+.onboarding-tour__actions button {
+  min-height: 2.25rem !important;
+  padding: 0.45rem 0.7rem !important;
+  font-size: 0.78rem !important;
+}
+
+.onboarding-tour__quiet {
+  border-color: transparent !important;
+  background: transparent !important;
+  color: #383838 !important;
+}
+
+.onboarding-tour__primary {
+  border-color: #262626 !important;
+  background: #262626 !important;
+  color: #ffffff !important;
+}
+
+.onboarding-tour__primary:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+@media (max-width: 480px) {
+  .onboarding-tour--prompt .onboarding-tour__actions {
+    flex-wrap: wrap;
+  }
+}
+
 @keyframes gridPan {
   0% { background-position: 0 0; }
   100% { background-position: 40px 40px; }

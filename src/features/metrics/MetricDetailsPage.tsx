@@ -27,7 +27,6 @@ import type {
   DeploymentFrequencyDetailDto,
   DeploymentStatus,
   DoraMetricsFilters,
-  IncidentSeverity,
   IncidentSource,
   MetricRating,
   RecoveryDeploymentRefDto,
@@ -228,14 +227,6 @@ const INCIDENT_SOURCE_LABEL: Record<IncidentSource, string> = {
   GITHUB: "GitHub",
   JIRA: "Jira",
   MANUAL: "Manual",
-};
-
-const SEVERITY_CLASS: Record<IncidentSeverity, string> = {
-  SEV1: "metric-severity-badge--sev1",
-  SEV2: "metric-severity-badge--sev2",
-  SEV3: "metric-severity-badge--sev3",
-  SEV4: "metric-severity-badge--sev4",
-  UNKNOWN: "metric-severity-badge--unknown",
 };
 
 const DEPLOYMENT_STATUS_CLASS: Record<DeploymentStatus, string> = {
@@ -1123,7 +1114,6 @@ export function MetricDetailsPage() {
                       <tr>
                         <th scope="col">Incident</th>
                         <th scope="col">Repository</th>
-                        <th scope="col">Severity</th>
                         <th scope="col">Detected</th>
                         <th scope="col">Resolved</th>
                         <th scope="col">Recovery Time</th>
@@ -1143,11 +1133,6 @@ export function MetricDetailsPage() {
                             </div>
                           </td>
                           <td><strong>{item.repositoryFullName ?? item.repositoryName}</strong></td>
-                          <td>
-                            <span className={`metric-severity-badge ${SEVERITY_CLASS[item.severity] ?? SEVERITY_CLASS.UNKNOWN}`}>
-                              {item.severity === "UNKNOWN" ? "Unknown" : item.severity}
-                            </span>
-                          </td>
                           <td>{formatTimestamp(item.detectedAt, workspaceTimezone)}</td>
                           <td>{formatTimestamp(item.resolvedAt, workspaceTimezone)}</td>
                           <td>
@@ -1273,7 +1258,6 @@ export function MetricDetailsPage() {
                         <th scope="col">Status</th>
                         <th scope="col">Commit SHA</th>
                         <th scope="col">Counted as Failure</th>
-                        <th scope="col">Linked Incident</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1329,22 +1313,6 @@ export function MetricDetailsPage() {
                               </span>
                               <FailureReason item={item} />
                             </div>
-                          </td>
-                          <td>
-                            {item.incident ? (
-                              <div className="metric-incident-cell">
-                                <span className="metric-incident-title">{item.incident.title}</span>
-                                <span
-                                  className={`metric-severity-badge ${
-                                    SEVERITY_CLASS[item.incident.severity] ?? SEVERITY_CLASS.UNKNOWN
-                                  }`}
-                                >
-                                  {item.incident.severity === "UNKNOWN" ? "Unknown" : item.incident.severity}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="metric-details-muted">&mdash;</span>
-                            )}
                           </td>
                         </tr>
                       ))}

@@ -13,6 +13,7 @@ const accountUser = {
   displayName: "Test User",
   emailVerified: true,
   hasPassword: true,
+  onboardingComplete: true,
 };
 
 const recoveredState: AuthState = {

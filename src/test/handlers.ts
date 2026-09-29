@@ -32,6 +32,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -59,6 +60,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -90,6 +92,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: false,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -117,6 +120,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -135,6 +139,8 @@ export const handlers = [
   // Logout
   http.post(`${API}/auth/logout`, () => new HttpResponse(null, { status: 204 })),
 
+  http.post(`${API}/auth/onboarding/complete`, () => new HttpResponse(null, { status: 204 })),
+
   // Me
   http.get(`${API}/auth/me`, () =>
     HttpResponse.json({
@@ -144,6 +150,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -191,6 +198,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-1",
@@ -219,6 +227,7 @@ export const handlers = [
         displayName: "Test User",
         emailVerified: true,
         hasPassword: true,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "mem-recovered",

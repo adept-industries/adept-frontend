@@ -11,7 +11,7 @@ import { GoogleOnboardingPage } from "./GoogleOnboardingPage.js";
 const authenticatedState: AuthState = {
   status: "authenticated",
   generation: 1,
-  user: { id: "u", email: "google@example.com", displayName: "Google User", emailVerified: true, hasPassword: false },
+  user: { id: "u", email: "google@example.com", displayName: "Google User", emailVerified: true, hasPassword: false, onboardingComplete: true },
   currentMembership: {
     id: "m",
     workspaceId: "w",

@@ -23,6 +23,9 @@ describe("RepositorySettingsModal discovery", () => {
     const user = userEvent.setup();
     const save = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<RepositorySettingsModal repository={repository} onClose={vi.fn()} onSave={save} />);
+    const incidentSource = screen.getByRole("combobox", { name: "Incident Source" });
+    expect(incidentSource).toHaveDisplayValue("GitHub deployment outcomes");
+    expect(incidentSource.querySelectorAll("option")).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "Deployment Workflow Name Patterns" }));
     expect(await screen.findByRole("checkbox", { name: "CI" })).not.toBeChecked();
     expect(screen.getByRole("button", { name: "Remove Deploy, API" })).toBeInTheDocument();

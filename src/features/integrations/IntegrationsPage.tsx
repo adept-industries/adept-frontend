@@ -287,6 +287,9 @@ export function IntegrationsPage() {
       }
       return a.fullName.localeCompare(b.fullName);
     });
+  const tourRepositoryId = filteredRepos.find(
+    (repo) => !repo.archived && !isRepoDeletedFromGithub(repo, github?.lastSyncedAt),
+  )?.id;
 
   return (
     <AppShell>
@@ -358,9 +361,10 @@ export function IntegrationsPage() {
         )}
 
         {/* Integration Cards Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.5rem" }}>
+        <div id="integrations-card-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.5rem" }}>
           {/* GitHub Integration Card */}
           <div
+            id="github-integration-card"
             style={{
               backgroundColor: "var(--card-bg, #161622)",
               border: "1px solid var(--border-color, #272738)",
@@ -426,6 +430,7 @@ export function IntegrationsPage() {
                     <>
                       <button
                         type="button"
+                        id="sync-github-btn"
                         className="primary-button"
                         onClick={handleSyncGithub}
                         disabled={syncingGithub}
@@ -475,6 +480,7 @@ export function IntegrationsPage() {
 
           {/* Jira Integration Card */}
           <div
+            id="jira-integration-card"
             style={{
               backgroundColor: "var(--card-bg, #161622)",
               border: "1px solid var(--border-color, #272738)",
@@ -540,6 +546,7 @@ export function IntegrationsPage() {
                     <>
                       <button
                         type="button"
+                        id="sync-jira-btn"
                         className="primary-button"
                         onClick={() => void handleSyncJira()}
                         disabled={syncingJira}
@@ -590,7 +597,7 @@ export function IntegrationsPage() {
         </div>
 
         {/* Repository Catalog Section */}
-        <section style={{ backgroundColor: "var(--card-bg, #161622)", border: "1px solid var(--border-color, #272738)", borderRadius: "10px", padding: "1.5rem" }}>
+        <section id="repository-catalog" style={{ backgroundColor: "var(--card-bg, #161622)", border: "1px solid var(--border-color, #272738)", borderRadius: "10px", padding: "1.5rem" }}>
           <div
             style={{
               display: "flex",
@@ -743,6 +750,7 @@ export function IntegrationsPage() {
                         <td style={{ padding: "0.75rem 0.5rem" }}>
                           <input
                             type="checkbox"
+                            id={repo.id === tourRepositoryId ? "tour-repo-tracking" : undefined}
                             checked={repo.trackingEnabled}
                             onChange={() => void handleToggleRepoTracking(repo)}
                             disabled={isPending || isUnavailable}
@@ -895,6 +903,7 @@ export function IntegrationsPage() {
                               )}
                               <button
                                 type="button"
+                                id={repo.id === tourRepositoryId ? "tour-repo-settings" : undefined}
                                 className="button-link"
                                 onClick={() => {
                                   setGlowingRepoId(null);

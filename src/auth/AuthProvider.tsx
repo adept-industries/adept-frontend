@@ -13,6 +13,7 @@ import { ApiError } from "../api/problem.js";
 import { queryClient } from "../api/queryClient.js";
 import {
   completeGoogleOnboarding as requestGoogleOnboarding,
+  completeOnboarding as requestCompleteOnboarding,
   createWorkspaceForSession as requestSessionWorkspace,
   getMe,
   login as requestLogin,
@@ -414,6 +415,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [invalidateSession]);
 
+  const completeOnboarding = useCallback(async (): Promise<void> => {
+    const current = stateRef.current;
+    if (current.status !== "authenticated") return;
+
+    const completedUserId = current.user.id;
+    await requestCompleteOnboarding();
+    const latest = stateRef.current;
+    if (latest.status === "authenticated" && latest.user.id === completedUserId) {
+      publishState({
+        ...latest,
+        user: { ...latest.user, onboardingComplete: true },
+      });
+    }
+  }, [publishState]);
+
   const resetPassword = useCallback(async (params: ResetPasswordBody) => {
     try {
       await runSessionMutation(
@@ -458,6 +474,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       createWorkspace,
       selectWorkspace,
       refresh,
+      completeOnboarding,
       logout,
       resetPassword,
       updateCurrentWorkspace,
@@ -471,6 +488,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     createWorkspace,
     selectWorkspace,
     refresh,
+    completeOnboarding,
     logout,
     resetPassword,
     updateCurrentWorkspace,

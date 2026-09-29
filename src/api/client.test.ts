@@ -5,7 +5,7 @@ import { accessTokenStore } from "../auth/accessTokenStore.js";
 import { configureAuthRecovery } from "./client.js";
 import { ApiError } from "./problem.js";
 import { queryClient } from "./queryClient.js";
-import { completeGoogleOnboarding, getMe, signup } from "../features/auth/api.js";
+import { completeGoogleOnboarding, completeOnboarding, getMe, signup } from "../features/auth/api.js";
 import { getCurrentWorkspace, updateWorkspace } from "../features/workspaces/api.js";
 import { apiRequest } from "./client.js";
 import { server } from "../test/server.js";
@@ -95,6 +95,7 @@ describe("shared API client", () => {
             displayName: "Google User",
             emailVerified: true,
             hasPassword: false,
+            onboardingComplete: true,
           },
           currentMembership: {
             id: "m",
@@ -126,6 +127,24 @@ describe("shared API client", () => {
     expect(accessTokenStore.get()).toBe("google-session-token");
   });
 
+  it("completes account onboarding with bearer auth and CSRF protection", async () => {
+    accessTokenStore.set("memory-token");
+    let observedAuthorization: string | null = null;
+    let observedCsrf: string | null = null;
+    server.use(
+      http.post("/api/v1/auth/onboarding/complete", ({ request }) => {
+        observedAuthorization = request.headers.get("authorization");
+        observedCsrf = request.headers.get("x-xsrf-token");
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    await completeOnboarding();
+
+    expect(observedAuthorization).toBe("Bearer memory-token");
+    expect(observedCsrf).toBe("test-csrf");
+  });
+
   it("performs one 401 recovery/retry and never recovers a 403", async () => {
     let generation = 1;
     let token = "expired";
@@ -147,7 +166,7 @@ describe("shared API client", () => {
           return HttpResponse.json(problem(401, "SESSION_INVALID"), { status: 401 });
         }
         return HttpResponse.json({
-          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true, hasPassword: true },
+          user: { id: "u", email: "u@example.com", displayName: "U", emailVerified: true, hasPassword: true, onboardingComplete: true },
           currentMembership: { id: "m", workspaceId: "workspace-1", workspaceName: "W", workspaceSlug: "w", timezone: "UTC", role: "MANAGER" },
           workspaces: [{ id: "workspace-1", name: "W", slug: "w", timezone: "UTC", role: "MANAGER" }],
         });

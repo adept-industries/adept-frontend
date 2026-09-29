@@ -286,6 +286,7 @@ describe("AcceptInvitePage", () => {
         displayName: "Google Lead",
         emailVerified: true,
         hasPassword: false,
+        onboardingComplete: true,
       },
       currentMembership: {
         id: "m-1",

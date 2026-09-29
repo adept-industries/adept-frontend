@@ -11,7 +11,7 @@ function renderLanding(authenticated = false) {
     state: authenticated
       ? {
           status: "authenticated",
-          user: { id: "u1", email: "test@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true },
+          user: { id: "u1", email: "test@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true, onboardingComplete: true },
           currentMembership: {
             id: "m1",
             workspaceId: "ws1",

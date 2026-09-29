@@ -232,6 +232,7 @@ export function ProjectsPage() {
             </div>
             <button
               type="button"
+              id="tour-project-create"
               className="button-link"
               aria-expanded={showCreateProjectForm}
               aria-controls="create-project-panel"
@@ -270,7 +271,7 @@ export function ProjectsPage() {
             />
 
             {/* Repository Multi-select for Creation */}
-            <div>
+            <div id="tour-project-repository-selection">
               <label style={{ display: "block", fontSize: "0.9rem", fontWeight: 500, marginBottom: "0.5rem" }}>
                 Attach Repositories & Assign Leads ({createRepoIds.length} selected)
               </label>
@@ -339,7 +340,7 @@ export function ProjectsPage() {
 
                         {/* Lead assignment remains repository-specific. */}
                         {isSelected && (
-                          <div style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem", minWidth: 0 }}>
+                          <div id="tour-project-lead-assignment" style={{ paddingLeft: "1.75rem", display: "grid", gap: "0.75rem", minWidth: 0 }}>
                             <RepoLeadManager
                               repositoryId={repo.id}
                               repositoryName={repo.fullName}

@@ -85,6 +85,7 @@ function authenticatedState(role: "MANAGER" | "LEAD" = "MANAGER"): Authenticated
       displayName: "Alice Manager",
       emailVerified: true,
       hasPassword: true,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "mem-mgr",

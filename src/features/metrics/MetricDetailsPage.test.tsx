@@ -22,6 +22,7 @@ function authenticatedState(): AuthenticatedState {
       displayName: "Test User",
       emailVerified: true,
       hasPassword: true,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "mem-1",
@@ -391,8 +392,8 @@ describe("MetricDetailsPage", () => {
       "Status",
       "Commit SHA",
       "Counted as Failure",
-      "Linked Incident",
     ]);
+    expect(within(table).queryByRole("columnheader", { name: "Linked Incident" })).not.toBeInTheDocument();
 
     // Successful deployment that caused an incident still counts as a failure.
     const incidentRow = rows[1];
@@ -401,8 +402,6 @@ describe("MetricDetailsPage", () => {
     expect(within(incidentRow).getByText("SUCCESS")).toHaveClass("metric-status-badge--success");
     expect(within(incidentRow).getByText("Yes")).toHaveClass("metric-failure-flag--yes");
     expect(within(incidentRow).getByText("linked incident")).toBeInTheDocument();
-    expect(within(incidentRow).getByText("Checkout returns 500s")).toBeInTheDocument();
-    expect(within(incidentRow).getByText("SEV1")).toBeInTheDocument();
     expect(within(incidentRow).getByRole("link", { name: /inc0004/ })).toHaveAttribute(
       "href",
       "https://github.com/acme/engine/commit/inc0004aaaaaaaa",
@@ -412,7 +411,6 @@ describe("MetricDetailsPage", () => {
     const cancelledRow = rows[2];
     expect(within(cancelledRow).getByText("CANCELLED")).toHaveClass("metric-status-badge--cancelled");
     expect(within(cancelledRow).getByText("No")).toHaveClass("metric-failure-flag--no");
-    expect(within(cancelledRow).getByText("—")).toBeInTheDocument();
     expect(cancelledRow).not.toHaveClass("metric-details-row--failure");
 
     const failedRow = rows[3];
@@ -532,10 +530,19 @@ describe("MetricDetailsPage", () => {
     const table = screen.getByRole("table", { name: /Resolved incidents/i });
     const rows = within(table).getAllByRole("row");
     expect(rows).toHaveLength(3);
+    expect(within(rows[0]).getAllByRole("columnheader").map((h) => h.textContent)).toEqual([
+      "Incident",
+      "Repository",
+      "Detected",
+      "Resolved",
+      "Recovery Time",
+      "Failed Deployment",
+      "Recovery Deployment",
+    ]);
 
     const linkedRow = rows[1];
     expect(within(linkedRow).getByText("GitHub")).toBeInTheDocument();
-    expect(within(linkedRow).getByText("SEV1")).toBeInTheDocument();
+    expect(within(table).queryByRole("columnheader", { name: "Severity" })).not.toBeInTheDocument();
     expect(within(linkedRow).getByText("acme/engine")).toBeInTheDocument();
     expect(within(linkedRow).getByText("2h 30m")).toBeInTheDocument();
     expect(within(linkedRow).getByRole("link", { name: /bad0001/ })).toHaveAttribute(
@@ -549,7 +556,6 @@ describe("MetricDetailsPage", () => {
 
     const manualRow = rows[2];
     expect(within(manualRow).getByText("Manual")).toBeInTheDocument();
-    expect(within(manualRow).getByText("Unknown")).toBeInTheDocument();
     expect(within(manualRow).getByText("45m")).toBeInTheDocument();
     expect(within(manualRow).queryByRole("link")).not.toBeInTheDocument();
 
