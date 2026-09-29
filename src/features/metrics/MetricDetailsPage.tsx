@@ -541,6 +541,40 @@ export function MetricDetailsPage() {
         ? (availableRepositories.find((r) => r.id === repositoryIdParam)?.fullName ?? "Selected repository")
         : "All repositories";
 
+      let chartImage: string | null = null;
+      const svgElement = document.querySelector(".metric-details-chart-canvas svg") as SVGSVGElement | null;
+      if (svgElement) {
+        try {
+          const svgString = new XMLSerializer().serializeToString(svgElement);
+          const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+          const url = URL.createObjectURL(svgBlob);
+          
+          const img = new Image();
+          await new Promise((resolve) => {
+            const timer = setTimeout(resolve, 100);
+            img.onload = () => { clearTimeout(timer); resolve(null); };
+            img.onerror = () => { clearTimeout(timer); resolve(null); };
+            img.src = url;
+          });
+          
+          const canvas = document.createElement("canvas");
+          canvas.width = svgElement.clientWidth * 2;
+          canvas.height = svgElement.clientHeight * 2;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            // Fill white background just in case
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.scale(2, 2);
+            ctx.drawImage(img, 0, 0, svgElement.clientWidth, svgElement.clientHeight);
+            chartImage = canvas.toDataURL("image/png");
+          }
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          console.error("Failed to capture chart image", e);
+        }
+      }
+
       exportMetricPdf({
         title: activeTabConfig.title,
         metricLabel: activeTabConfig.label,
@@ -568,6 +602,7 @@ export function MetricDetailsPage() {
             ? formatFailureBreakdown(changeFailureRateQuery.data)
             : null,
         data: exportData,
+        chartImage,
       });
     } catch {
       // In case of error, gracefully handle
