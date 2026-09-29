@@ -3,6 +3,7 @@ import { type ReactNode } from "react";
 import { AuthProvider } from "../auth/AuthProvider.js";
 import { queryClient } from "../api/queryClient.js";
 import { ProjectProvider } from "../features/projects/ProjectProvider.js";
+import { OnboardingTourProvider } from "../features/onboarding/OnboardingTour.js";
 
 /**
  * Top-level provider tree.
@@ -14,7 +15,11 @@ import { ProjectProvider } from "../features/projects/ProjectProvider.js";
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider><ProjectProvider>{children}</ProjectProvider></AuthProvider>
+      <AuthProvider>
+        <ProjectProvider>
+          <OnboardingTourProvider>{children}</OnboardingTourProvider>
+        </ProjectProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -17,7 +17,7 @@ function renderAppAt(path: string, authState: AuthTestState | boolean = "anonymo
     normalizedState === "authenticated"
       ? {
           status: "authenticated" as const,
-          user: { id: "u1", email: "dev@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true },
+          user: { id: "u1", email: "dev@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true, onboardingComplete: true },
           currentMembership: {
             id: "m1",
             workspaceId: "ws1",
@@ -32,7 +32,7 @@ function renderAppAt(path: string, authState: AuthTestState | boolean = "anonymo
       : normalizedState === "workspaceRequired"
         ? {
             status: "workspaceRequired" as const,
-            user: { id: "u1", email: "dev@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true },
+            user: { id: "u1", email: "dev@adept.dev", displayName: "Dev", emailVerified: true, hasPassword: true, onboardingComplete: true },
             workspaces: [{ id: "ws1", name: "Adept HQ", slug: "adept-hq", timezone: "UTC", role: "MANAGER" as const }],
           }
         : { status: "anonymous" as const };

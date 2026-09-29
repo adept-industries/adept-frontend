@@ -91,7 +91,7 @@ export function TeamsPage() {
 
       <div className={`teams-layout ${routeProjectId ? "has-selected-chat" : "no-selected-chat"}`}>
         {/* Left: Teams / Projects List */}
-        <aside className="teams-sidebar" aria-label="Team chats">
+        <aside id="team-channels-panel" className="teams-sidebar" aria-label="Team chats">
           <div className="teams-sidebar-header">
             <h2 className="teams-sidebar-title">
               Team chats

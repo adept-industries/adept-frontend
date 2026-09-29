@@ -20,6 +20,7 @@ function authenticatedState(role: "MANAGER" | "LEAD"): AuthenticatedState {
       displayName: "Test User",
       emailVerified: true,
       hasPassword: true,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "membership-1",

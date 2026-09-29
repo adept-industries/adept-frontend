@@ -29,6 +29,7 @@ function authenticatedState(hasPassword: boolean): AuthenticatedState {
       displayName: "Manager",
       emailVerified: true,
       hasPassword,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "mem-1",
@@ -80,6 +81,7 @@ function leadState(): AuthenticatedState {
       displayName: "Lead",
       emailVerified: true,
       hasPassword: true,
+      onboardingComplete: true,
     },
     currentMembership: {
       id: "mem-2",

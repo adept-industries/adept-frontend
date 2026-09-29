@@ -19,6 +19,7 @@ export interface AuthActions {
   createWorkspace(params: SessionWorkspaceBody): Promise<AuthState>;
   selectWorkspace(workspaceId: string): Promise<AuthState>;
   refresh(options?: { withoutWorkspace?: boolean }): Promise<AuthState>;
+  completeOnboarding(): Promise<void>;
   logout(): Promise<void>;
   resetPassword(params: ResetPasswordBody): Promise<void>;
   updateCurrentWorkspace(params: { name: string; timezone: string }): void;

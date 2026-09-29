@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { WorkspaceSwitcher } from "../../features/workspaces/WorkspaceSwitcher";
 import { ProjectSelector } from "../../features/projects/ProjectSelector";
+import { OnboardingTour } from "../../features/onboarding/OnboardingTour.js";
+import { useOnboardingTour } from "../../features/onboarding/OnboardingTourContext.js";
 import { useAuth } from "../../auth/AuthProvider";
 import logoPath from "../../assets/logo.png";
 
@@ -88,6 +90,15 @@ const CloseIcon = () => (
   </svg>
 );
 
+const TourIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 2.5v1.4M21.5 12h-1.4M12 21.5v-1.4M2.5 12h1.4" />
+    <path d="M16.2 7.8 13 13 7.8 16.2 11 11 16.2 7.8z" />
+    <path d="M16.2 7.8 13 13 11 11z" fill="currentColor" stroke="none" />
+  </svg>
+);
+
 const ThemeIcon = ({ theme }: { theme: DashboardTheme }) =>
   theme === "dark" ? (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -143,9 +154,10 @@ interface FloatingSidebarProps {
   onMobileClose: () => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
+  onStartTour: () => void;
 }
 
-function FloatingSidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollapse }: FloatingSidebarProps) {
+function FloatingSidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollapse, onStartTour }: FloatingSidebarProps) {
   const { state, actions } = useAuth();
   const location = useLocation();
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
@@ -285,6 +297,15 @@ function FloatingSidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollaps
             label={theme === "dark" ? "Light mode" : "Dark mode"}
           />
 
+          {isAuthenticated && (
+            <SidebarNavItem
+              onClick={() => { onMobileClose(); onStartTour(); }}
+              id="sidebar-nav-tour"
+              icon={<TourIcon />}
+              label="Take a tour"
+            />
+          )}
+
           <SidebarNavItem
             onClick={() => { onMobileClose(); void actions.logout(); }}
             id="sidebar-nav-logout"
@@ -310,6 +331,9 @@ function FloatingSidebar({ mobileOpen, onMobileClose, collapsed, onToggleCollaps
 // ─── AppShell ─────────────────────────────────────────────────────────────────
 
 export function AppShell({ children }: AppShellProps) {
+  const { state } = useAuth();
+  const tour = useOnboardingTour();
+  const navigate = useNavigate();
   const [theme, setTheme] = useState<DashboardTheme>(() => dashboardThemePreference.get());
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -343,7 +367,17 @@ export function AppShell({ children }: AppShellProps) {
         onMobileClose={() => setMobileOpen(false)}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed((p) => !p)}
+        onStartTour={() => {
+          if (state.status === "authenticated") {
+            tour.startTour(state.user.id);
+            if (location.pathname !== "/dashboard") {
+              void navigate("/dashboard");
+            }
+          }
+        }}
       />
+
+      <OnboardingTour pathname={location.pathname} />
 
       {/* Content area */}
       <div className="dashboard-content-area">
