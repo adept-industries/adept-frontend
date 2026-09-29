@@ -277,9 +277,6 @@ export function RepositorySettingsModal({
                 }}
               >
                 <option value="GITHUB">GitHub deployment outcomes</option>
-                <option value="BOTH" disabled>GitHub & Jira (Phase 9)</option>
-                <option value="JIRA" disabled>Jira incidents (Phase 9)</option>
-                <option value="MANUAL" disabled>Manual incidents (Phase 9)</option>
               </select>
               <p id="repository-incident-source-help" style={helpTextStyle}>
                 Tracks failed deployments until the next successful deployment.
