@@ -193,12 +193,12 @@ describe("AlertsPage", () => {
     await user.click(await screen.findByRole("button", { name: "+ New Alert Rule" }));
     await user.type(screen.getByLabelText(/Rule Name/i), "Invalid risk threshold");
     await user.selectOptions(screen.getByLabelText(/Metric to Evaluate/i), "PR_RISK_SCORE");
-    const thresholdInput = screen.getByLabelText(/Threshold \(score\)/i);
+    const thresholdInput = screen.getByLabelText(/Threshold \(%\)/i);
     await user.clear(thresholdInput);
-    await user.type(thresholdInput, "1.5");
+    await user.type(thresholdInput, "150");
     await user.click(screen.getByRole("button", { name: "Create Rule" }));
 
-    expect(await screen.findByText("PR risk thresholds must be between 0 and 1.")).toBeInTheDocument();
+    expect(await screen.findByText("PR risk thresholds must be between 0% and 100%.")).toBeInTheDocument();
     expect(createRequests).toBe(0);
   });
 

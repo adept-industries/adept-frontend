@@ -43,10 +43,10 @@ const METRIC_OPTIONS: { label: string; value: AlertMetricType; unit: string; des
     description: "Time to restore service after a production failure/incident (MTTR).",
   },
   {
-    label: "PR Estimated Review Risk",
+    label: "PR Estimated Review Risk (%)",
     value: "PR_RISK_SCORE",
-    unit: "score",
-    description: "Machine learning estimated review risk score for open pull requests (0.00 to 1.00).",
+    unit: "%",
+    description: "Machine learning estimated review risk probability for open pull requests (0% to 100%).",
   },
 ];
 
@@ -76,6 +76,20 @@ function formatDurationHours(minutes: number): string {
   return `${new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(hours)}h`;
 }
 
+function toUiThreshold(metricType: AlertMetricType, rawThreshold: number): number {
+  if (metricType === "PR_RISK_SCORE") {
+    return Number((rawThreshold * 100).toFixed(2));
+  }
+  return rawThreshold;
+}
+
+function toApiThreshold(metricType: AlertMetricType, uiThreshold: number): number {
+  if (metricType === "PR_RISK_SCORE") {
+    return Number((uiThreshold / 100).toFixed(4));
+  }
+  return uiThreshold;
+}
+
 function validateRuleValues(
   metricType: AlertMetricType,
   threshold: number,
@@ -85,8 +99,8 @@ function validateRuleValues(
   if (!Number.isFinite(threshold)) {
     return "Provide a valid numeric threshold.";
   }
-  if (metricType === "PR_RISK_SCORE" && (threshold < 0 || threshold > 1)) {
-    return "PR risk thresholds must be between 0 and 1.";
+  if (metricType === "PR_RISK_SCORE" && (threshold < 0 || threshold > 100)) {
+    return "PR risk thresholds must be between 0% and 100%.";
   }
   if (metricType === "CHANGE_FAILURE_RATE_PERCENT" && (threshold < 0 || threshold > 100)) {
     return "Change failure rate thresholds must be between 0% and 100%.";
@@ -224,7 +238,7 @@ export function AlertsPage() {
         repositoryId,
         metricType,
         comparator,
-        thresholdValue: parsedThreshold,
+        thresholdValue: toApiThreshold(metricType, parsedThreshold),
         evaluationWindowMinutes,
         cooldownMinutes,
         destination: destination.trim() || userEmail,
@@ -245,7 +259,7 @@ export function AlertsPage() {
     setEditingRule(rule);
     setEditName(rule.name);
     setEditComparator(rule.comparator);
-    setEditThresholdValue(String(rule.thresholdValue));
+    setEditThresholdValue(String(toUiThreshold(rule.metricType, rule.thresholdValue)));
     setEditEvaluationWindowHours(minutesToHoursInput(rule.evaluationWindowMinutes));
     setEditCooldownHours(minutesToHoursInput(rule.cooldownMinutes));
     setEditDestination(rule.destination);
@@ -278,7 +292,7 @@ export function AlertsPage() {
       await updateAlertRule(editingRule.id, {
         name: editName.trim() || undefined,
         comparator: editComparator,
-        thresholdValue: parsedThreshold,
+        thresholdValue: toApiThreshold(editingRule.metricType, parsedThreshold),
         evaluationWindowMinutes: Number(editEvaluationWindowMinutes),
         cooldownMinutes: Number(editCooldownMinutes),
         destination: editDestination.trim() || undefined,
@@ -453,7 +467,7 @@ export function AlertsPage() {
                     </td>
                     <td data-label="Condition">
                       <span className="alerts-table__condition">
-                        {rule.comparator} {rule.thresholdValue} {metricMeta?.unit}
+                        {rule.comparator} {toUiThreshold(rule.metricType, rule.thresholdValue)} {metricMeta?.unit}
                       </span>
                     </td>
                     <td data-label="Window / Cooldown">
@@ -888,7 +902,7 @@ export function AlertsPage() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   <label htmlFor="edit-rule-threshold" style={{ fontSize: "0.875rem", fontWeight: 600 }}>
-                    Threshold Value *
+                    Threshold ({METRIC_OPTIONS.find((m) => m.value === editingRule.metricType)?.unit ?? "val"}) *
                   </label>
                   <input
                     id="edit-rule-threshold"
