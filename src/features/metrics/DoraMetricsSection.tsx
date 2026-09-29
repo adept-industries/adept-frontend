@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { useDoraMetricsSummary, useDoraMetricsSeries } from "./useDoraMetrics.js";
 import { DoraMetricCard } from "./DoraMetricCard.js";
+import { CycleTimeSection } from "./CycleTimeSection.js";
 import type { DoraMetricsFilters, MetricSeriesItemDto, MetricType } from "./types.js";
 
 // ── Time range presets ─────────────────────────────────────────────────────
@@ -195,6 +196,12 @@ export function DoraMetricsSection({
     to:   range.to,
   }), [selectedProjectId, selectedRepositoryId, range]);
 
+  const cycleTimeFilters = useMemo(() => ({
+    ...filters,
+    // Weekly cohorts keep stage medians meaningful; a single week shows its days.
+    granularity: preset === "7d" ? "DAY" as const : "WEEK" as const,
+  }), [filters, preset]);
+
   const summaryQuery = useDoraMetricsSummary(filters);
   const seriesQuery = useDoraMetricsSeries({
     ...filters,
@@ -231,6 +238,7 @@ export function DoraMetricsSection({
   };
 
   return (
+    <>
     <section className="dora-section" aria-label="DORA Metrics">
       {/* Section header + filter bar */}
       <div className="dora-section-header">
@@ -385,5 +393,7 @@ export function DoraMetricsSection({
         </p>
       )}
     </section>
+    <CycleTimeSection filters={cycleTimeFilters} fallbackTimezone={workspaceTimezone} />
+    </>
   );
 }

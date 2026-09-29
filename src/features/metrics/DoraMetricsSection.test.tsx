@@ -122,7 +122,8 @@ describe("DoraMetricsSection", () => {
 
     renderSection();
 
-    const skeletons = screen.getAllByRole("generic", { busy: true });
+    const doraSection = screen.getByRole("region", { name: "DORA Metrics" });
+    const skeletons = within(doraSection).getAllByRole("generic", { busy: true });
     // The section renders 4 aria-busy skeleton cards
     expect(skeletons.length).toBe(4);
   });

@@ -632,6 +632,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/metrics/cycle-time": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get scoped code-review cycle time
+         * @description Splits merged pull requests into coding, pickup, review and deploy stages and returns stage medians for the range and a stacked series per period. Pull requests are grouped by merge time and scoped exactly like the DORA metrics endpoints.
+         */
+        get: operations["getCycleTime"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/metrics/deployment-frequency/details": {
         parameters: {
             query?: never;
@@ -1437,6 +1457,74 @@ export interface components {
             slug: string;
             timezone: string;
         };
+        CycleTimePeriodDto: {
+            /**
+             * Format: date-time
+             * @description Exclusive end of the calendar period. The last period can end after the requested range.
+             */
+            periodEnd?: string;
+            /**
+             * Format: date-time
+             * @description Start of the calendar day, Monday-start week or month in the workspace timezone. The first period can start before the requested range; only merges inside the range are counted.
+             */
+            periodStart?: string;
+            /**
+             * Format: int32
+             * @description Merged pull requests in this period and inside the requested range.
+             */
+            pullRequestCount?: number;
+            stages?: components["schemas"]["CycleTimeStageDto"][];
+        };
+        CycleTimeResponse: {
+            /**
+             * @description Stage with the longest non-zero median, or null when no stage took measurable time.
+             * @enum {string}
+             */
+            bottleneck?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
+            /** Format: date-time */
+            calculatedAt?: string;
+            calculationVersion?: string;
+            /** @enum {string} */
+            granularity?: "DAY" | "WEEK" | "MONTH";
+            /** Format: date-time */
+            periodEnd?: string;
+            /** Format: date-time */
+            periodStart?: string;
+            /** Format: uuid */
+            projectId?: string;
+            /**
+             * Format: int32
+             * @description Merged pull requests in the range with at least one measurable stage.
+             */
+            pullRequestCount?: number;
+            /** Format: int32 */
+            repositoryCount?: number;
+            /** Format: uuid */
+            repositoryId?: string;
+            series?: components["schemas"]["CycleTimePeriodDto"][];
+            stages?: components["schemas"]["CycleTimeStageDto"][];
+            stale?: boolean;
+            timezone?: string;
+            /**
+             * Format: int32
+             * @description Merged pull requests in the range that no human reviewed before merge.
+             */
+            unreviewedPullRequestCount?: number;
+            /** Format: uuid */
+            workspaceId?: string;
+        };
+        CycleTimeStageDto: {
+            /** @description Median hours spent in this stage; zero when sampleSize is zero. */
+            medianHours?: number;
+            p75Hours?: number;
+            /**
+             * Format: int32
+             * @description Merged pull requests with a measurable duration for this stage.
+             */
+            sampleSize?: number;
+            /** @enum {string} */
+            stage?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
+        };
         DeleteWorkspaceRequest: {
             confirmationSlug: string;
         };
@@ -1649,7 +1737,7 @@ export interface components {
                 [key: string]: unknown;
             };
             /** @enum {string} */
-            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+            metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
             /** Format: date-time */
             periodEnd?: string;
             /** Format: date-time */
@@ -4072,6 +4160,34 @@ export interface operations {
             };
         };
     };
+    getCycleTime: {
+        parameters: {
+            query?: {
+                /** @description Optional selected project scope. */
+                projectId?: string;
+                /** @description Optional single repository within the selected scope. */
+                repositoryId?: string;
+                granularity?: "DAY" | "WEEK" | "MONTH";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CycleTimeResponse"];
+                };
+            };
+        };
+    };
     getDeploymentFrequencyDetails: {
         parameters: {
             query?: {
@@ -4109,7 +4225,7 @@ export interface operations {
                 /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
                 /** @description Metric type to fetch details for. */
-                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
                 from?: string;
                 to?: string;
                 page?: number;
@@ -4168,7 +4284,7 @@ export interface operations {
                 projectId?: string;
                 /** @description Optional single repository within the selected scope. */
                 repositoryId?: string;
-                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT";
+                metricType?: "CHANGE_LEAD_TIME_HOURS" | "DEPLOYMENT_FREQUENCY" | "FAILED_DEPLOYMENT_RECOVERY_TIME_HOURS" | "CHANGE_FAILURE_RATE_PERCENT" | "PR_CODING_TIME_HOURS" | "PR_PICKUP_TIME_HOURS" | "PR_REVIEW_TIME_HOURS" | "PR_DEPLOY_TIME_HOURS";
                 granularity?: "DAY" | "WEEK" | "MONTH";
                 from?: string;
                 to?: string;

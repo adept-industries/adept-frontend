@@ -234,3 +234,37 @@ export interface ChangeFailureRateDetailsResponse {
   failureRatePercent: number;
   items: ChangeFailureRateDetailDto[];
 }
+
+// ── Code-review cycle time ────────────────────────────────────────────────
+
+type GeneratedCycleTimeResponse = components["schemas"]["CycleTimeResponse"];
+type GeneratedCycleTimeStage = components["schemas"]["CycleTimeStageDto"];
+type GeneratedCycleTimePeriod = components["schemas"]["CycleTimePeriodDto"];
+
+export type CycleTimeStage = NonNullable<GeneratedCycleTimeStage["stage"]>;
+export type CycleTimeStageDto = RequiredGenerated<GeneratedCycleTimeStage>;
+
+export type CycleTimePeriodDto = Omit<RequiredGenerated<GeneratedCycleTimePeriod>, "stages"> & {
+  stages: CycleTimeStageDto[];
+};
+
+export type CycleTimeResponse = Omit<
+  RequiredGenerated<GeneratedCycleTimeResponse>,
+  | "projectId"
+  | "repositoryId"
+  | "calculatedAt"
+  | "bottleneck"
+  | "stages"
+  | "series"
+> & {
+  projectId: string | null;
+  repositoryId: string | null;
+  calculatedAt: string | null;
+  bottleneck: CycleTimeStage | null;
+  stages: CycleTimeStageDto[];
+  series: CycleTimePeriodDto[];
+};
+
+export interface CycleTimeFilters extends DoraMetricsFilters {
+  granularity: MetricGranularity;
+}

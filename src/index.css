@@ -43,6 +43,12 @@
   --stat-card-border: rgba(0, 0, 0, 0.08);
   --stat-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
 
+  /* Code-review cycle-time stages reuse the dashboard's rating palette. */
+  --cycle-coding: #4f46e5;
+  --cycle-pickup: #f59e0b;
+  --cycle-review: #10b981;
+  --cycle-deploy: #737373;
+
   color: var(--text-primary);
   background: var(--bg-color);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -3531,5 +3537,176 @@ button.alerts-status {
   @page {
     size: A4 portrait;
     margin: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   CODE REVIEW CYCLE TIME
+   ═══════════════════════════════════════════════ */
+
+.cycle-time-intro {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.cycle-time-card {
+  gap: 0.9rem;
+}
+
+.cycle-time-card:hover {
+  transform: none;
+}
+
+.cycle-time-empty {
+  padding: 2.5rem 1.5rem;
+}
+
+.cycle-time-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cycle-time-bottleneck {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cycle-time-bottleneck strong {
+  color: var(--text-primary);
+}
+
+.cycle-time-unreviewed {
+  margin: -0.3rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.cycle-time-dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cycle-time-stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cycle-time-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--stat-card-border);
+  border-top: 3px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--card-bg);
+}
+
+.cycle-time-stage--bottleneck {
+  background: var(--surface-muted);
+  box-shadow: inset 0 0 0 1px var(--dashboard-divider);
+}
+
+.cycle-time-stage-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.cycle-time-stage-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.cycle-time-stage-meta {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cycle-time-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 190;
+  max-height: 240px;
+  overflow: visible;
+}
+
+.cycle-time-bar {
+  cursor: default;
+  transition: opacity 140ms ease-out;
+}
+
+.cycle-time-bar:focus {
+  outline: none;
+}
+
+.cycle-time-bar:focus-visible rect:first-child {
+  stroke: var(--focus-ring);
+  stroke-width: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cycle-time-bar {
+    transition: none;
+  }
+}
+
+.cycle-time-chart-detail {
+  min-height: 1.1rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.cycle-time-chart-empty {
+  height: 120px;
+}
+
+.cycle-time-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.cycle-time-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cycle-time-footnote {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .cycle-time-stages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
