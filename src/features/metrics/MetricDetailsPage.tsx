@@ -11,6 +11,7 @@ import {
   fetchRecoveryTimeDetails,
 } from "./api.js";
 import { exportMetricPdf, type MetricExportData } from "./exportMetricPdf.js";
+import { seriesChartToDataUrl } from "./chartToImage.js";
 import {
   useChangeFailureRateDetails,
   useChangeLeadTimeDetails,
@@ -550,6 +551,17 @@ export function MetricDetailsPage() {
         ? (availableRepositories.find((r) => r.id === repositoryIdParam)?.fullName ?? "Selected repository")
         : "All repositories";
 
+      // Render the trend chart as a PNG for PDF embedding
+      const chartColor = RATING_COLOR[activeRating] ?? "#818cf8";
+      const chartImageDataUrl = await seriesChartToDataUrl(
+        activeSeries,
+        chartColor,
+        `${activeTabConfig.label} Trend`,
+        activePreset,
+        seriesQuery.data?.timezone ?? workspaceTimezone,
+        activeSummaryMetric?.unit,
+      );
+
       exportMetricPdf({
         title: activeTabConfig.title,
         metricLabel: activeTabConfig.label,
@@ -576,6 +588,7 @@ export function MetricDetailsPage() {
           changeFailureRateQuery.data.totalDeployments > 0
             ? formatFailureBreakdown(changeFailureRateQuery.data)
             : null,
+        chartImageDataUrl,
         data: exportData,
       });
     } catch {

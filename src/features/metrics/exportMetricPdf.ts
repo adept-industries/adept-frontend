@@ -28,6 +28,8 @@ export interface ExportMetricPdfOptions {
     ratingLabel: string;
   } | null;
   cfrBreakdown?: string | null;
+  /** Optional PNG data URL of the chart trend image to embed before the data table. */
+  chartImageDataUrl?: string | null;
   data: MetricExportData;
 }
 
@@ -188,6 +190,26 @@ export function generateMetricPdf(options: ExportMetricPdfOptions): jsPDF {
   }
 
   let tableStartY = 50;
+
+  // Optional chart trend image
+  if (options.chartImageDataUrl) {
+    // Section label
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(30, 41, 59);
+    doc.text("Trend Chart", margin, tableStartY + 4);
+    tableStartY += 7;
+
+    // Embed the chart PNG (SVG rendered at 720×150 @2×, so aspect = 720/150 = 4.8)
+    const chartW = contentWidth;          // full content width in mm
+    const chartH = chartW / 4.8;          // maintain aspect ratio
+    try {
+      doc.addImage(options.chartImageDataUrl, "PNG", margin, tableStartY, chartW, chartH);
+    } catch {
+      // If image embedding fails, skip gracefully
+    }
+    tableStartY += chartH + 6;
+  }
 
   // Optional CFR Breakdown Chip
   if (options.cfrBreakdown) {
