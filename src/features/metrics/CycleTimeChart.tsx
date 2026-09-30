@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
+  axisMaximum,
   CYCLE_TIME_STAGES,
   formatCycleHours,
   formatPeriodRange,
@@ -86,7 +87,7 @@ export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granula
 
   const totals = series.map((period) =>
     CYCLE_TIME_STAGES.reduce((sum, { stage }) => sum + stageHours(period, stage), 0));
-  const maxTotal = Math.max(...totals, 0);
+  const maxTotal = axisMaximum(totals);
 
   if (series.length === 0 || maxTotal === 0) {
     return <div className="dora-chart-empty cycle-time-chart-empty">No merged pull requests in this period</div>;
@@ -154,6 +155,12 @@ export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granula
           const x = slotX + (slot - barWidth) / 2;
           const [lineOne, lineTwo] = lines[index];
           const isShown = index === shownIndex;
+          // An outlier taller than the axis keeps its stage proportions and gets break marks.
+          const clipped = totals[index] > maxTotal;
+          const scale = clipped ? maxTotal / totals[index] : 1;
+          const bottleneckLabel = period.bottleneck ? stageLabel(period.bottleneck) : null;
+          const showStageName = bottleneckLabel !== null
+            && slot >= bottleneckLabel.length * CHAR_WIDTH + 12;
           let stackTop = 0;
           return (
             <g
@@ -180,7 +187,7 @@ export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granula
                 rx={4}
               />
               {CYCLE_TIME_STAGES.map(({ stage }) => {
-                const hours = stageHours(period, stage);
+                const hours = stageHours(period, stage) * scale;
                 if (hours <= 0) return null;
                 const top = y(stackTop + hours);
                 const height = y(stackTop) - top;
@@ -197,7 +204,25 @@ export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granula
                   />
                 );
               })}
-              {period.bottleneck && (
+              {clipped && (
+                <path
+                  className="cycle-time-bar-break"
+                  d={`M${x - 2},${y(maxTotal) + 10} l${barWidth + 4},-6 M${x - 2},${y(maxTotal) + 16} l${barWidth + 4},-6`}
+                />
+              )}
+              {period.bottleneck && (showStageName ? (
+                <text
+                  className="cycle-time-bottleneck-marker"
+                  x={x + barWidth / 2}
+                  y={y(stackTop) - 6}
+                  textAnchor="middle"
+                  fontSize={FONT_SIZE}
+                  fontWeight={600}
+                  fill={stageColorVar(period.bottleneck)}
+                >
+                  {bottleneckLabel}
+                </text>
+              ) : (
                 <circle
                   className="cycle-time-bottleneck-marker"
                   cx={x + barWidth / 2}
@@ -205,7 +230,7 @@ export function CycleTimeChart({ series, rangeStart, rangeEnd, timezone, granula
                   r={MARKER_RADIUS}
                   fill={stageColorVar(period.bottleneck)}
                 />
-              )}
+              ))}
               {index % labelEvery === 0 && (
                 <text
                   x={slotX + slot / 2}

@@ -140,8 +140,9 @@ export function CycleTimeSection({ filters, description, fallbackTimezone }: Cyc
             </div>
 
             <p className="cycle-time-footnote">
-              Pull requests are grouped by the {unit} they merged, in {timezone}. The dot above each bar
-              marks that {unit}'s bottleneck. Each stage is a separate median, so stages do not add up
+              Pull requests are grouped by the {unit} they merged, in {timezone}. The stage named (or
+              the dot) above each bar is that {unit}'s bottleneck; a bar with break marks is cut short so
+              the others stay readable. Each stage is a separate median, so stages do not add up
               exactly. Bot reviews and authors reviewing their own pull requests are excluded.
             </p>
           </>

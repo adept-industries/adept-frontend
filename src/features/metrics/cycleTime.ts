@@ -143,3 +143,15 @@ function weekday(instant: number, timezone: string): string {
     return format("UTC");
   }
 }
+
+/**
+ * The axis maximum. One outlier period (a stuck pull request) would otherwise
+ * flatten every other bar into a sliver, so when the tallest of at least four
+ * bars is more than three times the next one, the axis fits the rest and the
+ * outlier is clipped. With fewer bars every height is shown as it is.
+ */
+export function axisMaximum(totals: number[]): number {
+  const measured = totals.filter((total) => total > 0).sort((a, b) => b - a);
+  const [tallest = 0, next = 0] = measured;
+  return measured.length >= 4 && tallest > next * 3 ? next * 1.25 : tallest;
+}

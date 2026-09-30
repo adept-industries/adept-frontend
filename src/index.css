@@ -3802,9 +3802,15 @@ button.alerts-status {
   stroke-width: 2;
 }
 
-.cycle-time-bottleneck-marker {
+circle.cycle-time-bottleneck-marker {
   stroke: var(--card-bg);
   stroke-width: 1.5;
+}
+
+.cycle-time-bar-break {
+  fill: none;
+  stroke: var(--card-bg);
+  stroke-width: 2.5;
 }
 
 @media (prefers-reduced-motion: reduce) {
