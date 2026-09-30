@@ -1,88 +1,27 @@
 # Adept Frontend
 
-React 19, TypeScript, and Vite browser application for Adept. The implementation through Phase 6 includes account lifecycle, refresh-backed authentication, workspace and project selection, Manager settings, repository/project-scoped DORA metrics, and browser acceptance tests.
+React 19, TypeScript, and Vite browser application for Adept.
 
-## Routes
+## Tech Stack
+- **Framework**: React 19, Vite
+- **Language**: TypeScript
 
-- `/signup`, `/login`, `/check-email`, `/forgot-password`
-- `/verify-email` and `/reset-password` for fragment-based email action links
-- `/select-workspace` for selecting among multiple memberships or creating a workspace when none remain
-- `/dashboard` for an authenticated workspace
-- `/dashboard/settings` for Managers
-- `/dashboard/projects` for Manager project administration
+## Getting Started
 
-Protected routes wait for refresh bootstrap. Leads receive a forbidden page for Manager settings, and authenticated users visiting login or signup return to the dashboard.
+1. Ensure the API, PostgreSQL, and Mailpit are running.
+2. **Run the dev server:**
+   ```bash
+   npm ci
+   npm run dev -- --host 127.0.0.1
+   ```
+   Open <http://localhost:5173>.
 
-## Local prerequisites
+## Commands
 
-Start the sibling API, PostgreSQL, and Mailpit before exercising account flows. With the repository Compose stack, the production-like frontend is available at <http://localhost:3000>, the API at <http://localhost:8080>, and Mailpit at <http://localhost:8025>.
-
-For Vite development:
-
-```bash
-npm ci
-npm run dev -- --host 127.0.0.1
-```
-
-Open <http://localhost:5173>. Vite proxies relative `/api` requests to `http://localhost:8080`.
-
-## Authentication and CSRF
-
-The access JWT exists only in a module-level memory store. It is never written to browser storage, cookies, URLs, logs, or TanStack Query. Local storage contains only the non-secret current-workspace UUID; session storage may contain a non-secret selected-project UUID per workspace.
-
-The API owns the HttpOnly refresh cookie. The frontend coordinates refresh, login, logout, workspace switch or recovery, and password reset with same-origin CSRF/session locks. Unsafe requests read the current `XSRF-TOKEN` cookie immediately before dispatch. An authenticated request may perform one coordinated refresh and one replay after a `401`; it never refreshes a `403`.
-
-## OpenAPI contract
-
-The committed API contract is `openapi/adept-api-v1.json`; feature request and response types derive from its generated `paths`, `operations`, and `components` definitions.
-
-```bash
-npm run api:generate   # regenerate src/api/generated/schema.ts
-npm run api:check      # fail when committed generated types drift
-```
-
-Never edit `src/api/generated/schema.ts` manually.
-
-## Verification
-
-```bash
-npm ci
-npm run api:check
-npm run lint
-npm run typecheck
-npm run test:run
-npm run build
-docker build --tag adept-frontend:phase6 .
-npm run nginx:verify -- adept-frontend:phase6
-```
-
-After the complete `CI` workflow succeeds for a push to `main`, the publish
-workflow builds Linux AMD64 and pushes exactly one immutable image tag:
-
-```text
-ghcr.io/adept-industries/adept-frontend:sha-<full-commit>
-```
-
-Pull-request runs, failed CI runs, and non-main branches never publish. A
-serialized production job deploys that exact image to AWS Lightsail, waits for
-the public frontend health check, and only then reports a terminal GitHub
-Deployment status for the tested SHA and the `production` environment. The
-workflow uses GitHub's short-lived `GITHUB_TOKEN` for GHCR and Deployment API
-access plus the existing `LIGHTSAIL_HOST`, `LIGHTSAIL_USER`, and
-`LIGHTSAIL_SSH_KEY` secrets; no PAT is required.
-
-Run the browser journeys against the full Compose stack:
-
-```bash
-PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run e2e
-```
-
-Playwright uses Chromium, one worker, no retries, and no trace/video/screenshot artifacts because account links and cookies are sensitive. The stateful backend journeys include short spacing so one CI client IP stays inside the production proxy's auth rate limit.
-
-`e2e/google-auth.spec.ts` covers the Adept-side Google return, first-time onboarding, and recovery paths with deterministic route mocks. `e2e/dora-metrics.spec.ts` verifies dashboard metric values, calculation metadata, and repository scoping against contract-shaped fixtures. The Google test intentionally does not automate `accounts.google.com`; use a manual local smoke test with a Google test account to verify the provider consent screen and configured redirect URI.
-
-### Landing page review
-
-Run `npm run dev` and open `/` (or `/landing`) to review the public page. Its dashboard preview is explicitly illustrative; it makes no live metrics or provider requests. GitHub/Jira setup and metric limitations are covered in the expandable FAQs. Existing sessions link back to the dashboard.
-
-`e2e/landing.spec.ts` checks phone, tablet, and desktop layouts, keyboard FAQs, and account navigation with mocked API sessions. With the dev server running, run `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npm run e2e -- e2e/landing.spec.ts`. No backend or provider credentials are needed for these checks.
+- **Generate OpenAPI schema**: `npm run api:generate`
+- **Check types and lint**: `npm run lint` & `npm run typecheck`
+- **Run Unit Tests**: `npm run test:run`
+- **Run E2E Tests**: 
+  ```bash
+  PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run e2e
+  ```
