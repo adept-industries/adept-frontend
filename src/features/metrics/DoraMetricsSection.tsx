@@ -4,6 +4,7 @@ import { useDoraMetricsSummary, useDoraMetricsSeries } from "./useDoraMetrics.js
 import { DoraMetricCard } from "./DoraMetricCard.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
 import type { DoraMetricsFilters, MetricSeriesItemDto, MetricType } from "./types.js";
+import { zonedDateKey, zonedDateTimeParts, zonedDateTimeToDate } from "./zonedTime.js";
 
 // ── Time range presets ─────────────────────────────────────────────────────
 
@@ -20,58 +21,6 @@ const PRESETS: Preset[] = [
   { label: "Last 30 Days", value: "30d", days: 30 },
   { label: "Last 90 Days", value: "90d", days: 90 },
 ];
-
-interface ZonedDateTimeParts {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  second: number;
-}
-
-function zonedDateTimeParts(date: Date, timezone: string): ZonedDateTimeParts {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hourCycle: "h23",
-  }).formatToParts(date);
-  const value = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((part) => part.type === type)?.value);
-  return {
-    year: value("year"),
-    month: value("month"),
-    day: value("day"),
-    hour: value("hour"),
-    minute: value("minute"),
-    second: value("second"),
-  };
-}
-
-function zonedDateKey(date: Date, timezone: string): string {
-  const { year, month, day } = zonedDateTimeParts(date, timezone);
-  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function zonedDateTimeToDate(parts: ZonedDateTimeParts, milliseconds: number, timezone: string): Date {
-  const target = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second, milliseconds);
-  let timestamp = target;
-
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const actual = zonedDateTimeParts(new Date(timestamp), timezone);
-    const represented = Date.UTC(actual.year, actual.month - 1, actual.day, actual.hour, actual.minute, actual.second, milliseconds);
-    const adjustment = target - represented;
-    if (adjustment === 0) break;
-    timestamp += adjustment;
-  }
-
-  return new Date(timestamp);
-}
 
 function presetToRange(preset: TimeRangePreset, timezone: string, today: string): { from: string; to: string } {
   const to = new Date();
