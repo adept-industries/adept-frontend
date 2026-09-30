@@ -1,4 +1,4 @@
-import { useEffect, useState, useTransition } from "react";
+import { useContext, useEffect, useState, useTransition } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../auth/AuthProvider.js";
 import { formatWorkspaceDateTime } from "../../lib/timezone.js";
@@ -24,6 +24,7 @@ import {
   type RepositorySettings,
 } from "./api.js";
 import { RepositorySettingsModal } from "./RepositorySettingsModal.js";
+import { ProjectContext } from "../projects/ProjectContext.js";
 
 const JIRA_SYNC_POLL_INTERVAL_MS = 1_000;
 const JIRA_SYNC_TIMEOUT_MS = 30_000;
@@ -92,11 +93,23 @@ export function IntegrationsPage() {
   const [repositories, setRepositories] = useState<RepositoryResponse[]>([]);
   const [jiraProjects, setJiraProjects] = useState<JiraProjectResponse[]>([]);
 
+  const projectContext = useContext(ProjectContext);
+  const projects = projectContext?.projects ?? [];
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [trackingFilter, setTrackingFilter] = useState<"ALL" | "TRACKED">("ALL");
   const [glowingRepoId, setGlowingRepoId] = useState<string | null>(null);
+
+  const [releaseConfirmation, setReleaseConfirmation] = useState<{
+    title: string;
+    message: string;
+    projectNames: string[];
+    confirmLabel: string;
+    action: () => Promise<void>;
+  } | null>(null);
+  const [confirmingRelease, setConfirmingRelease] = useState(false);
 
   const [selectedRepoForSettings, setSelectedRepoForSettings] = useState<RepositoryResponse | null>(null);
 
@@ -105,6 +118,64 @@ export function IntegrationsPage() {
   const [syncingJira, setSyncingJira] = useState(false);
   const [rebuildingRepositoryId, setRebuildingRepositoryId] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  const clearWarnings = () => {
+    setGlowingRepoId(null);
+  };
+
+  useEffect(() => {
+    if (!glowingRepoId) {
+      return;
+    }
+
+    const handleClickAnywhere = () => {
+      clearWarnings();
+    };
+
+    const timer = setTimeout(() => {
+      window.addEventListener("click", handleClickAnywhere);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("click", handleClickAnywhere);
+    };
+  }, [glowingRepoId]);
+
+  const getProjectsWithRepo = (repoId: string): string[] => {
+    return projects
+      .filter((p) => p.repositories?.some((r) => r.id === repoId))
+      .map((p) => p.name);
+  };
+
+  const getProjectsWithJiraProject = (jiraProjectId: string): string[] => {
+    return projects
+      .filter((p) =>
+        p.jiraProjects?.some((jp) => jp.id === jiraProjectId) ||
+        p.repositories?.some((r) => r.jiraProjects?.some((jp) => jp.id === jiraProjectId))
+      )
+      .map((p) => p.name);
+  };
+
+  const getProjectsLinkedToGithub = (): string[] => {
+    const linked = new Set<string>();
+    for (const repo of repositories) {
+      for (const name of getProjectsWithRepo(repo.id)) {
+        linked.add(name);
+      }
+    }
+    return Array.from(linked);
+  };
+
+  const getProjectsLinkedToJira = (): string[] => {
+    const linked = new Set<string>();
+    for (const jp of jiraProjects) {
+      for (const name of getProjectsWithJiraProject(jp.id)) {
+        linked.add(name);
+      }
+    }
+    return Array.from(linked);
+  };
 
   const loadData = async () => {
     try {
@@ -157,12 +228,32 @@ export function IntegrationsPage() {
   };
 
   const handleDisconnectGithub = async () => {
-    if (!github || !window.confirm("Are you sure you want to disconnect GitHub? Tracking will be stopped for all repositories.")) {
+    clearWarnings();
+    if (!github) return;
+
+    const linkedProjects = getProjectsLinkedToGithub();
+    if (linkedProjects.length > 0) {
+      setReleaseConfirmation({
+        title: "Disconnect GitHub and Release Repositories?",
+        message: "Disconnecting GitHub will untrack all repositories and release them from active project(s):",
+        projectNames: linkedProjects,
+        confirmLabel: "Disconnect & Release",
+        action: async () => {
+          await disconnectGithubIntegration(github.id);
+          await loadData();
+          await projectContext?.reload();
+        },
+      });
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to disconnect GitHub? Tracking will be stopped for all repositories.")) {
       return;
     }
     try {
       await disconnectGithubIntegration(github.id);
       await loadData();
+      await projectContext?.reload();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to disconnect GitHub");
     }
@@ -179,12 +270,32 @@ export function IntegrationsPage() {
   };
 
   const handleDisconnectJira = async () => {
-    if (!jira || !window.confirm("Are you sure you want to disconnect Jira? Tracking will be stopped for all Jira projects.")) {
+    clearWarnings();
+    if (!jira) return;
+
+    const linkedProjects = getProjectsLinkedToJira();
+    if (linkedProjects.length > 0) {
+      setReleaseConfirmation({
+        title: "Disconnect Jira and Release Projects?",
+        message: "Disconnecting Jira will untrack all Jira projects and release them from active project(s):",
+        projectNames: linkedProjects,
+        confirmLabel: "Disconnect & Release",
+        action: async () => {
+          await disconnectJiraIntegration(jira.id);
+          await loadData();
+          await projectContext?.reload();
+        },
+      });
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to disconnect Jira? Tracking will be stopped for all Jira projects.")) {
       return;
     }
     try {
       await disconnectJiraIntegration(jira.id);
       await loadData();
+      await projectContext?.reload();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to disconnect Jira");
     }
@@ -215,9 +326,29 @@ export function IntegrationsPage() {
   };
 
   const handleToggleRepoTracking = async (repo: RepositoryResponse) => {
+    clearWarnings();
     if (!repo.trackingEnabled && isRepoConfigurationNeeded(repo)) {
       setGlowingRepoId(repo.id);
       return;
+    }
+    if (repo.trackingEnabled) {
+      const linkedProjects = getProjectsWithRepo(repo.id);
+      if (linkedProjects.length > 0) {
+        setReleaseConfirmation({
+          title: "Release Repository from Active Projects?",
+          message: `Untracking repository '${repo.name}' will release it from active project(s):`,
+          projectNames: linkedProjects,
+          confirmLabel: "Release & Untrack",
+          action: async () => {
+            const updated = await updateRepository(repo.id, { trackingEnabled: false });
+            setRepositories((prev) =>
+              prev.map((r) => (r.id === repo.id ? updated : r))
+            );
+            await projectContext?.reload();
+          },
+        });
+        return;
+      }
     }
     const nextState = !repo.trackingEnabled;
     startTransition(async () => {
@@ -258,6 +389,26 @@ export function IntegrationsPage() {
   };
 
   const handleToggleJiraTracking = async (project: JiraProjectResponse) => {
+    clearWarnings();
+    if (project.trackingEnabled) {
+      const linkedProjects = getProjectsWithJiraProject(project.id);
+      if (linkedProjects.length > 0) {
+        setReleaseConfirmation({
+          title: "Release Jira Project from Active Projects?",
+          message: `Untracking Jira project '${project.projectKey}' will release it from active project(s):`,
+          projectNames: linkedProjects,
+          confirmLabel: "Release & Untrack",
+          action: async () => {
+            const updated = await updateJiraProjectTracking(project.id, false);
+            setJiraProjects((prev) =>
+              prev.map((p) => (p.id === project.id ? updated : p))
+            );
+            await projectContext?.reload();
+          },
+        });
+        return;
+      }
+    }
     const nextState = !project.trackingEnabled;
     try {
       const updated = await updateJiraProjectTracking(project.id, nextState);
@@ -439,13 +590,13 @@ export function IntegrationsPage() {
                         {syncingGithub ? "Syncing..." : "Sync Repositories"}
                       </button>
                       <button
-                        type="button"
-                        className="button-link"
-                        onClick={handleDisconnectGithub}
-                        style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
-                      >
-                        Disconnect
-                      </button>
+                          type="button"
+                          className="button-link"
+                          onClick={handleDisconnectGithub}
+                          style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
+                        >
+                          Disconnect
+                        </button>
                     </>
                   ) : (
                     <button
@@ -555,14 +706,14 @@ export function IntegrationsPage() {
                         {syncingJira ? "Syncing..." : "Sync Jira Projects"}
                       </button>
                       <button
-                        type="button"
-                        className="button-link"
-                        onClick={handleDisconnectJira}
-                        disabled={syncingJira}
-                        style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
-                      >
-                        Disconnect
-                      </button>
+                          type="button"
+                          className="button-link"
+                          onClick={handleDisconnectJira}
+                          disabled={syncingJira}
+                          style={{ fontSize: "0.85rem", color: "#f87171", padding: "0.4rem 0.9rem" }}
+                        >
+                          Disconnect
+                        </button>
                     </>
                   ) : (
                     <button
@@ -736,6 +887,7 @@ export function IntegrationsPage() {
                   {filteredRepos.map((repo) => {
                     const isDeletedFromGithub = isRepoDeletedFromGithub(repo, github?.lastSyncedAt);
                     const isUnavailable = repo.archived || isDeletedFromGithub;
+                    const isGithubActive = github?.status === "ACTIVE";
 
                     return (
                       <tr
@@ -749,26 +901,28 @@ export function IntegrationsPage() {
                       >
                         <td style={{ padding: "0.75rem 0.5rem" }}>
                           <input
-                            type="checkbox"
-                            id={repo.id === tourRepositoryId ? "tour-repo-tracking" : undefined}
-                            checked={repo.trackingEnabled}
-                            onChange={() => void handleToggleRepoTracking(repo)}
-                            disabled={isPending || isUnavailable}
-                            title={
-                              repo.archived
-                                ? "Archived repositories cannot be tracked"
-                                : isDeletedFromGithub
-                                  ? "Repository was deleted or removed on GitHub"
-                                  : !repo.trackingEnabled && isRepoConfigurationNeeded(repo)
-                                    ? "Configure in Settings before enabling tracking"
-                                    : undefined
-                            }
-                            style={{
-                              width: "1.1rem",
-                              height: "1.1rem",
-                              cursor: isUnavailable ? "not-allowed" : "pointer",
-                            }}
-                          />
+                              type="checkbox"
+                              id={repo.id === tourRepositoryId ? "tour-repo-tracking" : undefined}
+                              checked={repo.trackingEnabled}
+                              onChange={() => void handleToggleRepoTracking(repo)}
+                              disabled={isPending || isUnavailable || !isGithubActive}
+                              title={
+                                repo.archived
+                                  ? "Archived repositories cannot be tracked"
+                                  : isDeletedFromGithub
+                                    ? "Repository was deleted or removed on GitHub"
+                                    : !isGithubActive
+                                      ? "Connect or reconnect GitHub App to track repositories"
+                                      : !repo.trackingEnabled && isRepoConfigurationNeeded(repo)
+                                        ? "Configure in Settings before enabling tracking"
+                                        : undefined
+                              }
+                              style={{
+                                width: "1.1rem",
+                                height: "1.1rem",
+                                cursor: isUnavailable || !isGithubActive ? "not-allowed" : "pointer",
+                              }}
+                            />
                         </td>
                         <td style={{ padding: "0.75rem 0.5rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -827,19 +981,18 @@ export function IntegrationsPage() {
                         <td style={{ padding: "0.75rem 0.5rem" }}>
                           <span
                             style={{
+                              fontSize: "0.75rem",
                               padding: "0.2rem 0.5rem",
                               borderRadius: "4px",
-                              fontSize: "0.75rem",
-                              fontWeight: 500,
-                              backgroundColor: isUnavailable ? "rgba(255, 255, 255, 0.05)" : "rgba(99, 102, 241, 0.12)",
-                              color: isUnavailable ? "var(--text-secondary, #94a3b8)" : "var(--primary-light, #818cf8)",
+                              backgroundColor: "rgba(99, 102, 241, 0.1)",
+                              color: "var(--primary-light, #818cf8)",
                             }}
                           >
                             {repo.settings?.deploymentSignal ?? "WORKFLOW_RUN"}
                           </span>
                         </td>
-                        <td style={{ padding: "0.75rem 0.5rem" }}>
-                          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.5rem", position: "relative" }}>
+                        <td style={{ padding: "0.75rem 0.5rem", textAlign: "right" }}>
+                          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
                             <button
                               type="button"
                               className="button-link"
@@ -941,11 +1094,11 @@ export function IntegrationsPage() {
 
         {/* Jira Projects Catalog Section */}
         {jira && (
-          <section style={{ backgroundColor: "var(--card-bg, #161622)", border: "1px solid var(--border-color, #272738)", borderRadius: "10px", padding: "1.5rem" }}>
-            <div style={{ marginBottom: "1.25rem" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Discovered Jira Projects</h2>
+          <section id="jira-projects-catalog" style={{ backgroundColor: "var(--card-bg, #161622)", border: "1px solid var(--border-color, #272738)", borderRadius: "10px", padding: "1.5rem" }}>
+            <div style={{ marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Jira Projects</h2>
               <span style={{ fontSize: "0.85rem", color: "var(--text-secondary, #94a3b8)" }}>
-                Enable project tracking to ingest Jira incident tickets and calculate restoration duration.
+                Enable tracking to sync incident issues and correlate deployments.
               </span>
             </div>
 
@@ -953,38 +1106,44 @@ export function IntegrationsPage() {
               <p style={{ color: "var(--text-secondary, #94a3b8)", fontSize: "0.9rem" }}>No Jira projects found in connected site.</p>
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.75rem" }}>
-                {jiraProjects.map((proj) => (
-                  <div
-                    key={proj.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "0.75rem 1rem",
-                      borderRadius: "6px",
-                      backgroundColor: "var(--input-bg, #242436)",
-                      border: "1px solid var(--border-color, #3b3b54)",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-                        [{proj.projectKey}] {proj.projectName}
+                {jiraProjects.map((proj) => {
+                  const isJiraActive = jira.status === "ACTIVE";
+
+                  return (
+                    <div
+                      key={proj.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "0.75rem 1rem",
+                        borderRadius: "6px",
+                        backgroundColor: "var(--input-bg, #242436)",
+                        border: "1px solid var(--border-color, #3b3b54)",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>
+                          [{proj.projectKey}] {proj.projectName}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
+                          Type: {proj.projectType}
+                        </div>
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--text-secondary, #94a3b8)" }}>
-                        Type: {proj.projectType}
-                      </div>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", cursor: !isJiraActive ? "not-allowed" : "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={proj.trackingEnabled}
+                          onChange={() => void handleToggleJiraTracking(proj)}
+                          disabled={!isJiraActive}
+                          title={!isJiraActive ? "Connect or reconnect Jira Cloud to track projects" : undefined}
+                          style={{ width: "1rem", height: "1rem", cursor: !isJiraActive ? "not-allowed" : "pointer" }}
+                        />
+                        <span>Track</span>
+                      </label>
                     </div>
-                    <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", cursor: "pointer" }}>
-                      <input
-                        type="checkbox"
-                        checked={proj.trackingEnabled}
-                        onChange={() => void handleToggleJiraTracking(proj)}
-                        style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
-                      />
-                      <span>Track</span>
-                    </label>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
@@ -998,6 +1157,112 @@ export function IntegrationsPage() {
             onClose={() => setSelectedRepoForSettings(null)}
             onSave={handleSaveRepoSettings}
           />
+        )}
+
+        {releaseConfirmation && (
+          <div
+            className="modal-overlay"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 100,
+              padding: "1rem",
+            }}
+            onClick={() => {
+              if (!confirmingRelease) setReleaseConfirmation(null);
+            }}
+          >
+            <div
+              className="modal-card"
+              style={{
+                backgroundColor: "var(--card-bg, #1a1a24)",
+                border: "1px solid var(--border-color, #2d2d3d)",
+                borderRadius: "8px",
+                padding: "1.5rem",
+                maxWidth: "480px",
+                width: "100%",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <h2 style={{ fontSize: "1.2rem", fontWeight: 600, margin: 0, color: "var(--text-primary, #ffffff)" }}>
+                  {releaseConfirmation.title}
+                </h2>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => setReleaseConfirmation(null)}
+                  disabled={confirmingRelease}
+                  aria-label="Close"
+                  style={{ background: "none", border: "none", color: "var(--text-secondary, #94a3b8)", cursor: "pointer", fontSize: "1.2rem" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p style={{ fontSize: "0.9rem", color: "var(--text-secondary, #94a3b8)", margin: "0 0 0.75rem 0", lineHeight: 1.5 }}>
+                {releaseConfirmation.message}
+              </p>
+
+              <ul
+                style={{
+                  margin: "0 0 1.25rem 0",
+                  paddingLeft: "1.25rem",
+                  fontSize: "0.85rem",
+                  color: "var(--text-primary, #ffffff)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.35rem",
+                }}
+              >
+                {releaseConfirmation.projectNames.map((name) => (
+                  <li key={name} style={{ fontWeight: 500 }}>
+                    {name}
+                  </li>
+                ))}
+              </ul>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+                <button
+                  type="button"
+                  className="button-link"
+                  onClick={() => setReleaseConfirmation(null)}
+                  disabled={confirmingRelease}
+                  style={{ padding: "0.5rem 1rem" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="danger-button"
+                  disabled={confirmingRelease}
+                  onClick={async () => {
+                    setConfirmingRelease(true);
+                    setError(null);
+                    try {
+                      await releaseConfirmation.action();
+                      setReleaseConfirmation(null);
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : "Action failed");
+                    } finally {
+                      setConfirmingRelease(false);
+                    }
+                  }}
+                  style={{ padding: "0.5rem 1.25rem" }}
+                >
+                  {confirmingRelease ? "Releasing..." : releaseConfirmation.confirmLabel}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </AppShell>
