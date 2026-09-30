@@ -29,6 +29,7 @@ export interface ExportMetricPdfOptions {
   } | null;
   cfrBreakdown?: string | null;
   data: MetricExportData;
+  chartImage?: string | null;
 }
 
 function formatDate(iso: string, timezone: string): string {
@@ -198,6 +199,15 @@ export function generateMetricPdf(options: ExportMetricPdfOptions): jsPDF {
     doc.setTextColor(51, 65, 85);
     doc.text(options.cfrBreakdown, margin + 3, tableStartY + 4.8);
     tableStartY += 11;
+  }
+
+  // Chart Image
+  if (options.chartImage) {
+    // The chart from SVG has a 720x130 aspect ratio for the details variant
+    const chartWidth = contentWidth;
+    const chartHeight = (130 / 720) * chartWidth;
+    doc.addImage(options.chartImage, "PNG", margin, tableStartY, chartWidth, chartHeight);
+    tableStartY += chartHeight + 10;
   }
 
   // Prepare table headers and rows
