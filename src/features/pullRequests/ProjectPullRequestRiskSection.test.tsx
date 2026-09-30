@@ -98,8 +98,11 @@ describe("ProjectPullRequestRiskSection", () => {
     );
     expect(screen.getByText("acme/api #42")).toBeVisible();
     expect(screen.getByText("Stalled")).toBeVisible();
-    expect(screen.getByLabelText("critical risk, 62%")).toBeVisible();
+    const scoreElement = screen.getByLabelText("critical risk, 62%");
+    expect(scoreElement).toBeVisible();
+    expect(scoreElement).toHaveAttribute("title", expect.stringContaining("baseline (~8.5%)"));
     expect(screen.getByText(/Lines added: 180/)).toBeVisible();
+    expect(screen.getByText(/baseline \(~8\.5%\)/)).toBeVisible();
     expect(screen.getByText(RISK_PAGE.disclaimer)).toBeVisible();
   });
 
