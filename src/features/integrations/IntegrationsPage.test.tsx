@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext.js";
 import type { AuthenticatedState } from "../../auth/types.js";
 import { ProjectContext } from "../projects/ProjectContext.js";
+import type { ProjectResponse } from "../projects/api.js";
 import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
 import { IntegrationsPage } from "./IntegrationsPage.js";
@@ -33,28 +34,33 @@ function authenticatedState(): AuthenticatedState {
   };
 }
 
-function renderPage() {
+function renderPage(projects: ProjectResponse[] = [], reload = vi.fn()) {
   const state = authenticatedState();
   const actions = {
     logout: vi.fn(),
   } as unknown as AuthContextValue["actions"];
 
-  return renderWithProviders(
+  const result = renderWithProviders(
     <AuthContext.Provider value={{ state, actions }}>
       <ProjectContext.Provider
         value={{
-          projects: [],
+          projects,
           selectedProject: null,
           loading: false,
           error: null,
           select: vi.fn(),
-          reload: vi.fn(),
+          reload,
         }}
       >
         <IntegrationsPage />
       </ProjectContext.Provider>
     </AuthContext.Provider>
   );
+
+  return {
+    ...result,
+    reload,
+  };
 }
 
 function jiraIntegration(lastSyncedAt: string, projectCount = 1) {
@@ -550,5 +556,398 @@ describe("IntegrationsPage", () => {
       "title",
       "Repository was deleted or removed on GitHub",
     );
+  });
+
+  it("confirms and releases when untracking a repository linked to an active project", async () => {
+    const user = userEvent.setup();
+    const patchCalled = vi.fn();
+    server.use(
+      http.get("/api/v1/integrations/github", () =>
+        HttpResponse.json({
+          id: "gh-1",
+          workspaceId: "ws-1",
+          installationId: 12345,
+          accountLogin: "acme-org",
+          accountType: "ORGANIZATION",
+          repositorySelection: "ALL",
+          status: "ACTIVE",
+          lastSyncedAt: "2026-08-29T12:00:00Z",
+          repositoryCount: 1,
+        })
+      ),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([
+          {
+            ...repository("repo-1", "zebra-service"),
+            fullName: "acme-org/zebra-service",
+            trackingEnabled: true,
+            lastSyncedAt: "2026-08-29T12:00:00Z",
+          },
+        ])
+      ),
+      http.patch("/api/v1/repositories/repo-1", () => {
+        patchCalled();
+        return HttpResponse.json({
+          ...repository("repo-1", "zebra-service"),
+          fullName: "acme-org/zebra-service",
+          trackingEnabled: false,
+          lastSyncedAt: "2026-08-29T12:00:00Z",
+        });
+      })
+    );
+
+    const mockProject: ProjectResponse = {
+      id: "project-1",
+      name: "Alpha Project",
+      workspaceId: "ws-1",
+      repositories: [
+        {
+          id: "repo-1",
+          fullName: "acme-org/zebra-service",
+          archived: false,
+          trackingEnabled: true,
+          jiraProjects: [],
+        },
+      ],
+      jiraProjects: [],
+    };
+
+    const { reload } = renderPage([mockProject]);
+
+    const checkbox = await screen.findByRole("checkbox");
+    expect(checkbox).toBeChecked();
+
+    await user.click(checkbox);
+
+    // Confirmation modal should appear listing Alpha Project
+    expect(screen.getByRole("heading", { name: "Release Repository from Active Projects?" })).toBeInTheDocument();
+    expect(screen.getByText("Alpha Project")).toBeInTheDocument();
+
+    // Patch should not have been called yet
+    expect(patchCalled).not.toHaveBeenCalled();
+
+    // User cancels
+    const cancelBtn = screen.getByRole("button", { name: "Cancel" });
+    await user.click(cancelBtn);
+
+    expect(screen.queryByRole("heading", { name: "Release Repository from Active Projects?" })).not.toBeInTheDocument();
+    expect(patchCalled).not.toHaveBeenCalled();
+
+    // User clicks again and confirms
+    await user.click(checkbox);
+    const confirmBtn = screen.getByRole("button", { name: "Release & Untrack" });
+    await user.click(confirmBtn);
+
+    expect(patchCalled).toHaveBeenCalled();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("confirms and releases when untracking a Jira project linked to an active project", async () => {
+    const user = userEvent.setup();
+    const putCalled = vi.fn();
+    server.use(
+      http.get("/api/v1/integrations/github", () => HttpResponse.json(null)),
+      http.get("/api/v1/repositories", () => HttpResponse.json([])),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(jiraIntegration("2026-08-29T12:00:00Z"))),
+      http.get("/api/v1/jira/projects", () =>
+        HttpResponse.json([
+          {
+            ...jiraProject("jira-1", "JIRA-KEY", "Jira Test Project"),
+            trackingEnabled: true,
+          },
+        ])
+      ),
+      http.patch("/api/v1/jira/projects/jira-1", () => {
+        putCalled();
+        return HttpResponse.json({
+          ...jiraProject("jira-1", "JIRA-KEY", "Jira Test Project"),
+          trackingEnabled: false,
+        });
+      })
+    );
+
+    const mockProject: ProjectResponse = {
+      id: "project-1",
+      name: "Beta Project",
+      workspaceId: "ws-1",
+      repositories: [],
+      jiraProjects: [
+        {
+          id: "jira-1",
+          projectKey: "JIRA-KEY",
+          projectName: "Jira Test Project",
+          trackingEnabled: true,
+        },
+      ],
+    };
+
+    const { reload } = renderPage([mockProject]);
+
+    const checkbox = await screen.findByRole("checkbox");
+    expect(checkbox).toBeChecked();
+
+    await user.click(checkbox);
+
+    // Confirmation modal should appear listing Beta Project
+    expect(screen.getByRole("heading", { name: "Release Jira Project from Active Projects?" })).toBeInTheDocument();
+    expect(screen.getByText("Beta Project")).toBeInTheDocument();
+
+    // Put should not have been called yet
+    expect(putCalled).not.toHaveBeenCalled();
+
+    // User cancels
+    const cancelBtn = screen.getByRole("button", { name: "Cancel" });
+    await user.click(cancelBtn);
+
+    expect(screen.queryByRole("heading", { name: "Release Jira Project from Active Projects?" })).not.toBeInTheDocument();
+    expect(putCalled).not.toHaveBeenCalled();
+
+    // User clicks again and confirms
+    await user.click(checkbox);
+    const confirmBtn = screen.getByRole("button", { name: "Release & Untrack" });
+    await user.click(confirmBtn);
+
+    expect(putCalled).toHaveBeenCalled();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("confirms and releases when disconnecting GitHub with repositories linked to an active project", async () => {
+    const user = userEvent.setup();
+    const deleteCalled = vi.fn();
+    server.use(
+      http.get("/api/v1/integrations/github", () =>
+        HttpResponse.json({
+          id: "gh-1",
+          workspaceId: "ws-1",
+          installationId: 12345,
+          accountLogin: "acme-org",
+          accountType: "ORGANIZATION",
+          repositorySelection: "ALL",
+          status: "ACTIVE",
+          lastSyncedAt: "2026-08-29T12:00:00Z",
+          repositoryCount: 1,
+        })
+      ),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([
+          {
+            ...repository("repo-1", "zebra-service"),
+            fullName: "acme-org/zebra-service",
+            trackingEnabled: true,
+            lastSyncedAt: "2026-08-29T12:00:00Z",
+          },
+        ])
+      ),
+      http.delete("/api/v1/integrations/github/gh-1", () => {
+        deleteCalled();
+        return HttpResponse.json({});
+      })
+    );
+
+    const mockProject: ProjectResponse = {
+      id: "project-1",
+      name: "Gamma Project",
+      workspaceId: "ws-1",
+      repositories: [
+        {
+          id: "repo-1",
+          fullName: "acme-org/zebra-service",
+          archived: false,
+          trackingEnabled: true,
+          jiraProjects: [],
+        },
+      ],
+      jiraProjects: [],
+    };
+
+    const { reload } = renderPage([mockProject]);
+
+    const disconnectBtn = await screen.findByRole("button", { name: "Disconnect" });
+    await user.click(disconnectBtn);
+
+    // Confirmation modal should appear listing Gamma Project
+    expect(screen.getByRole("heading", { name: "Disconnect GitHub and Release Repositories?" })).toBeInTheDocument();
+    expect(screen.getByText("Gamma Project")).toBeInTheDocument();
+
+    expect(deleteCalled).not.toHaveBeenCalled();
+
+    // User cancels
+    const cancelBtn = screen.getByRole("button", { name: "Cancel" });
+    await user.click(cancelBtn);
+
+    expect(screen.queryByRole("heading", { name: "Disconnect GitHub and Release Repositories?" })).not.toBeInTheDocument();
+    expect(deleteCalled).not.toHaveBeenCalled();
+
+    // User clicks again and confirms
+    await user.click(disconnectBtn);
+    const confirmBtn = screen.getByRole("button", { name: "Disconnect & Release" });
+    await user.click(confirmBtn);
+
+    expect(deleteCalled).toHaveBeenCalled();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("confirms and releases when disconnecting Jira with Jira projects linked to an active project", async () => {
+    const user = userEvent.setup();
+    const deleteCalled = vi.fn();
+    server.use(
+      http.get("/api/v1/integrations/github", () => HttpResponse.json(null)),
+      http.get("/api/v1/repositories", () => HttpResponse.json([])),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(jiraIntegration("2026-08-29T12:00:00Z"))),
+      http.get("/api/v1/jira/projects", () =>
+        HttpResponse.json([
+          {
+            ...jiraProject("jira-1", "JIRA-KEY", "Jira Test Project"),
+            trackingEnabled: true,
+          },
+        ])
+      ),
+      http.delete("/api/v1/integrations/jira/jira-1", () => {
+        deleteCalled();
+        return HttpResponse.json({});
+      })
+    );
+
+    const mockProject: ProjectResponse = {
+      id: "project-1",
+      name: "Delta Project",
+      workspaceId: "ws-1",
+      repositories: [],
+      jiraProjects: [
+        {
+          id: "jira-1",
+          projectKey: "JIRA-KEY",
+          projectName: "Jira Test Project",
+          trackingEnabled: true,
+        },
+      ],
+    };
+
+    const { reload } = renderPage([mockProject]);
+
+    const disconnectBtn = await screen.findByRole("button", { name: "Disconnect" });
+    await user.click(disconnectBtn);
+
+    // Confirmation modal should appear listing Delta Project
+    expect(screen.getByRole("heading", { name: "Disconnect Jira and Release Projects?" })).toBeInTheDocument();
+    expect(screen.getByText("Delta Project")).toBeInTheDocument();
+
+    expect(deleteCalled).not.toHaveBeenCalled();
+
+    // User cancels
+    const cancelBtn = screen.getByRole("button", { name: "Cancel" });
+    await user.click(cancelBtn);
+
+    expect(screen.queryByRole("heading", { name: "Disconnect Jira and Release Projects?" })).not.toBeInTheDocument();
+    expect(deleteCalled).not.toHaveBeenCalled();
+
+    // User clicks again and confirms
+    await user.click(disconnectBtn);
+    const confirmBtn = screen.getByRole("button", { name: "Disconnect & Release" });
+    await user.click(confirmBtn);
+
+    expect(deleteCalled).toHaveBeenCalled();
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it("disables tracking checkboxes when GitHub or Jira integration is not ACTIVE", async () => {
+    server.use(
+      http.get("/api/v1/integrations/github", () =>
+        HttpResponse.json({
+          id: "gh-1",
+          workspaceId: "ws-1",
+          installationId: 12345,
+          accountLogin: "acme-org",
+          accountType: "ORGANIZATION",
+          repositorySelection: "ALL",
+          status: "REVOKED",
+          lastSyncedAt: "2026-08-29T00:00:00Z",
+          repositoryCount: 1,
+        })
+      ),
+      http.get("/api/v1/integrations/jira", () =>
+        HttpResponse.json({
+          ...jiraIntegration("2026-08-29T00:00:00Z"),
+          status: "REVOKED",
+        })
+      ),
+      http.get("/api/v1/jira/projects", () =>
+        HttpResponse.json([jiraProject("jira-1", "JIRA-KEY", "Jira Test Project")])
+      ),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([{
+          ...repository("repo-1", "zebra-service"),
+          lastSyncedAt: "2026-08-29T00:00:00Z",
+        }])
+      )
+    );
+
+    renderPage();
+
+    const checkboxes = await screen.findAllByRole("checkbox");
+    expect(checkboxes).toHaveLength(2);
+
+    // Repo tracking checkbox
+    expect(checkboxes[0]).toBeDisabled();
+    expect(checkboxes[0]).toHaveAttribute("title", "Connect or reconnect GitHub App to track repositories");
+
+    // Jira tracking checkbox
+    expect(checkboxes[1]).toBeDisabled();
+    expect(checkboxes[1]).toHaveAttribute("title", "Connect or reconnect Jira Cloud to track projects");
+  });
+
+  it("warns when attempting to track an unconfigured repository and dismisses the warning when clicking anywhere", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("/api/v1/integrations/github", () =>
+        HttpResponse.json({
+          id: "gh-1",
+          workspaceId: "ws-1",
+          installationId: 12345,
+          accountLogin: "acme-org",
+          accountType: "ORGANIZATION",
+          repositorySelection: "ALL",
+          status: "ACTIVE",
+          lastSyncedAt: "2026-08-29T12:00:00Z",
+          repositoryCount: 1,
+        })
+      ),
+      http.get("/api/v1/integrations/jira", () => HttpResponse.json(null)),
+      http.get("/api/v1/jira/projects", () => HttpResponse.json([])),
+      http.get("/api/v1/repositories", () =>
+        HttpResponse.json([
+          {
+            ...repository("repo-1", "zebra-service"),
+            trackingEnabled: false,
+            lastSyncedAt: "2026-08-29T12:00:00Z",
+            settings: {
+              ...repository("repo-1", "zebra-service").settings,
+              deploymentWorkflowNamePatterns: [],
+            },
+          },
+        ])
+      )
+    );
+
+    renderPage();
+
+    const checkbox = await screen.findByRole("checkbox");
+    expect(checkbox).not.toBeChecked();
+
+    await user.click(checkbox);
+    // Red warning tooltip appears above Settings button
+    expect(
+      screen.getByText(/in Settings before enabling tracking/i)
+    ).toBeInTheDocument();
+
+    // Clicking anywhere dismisses the warning tooltip
+    await user.click(document.body);
+    expect(
+      screen.queryByText(/in Settings before enabling tracking/i)
+    ).not.toBeInTheDocument();
   });
 });
