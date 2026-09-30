@@ -1476,6 +1476,11 @@ export interface components {
         };
         CycleTimePeriodDto: {
             /**
+             * @description This period's stage with the longest non-zero median, or null when no stage took measurable time. Chosen by the same rule as the range bottleneck.
+             * @enum {string}
+             */
+            bottleneck?: "CODING" | "PICKUP" | "REVIEW" | "DEPLOY";
+            /**
              * Format: date-time
              * @description Exclusive end of the calendar period. The last period can end after the requested range.
              */
@@ -2142,9 +2147,9 @@ export interface components {
             email: string;
             emailVerified: boolean;
             hasPassword: boolean;
-            onboardingComplete: boolean;
             /** Format: uuid */
             id: string;
+            onboardingComplete: boolean;
         };
         WorkspaceDeletionResponse: {
             /** @enum {string} */
