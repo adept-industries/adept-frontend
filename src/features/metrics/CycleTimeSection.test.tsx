@@ -7,7 +7,13 @@ import type { AuthenticatedState } from "../../auth/types.js";
 import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
-import { cycleTimeRange, formatCycleHours, formatPeriodRange, periodLabelLines } from "./cycleTime.js";
+import {
+  axisMaximum,
+  cycleTimeRange,
+  formatCycleHours,
+  formatPeriodRange,
+  periodLabelLines,
+} from "./cycleTime.js";
 import type { CycleTimeFilters } from "./types.js";
 
 const API = "/api/v1";
@@ -222,6 +228,38 @@ describe("CycleTimeSection", () => {
     expect(container.querySelectorAll(".cycle-time-bottleneck-marker")).toHaveLength(2);
   });
 
+  it("cuts an outlier week short and still reports its full times", async () => {
+    const week = (start: string, end: string, hours: number, bottleneck: string) => ({
+      periodStart: start,
+      periodEnd: end,
+      pullRequestCount: 1,
+      bottleneck,
+      stages: ["CODING", "PICKUP", "REVIEW", "DEPLOY"].map((name) =>
+        name === bottleneck ? stage(name, hours, 1) : stage(name, 0, name === "CODING" ? 1 : 0)),
+    });
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
+      ...CYCLE_TIME_FIXTURE,
+      series: [
+        week("2026-08-24T00:00:00Z", "2026-08-31T00:00:00Z", 1, "DEPLOY"),
+        week("2026-08-31T00:00:00Z", "2026-09-07T00:00:00Z", 60, "REVIEW"),
+        week("2026-09-07T00:00:00Z", "2026-09-14T00:00:00Z", 2, "DEPLOY"),
+        week("2026-09-14T00:00:00Z", "2026-09-21T00:00:00Z", 3, "DEPLOY"),
+      ],
+    })));
+    const user = userEvent.setup();
+
+    const { container } = renderSection();
+
+    const bars = await screen.findAllByRole("button", { name: /merged PR/ });
+    expect(container.querySelectorAll(".cycle-time-bar-break")).toHaveLength(1);
+    // The axis fits the other weeks: 3 hrs × 1.25.
+    expect(container.querySelector(".cycle-time-chart-svg")).toHaveTextContent("3.8 hrs");
+    await user.click(bars[1]);
+    await user.unhover(bars[1]);
+    expect(container.querySelector(".cycle-time-chart-detail"))
+      .toHaveTextContent("Aug 31 – Sep 6 · 1 merged PR · Bottleneck: Review · 2.5 days");
+  });
+
   it("shows the empty state when nothing was merged", async () => {
     renderSection();
 
@@ -381,5 +419,19 @@ describe("periodLabelLines", () => {
     expect(periodLabelLines(
       { periodStart: "2026-09-28T00:00:00Z", periodEnd: "2026-09-29T00:00:00Z" }, ...range, "UTC", "DAY",
     )).toEqual(["Mon", "Sep 28"]);
+  });
+});
+
+describe("axisMaximum", () => {
+  it("fits the axis to the tallest bar", () => {
+    expect(axisMaximum([0, 4, 3, 2, 1])).toBe(4);
+  });
+
+  it("clips one outlier among at least four bars", () => {
+    expect(axisMaximum([0, 540, 3, 60, 10, 5])).toBe(75);
+  });
+
+  it("never clips when fewer than four bars have data", () => {
+    expect(axisMaximum([11, 3, 0, 0])).toBe(11);
   });
 });
