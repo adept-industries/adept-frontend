@@ -9,6 +9,9 @@ import { useProjectPullRequestRisks } from "./useProjectPullRequestRisks.js";
 
 const PAGE_SIZE = 10;
 
+const RISK_EXPLANATION =
+  "Risk score reflects estimated defect likelihood compared to the codebase baseline (~8.5%). Scores above 36% represent the highest-risk changes requiring prioritized review.";
+
 const RISK_LEVELS: Array<{ value: "" | PullRequestRiskLevel; label: string }> = [
   { value: "", label: "All risk levels" },
   { value: "CRITICAL", label: "Critical" },
@@ -87,7 +90,11 @@ function PullRequestRiskRow({ item }: { item: ProjectPullRequestRiskItem }) {
             </p>
           )}
         </div>
-        <div className="pr-risk-score" aria-label={`${item.riskLevel.toLowerCase()} risk, ${scorePercent(item.riskScore)}`}>
+        <div
+          className="pr-risk-score"
+          title={RISK_EXPLANATION}
+          aria-label={`${item.riskLevel.toLowerCase()} risk, ${scorePercent(item.riskScore)}`}
+        >
           <span className={`pr-risk-level pr-risk-level--${item.riskLevel.toLowerCase()}`}>
             {item.riskLevel.toLowerCase()}
           </span>
@@ -160,7 +167,8 @@ export function ProjectPullRequestRiskSection({
             Pull request review queue
           </h2>
           <p className="pr-risk-section-description">
-            Open pull requests for the selected project, prioritized by estimated review risk.
+            Open pull requests for the selected project, prioritized by estimated review risk.{" "}
+            {RISK_EXPLANATION}
           </p>
         </div>
         {selectedProjectId && (
