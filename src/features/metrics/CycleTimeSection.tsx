@@ -1,6 +1,6 @@
 import { useCycleTime } from "./useDoraMetrics.js";
 import { CycleTimeChart } from "./CycleTimeChart.js";
-import { CYCLE_TIME_STAGES, formatCycleHours, stageColorVar } from "./cycleTime.js";
+import { CYCLE_TIME_STAGES, formatCycleHours, formatPeriodRange, stageColorVar } from "./cycleTime.js";
 import type { CycleTimeFilters, CycleTimeStage } from "./types.js";
 
 const STAGE_DESCRIPTIONS: Record<CycleTimeStage, string> = {
@@ -16,13 +16,21 @@ function plural(count: number, noun: string): string {
 
 interface CycleTimeSectionProps {
   filters: CycleTimeFilters;
+  /** The selected window in words, such as "Last 12 weeks". */
+  description: string;
   fallbackTimezone: string;
 }
 
-export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSectionProps) {
+export function CycleTimeSection({ filters, description, fallbackTimezone }: CycleTimeSectionProps) {
   const query = useCycleTime(filters);
   const { data, isLoading, error } = query;
   const timezone = data?.timezone ?? fallbackTimezone;
+  const unit = filters.granularity === "DAY" ? "day" : "week";
+  const rangeStart = data?.periodStart ?? filters.from;
+  const rangeEnd = data?.periodEnd ?? filters.to;
+  const covered = rangeStart && rangeEnd
+    ? formatPeriodRange({ periodStart: rangeStart, periodEnd: rangeEnd }, rangeStart, rangeEnd, timezone)
+    : null;
 
   return (
     <section className="dora-section cycle-time-section" aria-label="Code review cycle time">
@@ -30,7 +38,8 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
         <div>
           <h2 className="dash-section-title" style={{ margin: 0 }}>Code Review Cycle Time</h2>
           <p className="cycle-time-intro">
-            Median time merged pull requests spent in each stage, using the filters above.
+            {description}{covered ? ` (${covered})` : ""}, one bar per {unit}. Median time merged pull requests spent in
+            each stage; the bottleneck is the slowest stage.
           </p>
         </div>
       </div>
@@ -131,8 +140,9 @@ export function CycleTimeSection({ filters, fallbackTimezone }: CycleTimeSection
             </div>
 
             <p className="cycle-time-footnote">
-              Pull requests are grouped by merge week. Each stage is a separate median, so stages do not
-              add up exactly. Bot reviews and authors reviewing their own pull requests are excluded.
+              Pull requests are grouped by the {unit} they merged, in {timezone}. The dot above each bar
+              marks that {unit}'s bottleneck. Each stage is a separate median, so stages do not add up
+              exactly. Bot reviews and authors reviewing their own pull requests are excluded.
             </p>
           </>
         )}

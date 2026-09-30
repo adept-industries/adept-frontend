@@ -3,6 +3,7 @@ import { useAuth } from "../../auth/AuthProvider.js";
 import { useDoraMetricsSummary, useDoraMetricsSeries } from "./useDoraMetrics.js";
 import { DoraMetricCard } from "./DoraMetricCard.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
+import { cycleTimeRange } from "./cycleTime.js";
 import type { DoraMetricsFilters, MetricSeriesItemDto, MetricType } from "./types.js";
 import { zonedDateKey, zonedDateTimeParts, zonedDateTimeToDate } from "./zonedTime.js";
 
@@ -145,11 +146,18 @@ export function DoraMetricsSection({
     to:   range.to,
   }), [selectedProjectId, selectedRepositoryId, range]);
 
+  // Cycle time compares whole days or weeks, so its range snaps to period starts.
+  const cycleTimeWindow = useMemo(
+    () => cycleTimeRange(preset, workspaceTimezone, workspaceToday),
+    [preset, workspaceTimezone, workspaceToday],
+  );
   const cycleTimeFilters = useMemo(() => ({
-    ...filters,
-    // Weekly cohorts keep stage medians meaningful; a single week shows its days.
-    granularity: preset === "7d" ? "DAY" as const : "WEEK" as const,
-  }), [filters, preset]);
+    projectId: filters.projectId,
+    repositoryId: filters.repositoryId,
+    from: cycleTimeWindow.from,
+    to: cycleTimeWindow.to,
+    granularity: cycleTimeWindow.granularity,
+  }), [filters.projectId, filters.repositoryId, cycleTimeWindow]);
 
   const summaryQuery = useDoraMetricsSummary(filters);
   const seriesQuery = useDoraMetricsSeries({
@@ -342,7 +350,11 @@ export function DoraMetricsSection({
         </p>
       )}
     </section>
-    <CycleTimeSection filters={cycleTimeFilters} fallbackTimezone={workspaceTimezone} />
+    <CycleTimeSection
+      filters={cycleTimeFilters}
+      description={cycleTimeWindow.description}
+      fallbackTimezone={workspaceTimezone}
+    />
     </>
   );
 }
