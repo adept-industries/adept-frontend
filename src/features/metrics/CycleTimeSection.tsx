@@ -123,6 +123,8 @@ export function CycleTimeSection({ filters, description, fallbackTimezone }: Cyc
             )}
 
             <CycleTimeChart
+              // A new range has different bars, so a selection from the last one must not carry over.
+              key={`${data.granularity}:${data.periodStart}`}
               series={data.series}
               rangeStart={data.periodStart}
               rangeEnd={data.periodEnd}

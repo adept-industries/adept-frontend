@@ -46,10 +46,10 @@ function describeBottleneck(period: CycleTimePeriodDto): string {
 
 /** Tracks an element's rendered width so the chart draws in real pixels and text never shrinks. */
 function useWidth<T extends HTMLElement>(fallback: number) {
-  const ref = useRef<T>(null);
+  // A callback ref, so the observer attaches even when the chart first renders its empty state.
+  const [element, setElement] = useState<T | null>(null);
   const [width, setWidth] = useState(fallback);
   useEffect(() => {
-    const element = ref.current;
     if (!element || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(([entry]) => {
       const next = Math.round(entry.contentRect.width);
@@ -57,8 +57,8 @@ function useWidth<T extends HTMLElement>(fallback: number) {
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
-  return [ref, width] as const;
+  }, [element]);
+  return [setElement, width] as const;
 }
 
 interface CycleTimeChartProps {
