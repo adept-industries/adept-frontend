@@ -295,7 +295,7 @@ export function MetricDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { state } = useAuth();
   const projectContext = useContext(ProjectContext);
-  const projects = projectContext?.projects ?? [];
+  const projects = projectContext?.projects;
 
   const workspaceTimezone =
     state.status === "authenticated"
@@ -345,7 +345,7 @@ export function MetricDetailsPage() {
   });
 
   const selectedProject = useMemo(
-    () => projects.find((p) => p.id === projectIdParam) || null,
+    () => projects?.find((p) => p.id === projectIdParam) || null,
     [projects, projectIdParam],
   );
 
