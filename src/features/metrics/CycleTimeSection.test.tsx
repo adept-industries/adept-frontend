@@ -1,14 +1,22 @@
-import { screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext.js";
 import type { AuthenticatedState } from "../../auth/types.js";
 import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
+import { CycleTimeChart } from "./CycleTimeChart.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
-import { formatCycleHours, formatPeriodRange } from "./cycleTime.js";
-import type { CycleTimeFilters } from "./types.js";
+import {
+  axisMaximum,
+  cycleTimeRange,
+  formatCycleHours,
+  formatPeriodRange,
+  periodLabelLines,
+} from "./cycleTime.js";
+import type { CycleTimeFilters, CycleTimeResponse } from "./types.js";
 
 const API = "/api/v1";
 
@@ -74,12 +82,15 @@ const CYCLE_TIME_FIXTURE = {
       periodStart: "2026-09-07T00:00:00Z",
       periodEnd: "2026-09-14T00:00:00Z",
       pullRequestCount: 5,
+      bottleneck: "PICKUP",
       stages: [stage("CODING", 8, 5), stage("PICKUP", 44, 5), stage("REVIEW", 4, 4), stage("DEPLOY", 0, 0)],
     },
     {
       periodStart: "2026-09-14T00:00:00Z",
       periodEnd: "2026-09-21T00:00:00Z",
       pullRequestCount: 7,
+      // This week's slowest stage differs from the range-wide bottleneck.
+      bottleneck: "DEPLOY",
       stages: [stage("CODING", 4, 7), stage("PICKUP", 14, 5), stage("REVIEW", 6, 5), stage("DEPLOY", 17, 8)],
     },
   ],
@@ -89,7 +100,7 @@ function renderSection() {
   const actions = { logout: vi.fn() } as unknown as AuthContextValue["actions"];
   return renderWithProviders(
     <AuthContext.Provider value={{ state: authenticatedState(), actions }}>
-      <CycleTimeSection filters={FILTERS} fallbackTimezone="UTC" />
+      <CycleTimeSection filters={FILTERS} description="Last 4 weeks" fallbackTimezone="UTC" />
     </AuthContext.Provider>,
   );
 }
@@ -116,6 +127,7 @@ describe("CycleTimeSection", () => {
     expect(stages[1]).toHaveClass("cycle-time-stage--bottleneck");
     expect(stages[2]).toHaveTextContent("30 min");
     expect(screen.getByText(/2 of 12 pull requests were\s+merged without a review/)).toBeInTheDocument();
+    expect(screen.getByText(/Last 4 weeks \(Aug 24 – Sep 20\), one bar per week\./)).toBeInTheDocument();
   });
 
   it("marks review stages without reviewed pull requests", async () => {
@@ -134,7 +146,7 @@ describe("CycleTimeSection", () => {
     expect(stages[3]).toHaveTextContent("8 PRs");
   });
 
-  it("describes the latest period with merges until a bar is hovered", async () => {
+  it("describes the latest period with merges and its own bottleneck by default", async () => {
     server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
       ...CYCLE_TIME_FIXTURE,
       series: [
@@ -148,23 +160,179 @@ describe("CycleTimeSection", () => {
       ],
     })));
 
-    renderSection();
+    const { container } = renderSection();
 
-    expect(await screen.findByText("Sep 14 – 20 · 7 merged PRs · Coding 4 hrs · Pickup 14 hrs · Review 6 hrs · Deploy 17 hrs"))
-      .toBeInTheDocument();
+    await screen.findByRole("group", { name: /Select a bar to see its bottleneck/ });
+    const detail = container.querySelector(".cycle-time-chart-detail")!;
+    expect(detail).toHaveTextContent("Sep 14 – 20 · 7 merged PRs · Bottleneck: Deploy · 17 hrs");
+    expect(detail).toHaveTextContent(
+      "Coding 4 hrs (7 PRs) · Pickup 14 hrs (5 PRs) · Review 6 hrs (5 PRs) · Deploy 17 hrs (8 PRs)",
+    );
+    // The range bottleneck above the chart still pools every week.
+    expect(screen.getByRole("status")).toHaveTextContent("Bottleneck: Pickup");
   });
 
-  it("describes a bar's stages when it receives focus", async () => {
+  it("marks each period's bottleneck with its stage colour", async () => {
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(CYCLE_TIME_FIXTURE)));
+
+    const { container } = renderSection();
+
+    await screen.findAllByRole("button", { name: /merged PRs/ });
+    const markers = Array.from(container.querySelectorAll(".cycle-time-bottleneck-marker"));
+    expect(markers.map((marker) => marker.getAttribute("fill")))
+      .toEqual(["var(--cycle-pickup)", "var(--cycle-deploy)"]);
+  });
+
+  it("keeps a clicked bar selected and moves with the arrow keys", async () => {
     server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json(CYCLE_TIME_FIXTURE)));
     const user = userEvent.setup();
 
-    renderSection();
+    const { container } = renderSection();
 
-    const bars = await screen.findAllByRole("img", { name: /merged pull requests/ });
+    const bars = await screen.findAllByRole("button", { name: /merged PRs/ });
     expect(bars).toHaveLength(2);
-    await user.tab();
-    expect(screen.getByText("Sep 7 – 13 · 5 merged PRs · Coding 8 hrs · Pickup 44 hrs · Review 4 hrs · Deploy —"))
-      .toBeInTheDocument();
+    expect(bars[0]).toHaveAccessibleName(/^Sep 7 – 13: 5 merged PRs\. Bottleneck: Pickup · 44 hrs\./);
+    const detail = () => container.querySelector(".cycle-time-chart-detail")!;
+
+    await user.click(bars[0]);
+    await user.unhover(bars[0]);
+    expect(detail()).toHaveTextContent("Sep 7 – 13 · 5 merged PRs · Bottleneck: Pickup · 44 hrs");
+    expect(detail()).toHaveTextContent("Deploy —");
+    expect(bars[0]).toHaveAttribute("aria-pressed", "true");
+
+    await user.keyboard("{ArrowRight}");
+    expect(bars[1]).toHaveFocus();
+    expect(detail()).toHaveTextContent("Sep 14 – 20 · 7 merged PRs · Bottleneck: Deploy · 17 hrs");
+  });
+
+  it("says when a selected period had no merges", async () => {
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
+      ...CYCLE_TIME_FIXTURE,
+      series: [
+        {
+          periodStart: "2026-08-31T00:00:00Z",
+          periodEnd: "2026-09-07T00:00:00Z",
+          pullRequestCount: 0,
+          stages: [stage("CODING", 0, 0), stage("PICKUP", 0, 0), stage("REVIEW", 0, 0), stage("DEPLOY", 0, 0)],
+        },
+        ...CYCLE_TIME_FIXTURE.series,
+      ],
+    })));
+    const user = userEvent.setup();
+
+    const { container } = renderSection();
+
+    const bars = await screen.findAllByRole("button", { name: /merged PRs/ });
+    await user.click(bars[0]);
+    await user.unhover(bars[0]);
+    expect(container.querySelector(".cycle-time-chart-detail"))
+      .toHaveTextContent("Aug 31 – Sep 6 · 0 merged PRs · No merged pull requests");
+    expect(container.querySelectorAll(".cycle-time-bottleneck-marker")).toHaveLength(2);
+  });
+
+  it("cuts an outlier week short and still reports its full times", async () => {
+    const week = (start: string, end: string, hours: number, bottleneck: string) => ({
+      periodStart: start,
+      periodEnd: end,
+      pullRequestCount: 1,
+      bottleneck,
+      stages: ["CODING", "PICKUP", "REVIEW", "DEPLOY"].map((name) =>
+        name === bottleneck ? stage(name, hours, 1) : stage(name, 0, name === "CODING" ? 1 : 0)),
+    });
+    server.use(http.get(`${API}/metrics/cycle-time`, () => HttpResponse.json({
+      ...CYCLE_TIME_FIXTURE,
+      series: [
+        week("2026-08-24T00:00:00Z", "2026-08-31T00:00:00Z", 1, "DEPLOY"),
+        week("2026-08-31T00:00:00Z", "2026-09-07T00:00:00Z", 60, "REVIEW"),
+        week("2026-09-07T00:00:00Z", "2026-09-14T00:00:00Z", 2, "DEPLOY"),
+        week("2026-09-14T00:00:00Z", "2026-09-21T00:00:00Z", 3, "DEPLOY"),
+      ],
+    })));
+    const user = userEvent.setup();
+
+    const { container } = renderSection();
+
+    const bars = await screen.findAllByRole("button", { name: /merged PR/ });
+    expect(container.querySelectorAll(".cycle-time-bar-break")).toHaveLength(1);
+    // The axis fits the other weeks: 3 hrs × 1.25.
+    expect(container.querySelector(".cycle-time-chart-svg")).toHaveTextContent("3.8 hrs");
+    await user.click(bars[1]);
+    await user.unhover(bars[1]);
+    expect(container.querySelector(".cycle-time-chart-detail"))
+      .toHaveTextContent("Aug 31 – Sep 6 · 1 merged PR · Bottleneck: Review · 2.5 days");
+  });
+
+  it("drops a bar selection when a cached range with fewer bars is shown", async () => {
+    const dayFrom = "2026-09-14T00:00:00Z";
+    const DAY_FILTERS: CycleTimeFilters = { ...FILTERS, from: dayFrom, granularity: "DAY" };
+    const days = Array.from({ length: 7 }, (_, index) => ({
+      periodStart: new Date(Date.parse(dayFrom) + index * 86_400_000).toISOString(),
+      periodEnd: new Date(Date.parse(dayFrom) + (index + 1) * 86_400_000).toISOString(),
+      pullRequestCount: 1,
+      bottleneck: "CODING",
+      stages: [stage("CODING", index + 1, 1), stage("PICKUP", 0, 0), stage("REVIEW", 0, 0), stage("DEPLOY", 0, 0)],
+    }));
+    server.use(http.get(`${API}/metrics/cycle-time`, ({ request }) =>
+      new URL(request.url).searchParams.get("granularity") === "DAY"
+        ? HttpResponse.json({ ...CYCLE_TIME_FIXTURE, granularity: "DAY", periodStart: dayFrom, series: days })
+        : HttpResponse.json(CYCLE_TIME_FIXTURE)));
+    const user = userEvent.setup();
+    // Keep earlier ranges cached, as the app does, so switching back shows them without loading.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const actions = { logout: vi.fn() } as unknown as AuthContextValue["actions"];
+    const ui = (filters: CycleTimeFilters) => (
+      <QueryClientProvider client={client}>
+        <AuthContext.Provider value={{ state: authenticatedState(), actions }}>
+          <CycleTimeSection filters={filters} description="Range" fallbackTimezone="UTC" />
+        </AuthContext.Provider>
+      </QueryClientProvider>
+    );
+
+    const { container, rerender } = render(ui(FILTERS));
+    await screen.findAllByRole("button", { name: /merged PRs/ });
+    rerender(ui(DAY_FILTERS));
+    const dayBars = await screen.findAllByRole("button", { name: /merged PR/ });
+    expect(dayBars).toHaveLength(7);
+    await user.click(dayBars[5]);
+    await user.unhover(dayBars[5]);
+
+    rerender(ui(FILTERS));
+    await screen.findAllByRole("button", { name: /merged PRs/ });
+    expect(container.querySelector(".cycle-time-chart-detail"))
+      .toHaveTextContent("Sep 14 – 20 · 7 merged PRs · Bottleneck: Deploy · 17 hrs");
+  });
+
+  it("draws at the container's width once data arrives after an empty range", () => {
+    class FixedWidthObserver {
+      private readonly callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+      }
+      observe(target: Element) {
+        this.callback([{ target, contentRect: { width: 400 } } as ResizeObserverEntry], this as unknown as ResizeObserver);
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("ResizeObserver", FixedWidthObserver);
+    try {
+      const chart = (series: typeof CYCLE_TIME_FIXTURE.series) => (
+        <CycleTimeChart
+          series={series as CycleTimeResponse["series"]}
+          rangeStart="2026-08-24T00:00:00Z"
+          rangeEnd="2026-09-21T00:00:00Z"
+          timezone="UTC"
+          granularity="WEEK"
+        />
+      );
+      const { container, rerender } = render(chart([]));
+      expect(screen.getByText("No merged pull requests in this period")).toBeInTheDocument();
+
+      rerender(chart(CYCLE_TIME_FIXTURE.series));
+      expect(container.querySelector(".cycle-time-chart-svg")).toHaveAttribute("width", "400");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("shows the empty state when nothing was merged", async () => {
@@ -199,7 +367,8 @@ describe("CycleTimeSection", () => {
     renderSection();
 
     expect(await screen.findByRole("list", { name: "Stage medians" })).toBeInTheDocument();
-    expect(screen.queryByText(/Bottleneck:/)).not.toBeInTheDocument();
+    // Only the range-wide line disappears; each bar still names its own bottleneck.
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("offers a retry when loading fails", async () => {
@@ -267,5 +436,77 @@ describe("formatPeriodRange", () => {
       "2026-10-01T00:00:00Z",
       "Asia/Colombo",
     )).toBe("Aug 31 – Sep 6");
+  });
+});
+
+describe("cycleTimeRange", () => {
+  // Wednesday 2026-09-30, 10:00 UTC.
+  const now = new Date("2026-09-30T10:00:00Z");
+
+  it.each([
+    ["7d", "DAY", 7, "2026-09-24T00:00:00.000Z", "Last 7 days"],
+    ["30d", "WEEK", 4, "2026-09-07T00:00:00.000Z", "Last 4 weeks"],
+    ["90d", "WEEK", 12, "2026-07-13T00:00:00.000Z", "Last 12 weeks"],
+  ] as const)("covers whole periods for %s", (window, granularity, periods, from, description) => {
+    expect(cycleTimeRange(window, "UTC", "2026-09-30", now)).toEqual({
+      from,
+      to: now.toISOString(),
+      granularity,
+      periods,
+      description,
+    });
+  });
+
+  it.each([
+    ["Monday", "2026-09-28"],
+    ["Sunday", "2026-10-04"],
+  ])("counts the current week as one of the weeks on a %s", (_day, today) => {
+    expect(cycleTimeRange("30d", "UTC", today, now).from).toBe("2026-09-07T00:00:00.000Z");
+  });
+
+  it("starts at midnight in the workspace timezone", () => {
+    // Midnight in Colombo is 18:30 UTC the day before.
+    expect(cycleTimeRange("7d", "Asia/Colombo", "2026-09-30", now).from).toBe("2026-09-23T18:30:00.000Z");
+  });
+
+  it("keeps local midnight across a daylight-saving change", () => {
+    // New York leaves daylight time on 2026-11-01; Oct 28 is still UTC-4.
+    expect(cycleTimeRange("7d", "America/New_York", "2026-11-03", now).from).toBe("2026-10-28T04:00:00.000Z");
+  });
+});
+
+describe("periodLabelLines", () => {
+  const range = ["2026-08-01T00:00:00Z", "2026-09-30T10:00:00Z"] as const;
+
+  it("splits a week over two short lines", () => {
+    expect(periodLabelLines(
+      { periodStart: "2026-08-31T00:00:00Z", periodEnd: "2026-09-07T00:00:00Z" }, ...range, "UTC", "WEEK",
+    )).toEqual(["Aug 31", "– Sep 6"]);
+  });
+
+  it("ends the current week today", () => {
+    expect(periodLabelLines(
+      { periodStart: "2026-09-28T00:00:00Z", periodEnd: "2026-10-05T00:00:00Z" }, ...range, "UTC", "WEEK",
+    )).toEqual(["Sep 28", "– 30"]);
+  });
+
+  it("names the weekday for a day", () => {
+    expect(periodLabelLines(
+      { periodStart: "2026-09-28T00:00:00Z", periodEnd: "2026-09-29T00:00:00Z" }, ...range, "UTC", "DAY",
+    )).toEqual(["Mon", "Sep 28"]);
+  });
+});
+
+describe("axisMaximum", () => {
+  it("fits the axis to the tallest bar", () => {
+    expect(axisMaximum([0, 4, 3, 2, 1])).toBe(4);
+  });
+
+  it("clips one outlier among at least four bars", () => {
+    expect(axisMaximum([0, 540, 3, 60, 10, 5])).toBe(75);
+  });
+
+  it("never clips when fewer than four bars have data", () => {
+    expect(axisMaximum([11, 3, 0, 0])).toBe(11);
   });
 });

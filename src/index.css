@@ -3768,40 +3768,84 @@ button.alerts-status {
   white-space: nowrap;
 }
 
+.cycle-time-chart {
+  width: 100%;
+  min-width: 0;
+}
+
 .cycle-time-chart-svg {
   display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 720 / 190;
-  max-height: 240px;
+  max-width: 100%;
   overflow: visible;
 }
 
 .cycle-time-bar {
-  cursor: default;
-  transition: opacity 140ms ease-out;
+  cursor: pointer;
 }
 
 .cycle-time-bar:focus {
   outline: none;
 }
 
-.cycle-time-bar:focus-visible rect:first-child {
+.cycle-time-bar-hit {
+  fill: transparent;
+  transition: fill 140ms ease-out;
+}
+
+.cycle-time-bar:hover .cycle-time-bar-hit,
+.cycle-time-bar--shown .cycle-time-bar-hit {
+  fill: var(--surface-muted);
+}
+
+.cycle-time-bar:focus-visible .cycle-time-bar-hit {
   stroke: var(--focus-ring);
   stroke-width: 2;
 }
 
+circle.cycle-time-bottleneck-marker {
+  stroke: var(--card-bg);
+  stroke-width: 1.5;
+}
+
+.cycle-time-bar-break {
+  fill: none;
+  stroke: var(--card-bg);
+  stroke-width: 2.5;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .cycle-time-bar {
+  .cycle-time-bar-hit {
     transition: none;
   }
 }
 
 .cycle-time-chart-detail {
-  min-height: 1.1rem;
-  margin: 0.35rem 0 0;
-  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 2.6rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.cycle-time-chart-detail p {
+  margin: 0;
+}
+
+.cycle-time-chart-detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cycle-time-chart-detail-title strong {
+  color: var(--text-primary);
+}
+
+.cycle-time-chart-detail-stages {
+  font-size: 0.76rem;
 }
 
 .cycle-time-chart-empty {
