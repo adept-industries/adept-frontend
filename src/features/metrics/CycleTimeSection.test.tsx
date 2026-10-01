@@ -1,11 +1,13 @@
-import { screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { AuthContext, type AuthContextValue } from "../../auth/AuthContext.js";
 import type { AuthenticatedState } from "../../auth/types.js";
 import { renderWithProviders } from "../../test/renderWithProviders.js";
 import { server } from "../../test/server.js";
+import { CycleTimeChart } from "./CycleTimeChart.js";
 import { CycleTimeSection } from "./CycleTimeSection.js";
 import {
   axisMaximum,
@@ -14,7 +16,7 @@ import {
   formatPeriodRange,
   periodLabelLines,
 } from "./cycleTime.js";
-import type { CycleTimeFilters } from "./types.js";
+import type { CycleTimeFilters, CycleTimeResponse } from "./types.js";
 
 const API = "/api/v1";
 
@@ -258,6 +260,79 @@ describe("CycleTimeSection", () => {
     await user.unhover(bars[1]);
     expect(container.querySelector(".cycle-time-chart-detail"))
       .toHaveTextContent("Aug 31 – Sep 6 · 1 merged PR · Bottleneck: Review · 2.5 days");
+  });
+
+  it("drops a bar selection when a cached range with fewer bars is shown", async () => {
+    const dayFrom = "2026-09-14T00:00:00Z";
+    const DAY_FILTERS: CycleTimeFilters = { ...FILTERS, from: dayFrom, granularity: "DAY" };
+    const days = Array.from({ length: 7 }, (_, index) => ({
+      periodStart: new Date(Date.parse(dayFrom) + index * 86_400_000).toISOString(),
+      periodEnd: new Date(Date.parse(dayFrom) + (index + 1) * 86_400_000).toISOString(),
+      pullRequestCount: 1,
+      bottleneck: "CODING",
+      stages: [stage("CODING", index + 1, 1), stage("PICKUP", 0, 0), stage("REVIEW", 0, 0), stage("DEPLOY", 0, 0)],
+    }));
+    server.use(http.get(`${API}/metrics/cycle-time`, ({ request }) =>
+      new URL(request.url).searchParams.get("granularity") === "DAY"
+        ? HttpResponse.json({ ...CYCLE_TIME_FIXTURE, granularity: "DAY", periodStart: dayFrom, series: days })
+        : HttpResponse.json(CYCLE_TIME_FIXTURE)));
+    const user = userEvent.setup();
+    // Keep earlier ranges cached, as the app does, so switching back shows them without loading.
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const actions = { logout: vi.fn() } as unknown as AuthContextValue["actions"];
+    const ui = (filters: CycleTimeFilters) => (
+      <QueryClientProvider client={client}>
+        <AuthContext.Provider value={{ state: authenticatedState(), actions }}>
+          <CycleTimeSection filters={filters} description="Range" fallbackTimezone="UTC" />
+        </AuthContext.Provider>
+      </QueryClientProvider>
+    );
+
+    const { container, rerender } = render(ui(FILTERS));
+    await screen.findAllByRole("button", { name: /merged PRs/ });
+    rerender(ui(DAY_FILTERS));
+    const dayBars = await screen.findAllByRole("button", { name: /merged PR/ });
+    expect(dayBars).toHaveLength(7);
+    await user.click(dayBars[5]);
+    await user.unhover(dayBars[5]);
+
+    rerender(ui(FILTERS));
+    await screen.findAllByRole("button", { name: /merged PRs/ });
+    expect(container.querySelector(".cycle-time-chart-detail"))
+      .toHaveTextContent("Sep 14 – 20 · 7 merged PRs · Bottleneck: Deploy · 17 hrs");
+  });
+
+  it("draws at the container's width once data arrives after an empty range", () => {
+    class FixedWidthObserver {
+      private readonly callback: ResizeObserverCallback;
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+      }
+      observe(target: Element) {
+        this.callback([{ target, contentRect: { width: 400 } } as ResizeObserverEntry], this as unknown as ResizeObserver);
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("ResizeObserver", FixedWidthObserver);
+    try {
+      const chart = (series: typeof CYCLE_TIME_FIXTURE.series) => (
+        <CycleTimeChart
+          series={series as CycleTimeResponse["series"]}
+          rangeStart="2026-08-24T00:00:00Z"
+          rangeEnd="2026-09-21T00:00:00Z"
+          timezone="UTC"
+          granularity="WEEK"
+        />
+      );
+      const { container, rerender } = render(chart([]));
+      expect(screen.getByText("No merged pull requests in this period")).toBeInTheDocument();
+
+      rerender(chart(CYCLE_TIME_FIXTURE.series));
+      expect(container.querySelector(".cycle-time-chart-svg")).toHaveAttribute("width", "400");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("shows the empty state when nothing was merged", async () => {
