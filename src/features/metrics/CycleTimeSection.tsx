@@ -98,10 +98,9 @@ export function CycleTimeSection({ filters, description, fallbackTimezone }: Cyc
                   <li
                     key={stage}
                     className={`cycle-time-stage${isBottleneck ? " cycle-time-stage--bottleneck" : ""}`}
-                    style={{ borderTopColor: stageColorVar(stage) }}
                   >
-                    <span className="cycle-time-stage-label">{label}</span>
-                    <span className="cycle-time-stage-value">
+                    <span className="cycle-time-stage-label" style={{ color: stageColorVar(stage) }}>{label}</span>
+                    <span className="cycle-time-stage-value" style={{ color: stageColorVar(stage) }}>
                       {value && sampleSize > 0 ? formatCycleHours(value.medianHours) : "—"}
                     </span>
                     <span className="cycle-time-stage-meta" title={STAGE_DESCRIPTIONS[stage]}>
