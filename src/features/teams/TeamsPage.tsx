@@ -17,7 +17,10 @@ function getInitials(name: string): string {
 function formatTime(isoString: string): string {
   try {
     const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (Number.isNaN(d.getTime())) return "";
+    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const date = d.toLocaleDateString([], { month: "short", day: "numeric" });
+    return `${time}, ${date}`;
   } catch {
     return "";
   }

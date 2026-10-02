@@ -3735,7 +3735,6 @@ button.alerts-status {
   min-width: 0;
   padding: 0.6rem 0.7rem;
   border: 1px solid var(--stat-card-border);
-  border-top: 3px solid var(--border-color);
   border-radius: 0.5rem;
   background: var(--card-bg);
 }
